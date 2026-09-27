@@ -70,6 +70,8 @@ The plugin needs a few helpers for movement, combat and travel to be installed a
 | `/aht pause` | Pause or resume the current ride |
 | `/aht target` | Log targeted NPC's BaseId (debug helper) |
 | `/aht goto <territory> <x> <y> <z>` | Travel to a point, `/aht goto stop` cancels (debug helper) |
+| `/aht goto <world> [<aetheryte>] [i<n>]` | Travel to a world in your region, and on it to a named aetheryte and instance, e.g. `/aht goto Zalera Wachunpelo i2` (debug helper) |
+| `/aht goto home` | Travel back to your home world (debug helper) |
 
 ## Languages
 

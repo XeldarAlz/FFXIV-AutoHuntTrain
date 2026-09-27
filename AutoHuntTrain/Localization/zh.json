@@ -251,7 +251,7 @@
   "settings.general.behavior": "行为",
   "settings.general.autoPause": "副本中自动暂停",
   "settings.general.autoPauseHelp": "在副本、讨伐战、团队副本或其他实例化内容中时暂停行程，回到外面后继续。你的行程和本次统计会保留。",
-  "plugin.commandHelp": "打开或关闭 Auto Hunt Train 窗口。/aht config | stats | deps | log | changelog | about | pause（暂停或继续行程）| target（输出当前目标的BaseId）| goto <区域> <x> <y> <z>（前往某点，goto stop 取消）。",
+  "plugin.commandHelp": "打开或关闭 Auto Hunt Train 窗口。/aht config | stats | deps | log | changelog | about | pause（暂停或继续行程）| target（输出当前目标的BaseId）| goto <区域> <x> <y> <z>、goto <世界> [以太之光] [i<n>] 或 goto home（旅行辅助，goto stop 取消）。",
   "plugin.commandHelpAlias": "/aht 的别名。",
   "progress.phase.upkeep": "整备中",
   "progress.markLine": "{0}  ·  {1}",

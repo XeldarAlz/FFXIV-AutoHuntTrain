@@ -251,7 +251,7 @@
   "settings.general.behavior": "Поведение",
   "settings.general.autoPause": "Автопауза в контенте",
   "settings.general.autoPauseHelp": "Приостанавливает поездку, пока вы в подземелье, испытании, рейде или другом инстансе, и продолжает её, когда вы вернётесь. Поездка и статистика сессии сохраняются.",
-  "plugin.commandHelp": "Открыть или закрыть окно Auto Hunt Train. /aht config | stats | deps | log | changelog | about | pause (пауза или продолжение поездки) | target (вывести BaseId текущей цели) | goto <зона> <x> <y> <z> (переместиться в точку, goto stop отменяет).",
+  "plugin.commandHelp": "Открыть или закрыть окно Auto Hunt Train. /aht config | stats | deps | log | changelog | about | pause (пауза или продолжение поездки) | target (вывести BaseId текущей цели) | goto <зона> <x> <y> <z>, goto <мир> [этерит] [i<n>] или goto home (помощники путешествий, goto stop отменяет).",
   "plugin.commandHelpAlias": "Псевдоним для /aht.",
   "progress.phase.upkeep": "Обслуживание",
   "progress.markLine": "{0}  ·  {1}",

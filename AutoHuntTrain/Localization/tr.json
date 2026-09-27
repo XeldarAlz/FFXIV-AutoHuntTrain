@@ -251,7 +251,7 @@
   "settings.general.behavior": "Davranış",
   "settings.general.autoPause": "İçerikte otomatik duraklat",
   "settings.general.autoPauseHelp": "Bir zindan, sınav, baskın ya da başka bir örneklenmiş içerikteyken yolculuğu duraklatır, dışarı çıkınca sürdürür. Yolculuğunuz ve oturum istatistikleriniz korunur.",
-  "plugin.commandHelp": "Auto Hunt Train penceresini açar/kapatır. /aht config | stats | deps | log | changelog | about | pause (yolculuğu duraklat ya da sürdür) | target (mevcut hedefin BaseId'sini yazdır) | goto <bölge> <x> <y> <z> (bir noktaya git, goto stop iptal eder).",
+  "plugin.commandHelp": "Auto Hunt Train penceresini açar/kapatır. /aht config | stats | deps | log | changelog | about | pause (yolculuğu duraklat ya da sürdür) | target (mevcut hedefin BaseId'sini yazdır) | goto <bölge> <x> <y> <z>, goto <dünya> [aetheryte] [i<n>] ya da goto home (seyahat yardımcıları, goto stop iptal eder).",
   "plugin.commandHelpAlias": "/aht için kısayol.",
   "progress.phase.upkeep": "Bakım",
   "progress.markLine": "{0}  ·  {1}",

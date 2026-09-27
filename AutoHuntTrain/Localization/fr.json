@@ -251,7 +251,7 @@
   "settings.general.behavior": "Comportement",
   "settings.general.autoPause": "Pause automatique en instance",
   "settings.general.autoPauseHelp": "Met le trajet en pause pendant un donjon, une épreuve, un raid ou tout autre contenu instancié, puis le reprend une fois dehors. Votre trajet et vos statistiques sont conservés.",
-  "plugin.commandHelp": "Ouvre ou ferme la fenêtre Auto Hunt Train. /aht config | stats | deps | log | changelog | about | pause (mettre en pause ou reprendre le trajet) | target (afficher le BaseId de la cible actuelle) | goto <zone> <x> <y> <z> (se rendre à un point, goto stop annule).",
+  "plugin.commandHelp": "Ouvre ou ferme la fenêtre Auto Hunt Train. /aht config | stats | deps | log | changelog | about | pause (mettre en pause ou reprendre le trajet) | target (afficher le BaseId de la cible actuelle) | goto <zone> <x> <y> <z>, goto <monde> [éthérite] [i<n>] ou goto home (aides au voyage, goto stop annule).",
   "plugin.commandHelpAlias": "Alias de /aht.",
   "progress.phase.upkeep": "Entretien",
   "progress.markLine": "{0}  ·  {1}",
