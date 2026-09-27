@@ -22,6 +22,7 @@ internal static class GeneralSettings
         DrawLanguageGroup(configuration);
         DrawWindowGroup(configuration);
         DrawBehaviorGroup(configuration);
+        FeedSettings.Draw(configuration);
         ConductorSettings.Draw(configuration);
         EngagementSettings.Draw(configuration);
         DrawAfterRideGroup(configuration);

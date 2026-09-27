@@ -14,6 +14,8 @@ internal static class ReadyState
 
     public readonly record struct Info(Kind Kind, Vector4 Accent, Vector4 AccentSoft, FontAwesomeIcon Icon, string Title, string Detail);
 
+    private static readonly CachedText[] details = new CachedText[6];
+
     private static int cachedFrame = -1;
     private static Info cached;
 
@@ -51,20 +53,33 @@ internal static class ReadyState
                 Loc.T(L.Train.TitleSetupNeeded), Loc.T(L.Train.DetailSetupNeeded));
         }
 
+        // With the feed loaded a ride needs no conductor of the player's own; without it, one is the only way to ride.
+        if (Plugin.Instance.Feed.IsFeedLoaded)
+        {
+            return new Info(Kind.FeedReady, Styling.AccentMint, Styling.AccentMintSoft, FontAwesomeIcon.Rss,
+                Loc.T(L.Train.TitleFeedReady), FeedDetail(Kind.FeedReady, L.Feed.HeadlineHuntAlerts, L.Train.DetailFeedReady));
+        }
+
         if (!Conductor.IsSet)
         {
             return new Info(Kind.PickConductor, Styling.AccentAmber, Styling.AccentAmberSoft, FontAwesomeIcon.Flag,
-                Loc.T(L.Ride.TitlePickConductor), Loc.T(L.Ride.DetailPickConductor));
-        }
-
-        if (ExternalPlugins.IsInstalled(ExternalPlugin.HuntAlerts))
-        {
-            return new Info(Kind.FeedReady, Styling.AccentMint, Styling.AccentMintSoft, FontAwesomeIcon.Rss,
-                Loc.T(L.Train.TitleFeedReady), Loc.T(L.Train.DetailFeedReady));
+                Loc.T(L.Ride.TitlePickConductor), FeedDetail(Kind.PickConductor, L.Feed.HeadlineChatOnly, L.Ride.DetailPickConductor));
         }
 
         return new Info(Kind.ChatOnly, Styling.AccentAmber, Styling.AccentAmberSoft, FontAwesomeIcon.CommentDots,
-            Loc.T(L.Train.TitleChatOnly), Loc.T(L.Train.DetailChatOnly));
+            Loc.T(L.Train.TitleChatOnly), FeedDetail(Kind.ChatOnly, L.Feed.HeadlineChatOnly, L.Train.DetailChatOnly));
+    }
+
+    // The detail line opens with which feed the trains come from; composed once per kind and language.
+    private static string FeedDetail(Kind kind, LocString feedLine, LocString detail)
+    {
+        ref var cache = ref details[(int)kind];
+        if (cache.TryGet((int)kind, out var text))
+        {
+            return text;
+        }
+
+        return cache.Set((int)kind, Loc.T(L.Feed.HeadlineDetail, Loc.T(feedLine), Loc.T(detail)));
     }
 
     public static string ShortLabel(Kind kind) => kind switch
