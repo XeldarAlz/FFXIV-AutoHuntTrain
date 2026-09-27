@@ -1,5 +1,6 @@
 using AutoHuntTrain.Core;
 using AutoHuntTrain.Core.Debug;
+using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Game.Watchers;
 using AutoHuntTrain.Core.Kills;
 using AutoHuntTrain.Core.Localization;
@@ -45,6 +46,7 @@ public sealed class Plugin : IDalamudPlugin
     internal RunHistory History { get; }
     internal AutoHuntController Controller { get; }
     internal FlagListener Flags { get; }
+    internal FeedListener Feed { get; }
 
     private readonly DutyWatcher dutyWatcher;
     private readonly GmAlertWatcher gmAlertWatcher;
@@ -65,6 +67,7 @@ public sealed class Plugin : IDalamudPlugin
         History = new RunHistory();
         Controller = new AutoHuntController();
         Flags = new FlagListener();
+        Feed = new FeedListener();
         dutyWatcher = new DutyWatcher();
         gmAlertWatcher = new GmAlertWatcher();
         partyInviteWatcher = new PartyInviteWatcher();
@@ -116,6 +119,7 @@ public sealed class Plugin : IDalamudPlugin
         dutyWatcher.Dispose();
         gmAlertWatcher.Dispose();
         partyInviteWatcher.Dispose();
+        Feed.Dispose();
         Flags.Dispose();
         Kills.Dispose();
 
@@ -202,7 +206,11 @@ public sealed class Plugin : IDalamudPlugin
         Configuration.FlushPendingSave();
     }
 
-    private void OnFrameworkUpdate(IFramework framework) => Controller.Tick();
+    private void OnFrameworkUpdate(IFramework framework)
+    {
+        Feed.Tick();
+        Controller.Tick();
+    }
 
     private static bool HasSubcommand(string arguments, string subcommand)
         => arguments.StartsWith(subcommand, StringComparison.OrdinalIgnoreCase)
