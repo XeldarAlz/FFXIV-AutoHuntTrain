@@ -448,7 +448,7 @@ public abstract partial class AutoCommon
     }
 
     // Only picks the aetheryte to land at; the real height is snapped once the zone's mesh is loaded.
-    private static Vector3 EstimateMarkHeight(uint territoryId, Vector3 point)
+    private protected static Vector3 EstimateMarkHeight(uint territoryId, Vector3 point)
     {
         if (!float.IsNaN(point.Y))
         {
@@ -460,7 +460,7 @@ public abstract partial class AutoCommon
     }
 
     // A height hint picks the floor nearest it, so a spawn under a bridge or below a ledge is not lifted to the top layer.
-    private static Vector3? SnapMarkHeight(Vector3 point)
+    private protected static Vector3? SnapMarkHeight(Vector3 point)
     {
         if (float.IsNaN(point.Y))
         {

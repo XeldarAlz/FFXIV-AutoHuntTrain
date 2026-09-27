@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using AutoTask = clib.Services.AutoTask;
 
 namespace AutoHuntTrain.Core.Tasks;
 
@@ -8,10 +9,10 @@ public abstract partial class AutoCommon
 
     private const int CancellablePollFrames = 4;
 
-    // Runs one library operation as its own task under a wall-clock cap. On timeout, or when abortIf trips, it
-    // cancels that operation, whose cleanups stop navigation, so the operation genuinely unwinds and cannot fight
-    // the next move. True when the operation finished on its own.
-    internal async Task<bool> RunCancellable(MoveOp operation, int timeoutMs, string label, Func<bool>? abortIf = null)
+    // Runs one operation, a library move or a whole leg, as its own task under a wall-clock cap. On timeout, or when
+    // abortIf trips, it cancels that operation, whose cleanups stop navigation, so the operation genuinely unwinds
+    // and cannot fight the next move. True when the operation finished on its own.
+    internal async Task<bool> RunCancellable(AutoTask operation, int timeoutMs, string label, Func<bool>? abortIf = null)
     {
         var completion = new TaskCompletionSource();
         operation.Run(() => completion.TrySetResult());
@@ -87,7 +88,7 @@ public abstract partial class AutoCommon
         }
     }
 
-    private void TryCancel(MoveOp operation, string label)
+    private void TryCancel(AutoTask operation, string label)
     {
         // The operation can finish and dispose its cancellation source between our check and here; a finished one needs no cancelling.
         try

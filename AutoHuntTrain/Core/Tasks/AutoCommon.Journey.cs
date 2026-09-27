@@ -368,7 +368,7 @@ public abstract partial class AutoCommon
         return true;
     }
 
-    private async Task<bool> SwitchToInstance(int instance, string label)
+    private protected async Task<bool> SwitchToInstance(int instance, string label)
     {
         var lifestream = LifestreamIPC.Instance;
         var zoneName = TerritoryNames.Of(Svc.ClientState.TerritoryType);
