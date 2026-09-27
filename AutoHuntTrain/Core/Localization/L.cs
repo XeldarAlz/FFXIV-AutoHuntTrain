@@ -162,7 +162,7 @@ internal static partial class L
         public static readonly LocString PurposeVnavmesh = new("plugins.purpose.vnavmesh", "Pathfinding, flying, and movement to hunt marks.");
         public static readonly LocString PurposeBossMod = new("plugins.purpose.bossMod", "Auto-rotation, targeting, and dodging while fighting marks.");
         public static readonly LocString PurposeLifestream = new("plugins.purpose.lifestream", "World, data center and instance travel to reach the train.");
-        public static readonly LocString PurposeHuntAlerts = new("plugins.purpose.huntAlerts", "Hunt train announcements from the community feed. Without it, ride by following a conductor on your current world.");
+        public static readonly LocString PurposeHuntAlerts = new("plugins.purpose.huntAlerts", "Hunt train announcements from the community feed.");
     }
 
     internal static class Log

@@ -66,10 +66,10 @@ body:
     id: feed
     attributes:
       label: Where did the train come from?
-      description: The plugin rides trains announced through the HuntAlerts feed, or follows a conductor you picked on your current world.
+      description: The plugin rides trains announced through the HuntAlerts feed; you can also pick the conductor by hand.
       options:
         - HuntAlerts feed
-        - Conductor picked by hand (no feed)
+        - Conductor picked by hand
         - Not sure
     validations:
       required: true

@@ -138,7 +138,7 @@
   "plugins.purpose.vnavmesh": "Wegfindung, Fliegen und Bewegung zu Jagdzielen.",
   "plugins.purpose.bossMod": "Auto-Rotation, Zielerfassung und Ausweichen im Kampf gegen Ziele.",
   "plugins.purpose.lifestream": "Welt-, Datenzentrums- und Instanzwechsel, um den Zug zu erreichen.",
-  "plugins.purpose.huntAlerts": "Zugankündigungen aus dem Community-Feed. Ohne es folgst du einem Zugführer auf deiner aktuellen Welt.",
+  "plugins.purpose.huntAlerts": "Zugankündigungen aus dem Community-Feed.",
   "log.title": "Konsole",
   "log.entries.one": "{0} Zeile im Puffer",
   "log.entries.other": "{0} Zeilen im Puffer",

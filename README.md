@@ -20,7 +20,7 @@
 
 ## What it does
 
-Hears a hunt train being called anywhere in your region, gets your character to the start aetheryte on that world, follows the conductor's flags from mark to mark, and lands a hit on every A rank before the crowd deletes it. With no feed installed it still follows a conductor you pick on your current world.
+Hears a hunt train being called anywhere in your region, gets your character to the start aetheryte on that world, follows the conductor's flags from mark to mark, and lands a hit on every A rank before the crowd deletes it.
 
 ## Features
 
@@ -50,7 +50,7 @@ https://raw.githubusercontent.com/XeldarAlz/DalamudPlugins/main/repo.json
 
 Tick **Enabled**, click **+**, then **Save and Close**. Open `/xlplugins` → **All Plugins**, search for **Auto Hunt Train**, and install.
 
-The plugin needs a few helpers for movement, combat and travel to be installed and loaded, and HuntAlerts if you want announced trains. Open `/aht deps` after install to see the list and one-click each missing one. Data center rides also need data center travel enabled in Lifestream's own settings.
+The plugin needs a few helpers to be installed and loaded: movement, combat, travel through Lifestream, and HuntAlerts for the train announcements. Open `/aht deps` after install to see the list and one-click each missing one. Data center rides also need data center travel enabled in Lifestream's own settings.
 
 ## Commands
 

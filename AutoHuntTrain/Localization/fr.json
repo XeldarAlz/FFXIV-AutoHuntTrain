@@ -138,7 +138,7 @@
   "plugins.purpose.vnavmesh": "Recherche de chemin, vol et déplacement vers les cibles de chasse.",
   "plugins.purpose.bossMod": "Rotation automatique, ciblage et esquive pendant les combats contre les cibles.",
   "plugins.purpose.lifestream": "Changement de monde, de centre de données et d'instance pour rejoindre le train.",
-  "plugins.purpose.huntAlerts": "Annonces de trains depuis le flux communautaire. Sans lui, suivez un conducteur sur votre monde actuel.",
+  "plugins.purpose.huntAlerts": "Annonces de trains depuis le flux communautaire.",
   "log.title": "Console",
   "log.entries.one": "{0} ligne en mémoire",
   "log.entries.other": "{0} lignes en mémoire",

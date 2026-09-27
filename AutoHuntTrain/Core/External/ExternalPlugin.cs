@@ -50,7 +50,7 @@ public static class ExternalPlugins
             DisplayName: "HuntAlerts",
             RepoUrl: "https://puni.sh/api/repository/asuna",
             Purpose: "Hunt train announcements from the community feed.",
-            Required: false),
+            Required: true),
     };
 
     public static IReadOnlyList<ExternalPlugin> All => all;

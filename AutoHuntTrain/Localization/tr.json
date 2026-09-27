@@ -138,7 +138,7 @@
   "plugins.purpose.vnavmesh": "Av hedeflerine yol bulma, uçuş ve hareket.",
   "plugins.purpose.bossMod": "Hedeflerle savaşırken otomatik rotasyon, hedefleme ve kaçınma.",
   "plugins.purpose.lifestream": "Trene ulaşmak için dünya, veri merkezi ve instance geçişleri.",
-  "plugins.purpose.huntAlerts": "Topluluk akışından tren duyuruları. Onsuz, bulunduğun dünyadaki bir kondüktörü takip ederek katılırsın.",
+  "plugins.purpose.huntAlerts": "Topluluk akışından tren duyuruları.",
   "log.title": "Konsol",
   "log.entries.one": "Arabellekte {0} satır",
   "log.entries.other": "Arabellekte {0} satır",

@@ -138,7 +138,7 @@
   "plugins.purpose.vnavmesh": "Busca de rotas, voo e movimento até os alvos.",
   "plugins.purpose.bossMod": "Rotação automática, seleção de alvo e esquiva ao lutar contra alvos.",
   "plugins.purpose.lifestream": "Troca de mundo, de data center e de instância para chegar ao trem.",
-  "plugins.purpose.huntAlerts": "Anúncios de trens vindos do feed da comunidade. Sem ele, siga um condutor no seu mundo atual.",
+  "plugins.purpose.huntAlerts": "Anúncios de trens vindos do feed da comunidade.",
   "log.title": "Console",
   "log.entries.one": "{0} linha no buffer",
   "log.entries.other": "{0} linhas no buffer",

@@ -138,7 +138,7 @@
   "plugins.purpose.vnavmesh": "Pathfinding, flying, and movement to hunt marks.",
   "plugins.purpose.bossMod": "Auto-rotation, targeting, and dodging while fighting marks.",
   "plugins.purpose.lifestream": "World, data center and instance travel to reach the train.",
-  "plugins.purpose.huntAlerts": "Hunt train announcements from the community feed. Without it, ride by following a conductor on your current world.",
+  "plugins.purpose.huntAlerts": "Hunt train announcements from the community feed.",
   "log.title": "Console",
   "log.entries.one": "{0} line in the buffer",
   "log.entries.other": "{0} lines in the buffer",
