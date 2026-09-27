@@ -40,8 +40,7 @@ internal sealed class NavArrowWindow : Window
         | ImGuiWindowFlags.NoBackground
         | ImGuiWindowFlags.NoCollapse
         | ImGuiWindowFlags.AlwaysAutoResize
-        | ImGuiWindowFlags.NoFocusOnAppearing
-        | ImGuiWindowFlags.NoSavedSettings;
+        | ImGuiWindowFlags.NoFocusOnAppearing;
 
     private static readonly Vector2 DefaultPosition = new(200f, 200f);
 
