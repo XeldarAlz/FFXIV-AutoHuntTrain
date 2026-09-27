@@ -111,6 +111,14 @@ internal sealed class FeedListener : IDisposable
             return;
         }
 
+        // HuntAlerts relays every region, and a train in another region can never be reached; kept, it would only
+        // push the player's own trains out of the ring.
+        if (Worlds.TryHome(out var home) && home.Region != announcement.World.Region)
+        {
+            RunLog.Debug($"Feed: skipped a train on {announcement.World.Name}, outside the character's region");
+            return;
+        }
+
         if (TryMergeDuplicate(announcement))
         {
             return;

@@ -51,7 +51,8 @@ internal static partial class L
         public static readonly LocString RideDawntrail = new("feed.settings.rideDt", "Ride Dawntrail trains");
         public static readonly LocString RideGroupHelp = new("feed.settings.rideGroupHelp", "Announced trains of this expansion group are listed and ridden. Off hides them from the Upcoming trains list and from auto-ride.");
         public static readonly LocString DataCenters = new("feed.settings.dataCenters", "Allowed data centers");
-        public static readonly LocString DataCentersHelp = new("feed.settings.dataCentersHelp", "Trains on the ticked data centers are ridden. With none ticked, only trains on your home data center are.");
+        public static readonly LocString DataCentersHelp = new("feed.settings.dataCentersHelp", "Only trains on the ticked data centers are listed and ridden. With none ticked, only your home data center counts. Trains in other regions are never listed.");
+        public static readonly LocString AllHidden = new("feed.allHidden", "Trains were announced, but none match your Feed settings: their data center or expansion is switched off.");
         public static readonly LocString HomeMarker = new("feed.settings.home", "(home)");
         public static readonly LocString NoHomeRegion = new("feed.settings.noHomeRegion", "Log in to list the data centers of your region.");
         public static readonly LocString CrossDataCenter = new("feed.settings.crossDataCenter", "Rides to other data centers");

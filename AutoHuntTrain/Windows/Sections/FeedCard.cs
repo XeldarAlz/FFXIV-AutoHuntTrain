@@ -31,6 +31,9 @@ internal static class FeedCard
     private static readonly CachedText[] conductorLines = new CachedText[FeedListener.Capacity];
     private static readonly RideVerdict[] verdicts = new RideVerdict[FeedListener.Capacity];
     private static readonly Reachability[] reachabilities = new Reachability[FeedListener.Capacity];
+    private static readonly bool[] listed = new bool[FeedListener.Capacity];
+
+    private static int listedCount;
 
     private static CachedText verdictTooltip;
     private static long verdictsRefreshedAtMs;
@@ -52,9 +55,15 @@ internal static class FeedCard
 
         drawList.ChannelsSplit(2);
         drawList.ChannelsSetCurrent(1);
+        var drawn = 0;
         for (var index = 0; index < feed.Count; index++)
         {
-            if (index > 0)
+            if (!listed[index])
+            {
+                continue;
+            }
+
+            if (drawn++ > 0)
             {
                 Paint.Hairline(drawList, new Vector2(x, y), new Vector2(x + innerWidth, y));
             }
@@ -71,6 +80,13 @@ internal static class FeedCard
         ImGui.Dummy(new Vector2(width, end.Y - origin.Y));
     }
 
+    // How many trains pass the Feed settings, so the page can show its empty state instead of an empty card.
+    public static int ListedCount(FeedListener feed)
+    {
+        RefreshVerdicts(feed, DateTime.UtcNow);
+        return listedCount;
+    }
+
     private static void RefreshVerdicts(FeedListener feed, DateTime nowUtc)
     {
         var now = Environment.TickCount64;
@@ -81,9 +97,15 @@ internal static class FeedCard
 
         verdictsVersion = feed.Version;
         verdictsRefreshedAtMs = now;
+        listedCount = 0;
         for (var index = 0; index < feed.Count; index++)
         {
             verdicts[index] = RideRules.Evaluate(feed[index], nowUtc, forAutoRide: false, out reachabilities[index]);
+            listed[index] = RideRules.IsListed(feed[index]);
+            if (listed[index])
+            {
+                listedCount++;
+            }
         }
     }
 

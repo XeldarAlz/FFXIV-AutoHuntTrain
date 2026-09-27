@@ -43,6 +43,10 @@ internal sealed class TrainPage
         {
             EmptyCard(FontAwesomeIcon.Train, Loc.T(L.Train.UpcomingEmpty));
         }
+        else if (FeedCard.ListedCount(plugin.Feed) == 0)
+        {
+            EmptyCard(FontAwesomeIcon.Filter, Loc.T(L.Feed.AllHidden));
+        }
         else
         {
             FeedCard.Draw(plugin);
