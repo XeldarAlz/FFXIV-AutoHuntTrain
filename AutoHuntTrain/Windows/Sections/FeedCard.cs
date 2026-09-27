@@ -209,7 +209,6 @@ internal static class FeedCard
         RideVerdict.TooSoon => L.Feed.VerdictTooSoon,
         RideVerdict.TooLate => L.Feed.VerdictTooLate,
         RideVerdict.InDuty => L.Feed.VerdictInDuty,
-        RideVerdict.InParty => L.Feed.VerdictInParty,
         RideVerdict.LifestreamBusy => L.Feed.VerdictLifestreamBusy,
         RideVerdict.RideRunning => L.Feed.VerdictRideRunning,
         RideVerdict.Snoozed => L.Feed.VerdictSnoozed,

@@ -13,12 +13,10 @@ public sealed partial class Configuration
     public int AutoConsumeMinMinutes { get; set; } = 3;
     public List<ConsumableEntry> AutoConsumeItems { get; set; } = [];
 
-    public bool DeclinePartyInvites { get; set; } = false;
-    public int DeclineInviteDelayMinSeconds { get; set; } = 2;
-    public int DeclineInviteDelayMaxSeconds { get; set; } = 6;
-    public bool DeclineInviteReply { get; set; } = false;
-    public PartyInviteReplyChannel DeclineInviteReplyChannel { get; set; } = PartyInviteReplyChannel.Tell;
-    public string DeclineInviteReplyMessage { get; set; } = "";
+    public bool AcceptPartyInvites { get; set; } = true;
+    public bool PostLookingForGroup { get; set; } = false;
+    public string LookingForGroupText { get; set; } = "LFG";
+    public bool LeavePartyAfterRide { get; set; } = true;
 
     public bool GmAlertStopRun { get; set; } = true;
     public bool GmAlertToast { get; set; } = false;

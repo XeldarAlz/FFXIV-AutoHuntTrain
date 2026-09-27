@@ -13,8 +13,8 @@ internal static partial class L
         public static readonly LocString CatRepairSub = new("safety.cat.repairSub", "Auto-repair gear when equipped item condition drops below the threshold.");
         public static readonly LocString CatConsumables = new("safety.cat.consumables", "Consumables");
         public static readonly LocString CatConsumablesSub = new("safety.cat.consumablesSub", "Keep food and medicine buffs up while hunting: Well Fed is a free +3% EXP.");
-        public static readonly LocString CatPartyInvites = new("safety.cat.partyInvites", "Party invites");
-        public static readonly LocString CatPartyInvitesSub = new("safety.cat.partyInvitesSub", "Auto-decline incoming party invites during a run, after a human-like delay, with an optional reply.");
+        public static readonly LocString CatParty = new("safety.cat.partyInvites", "Party");
+        public static readonly LocString CatPartySub = new("safety.cat.partyInvitesSub", "On a train, party members share the credit on a mark. Join the parties the crowd offers, find one with a shout, and leave it once the ride is over.");
         public static readonly LocString CatGmAlert = new("safety.cat.gmAlert", "GM alert");
         public static readonly LocString CatGmAlertSub = new("safety.cat.gmAlertSub", "Detects nearby Game Masters and reacts: stop the bot, ping you, or take more drastic action.");
 
@@ -68,26 +68,15 @@ internal static partial class L
         public static readonly LocString MinutesFormat = new("safety.minutesFormat", "%d min");
         public static readonly LocString SecondsFormat = new("safety.secondsFormat", "%d s");
 
-        public static readonly LocString InvitesDecline = new("safety.invites.decline", "Decline");
-        public static readonly LocString AutoDecline = new("safety.invites.autoDecline", "Auto-decline party invites");
-        public static readonly LocString AutoDeclineHelp = new("safety.invites.autoDeclineHelp", "While a hunt is running, automatically decline incoming party invites after a short random delay. Invites that arrive while idle or playing manually are left alone for you to handle.");
-        public static readonly LocString AutoDeclineOff = new("safety.invites.autoDeclineOff", "Auto-decline is off. Enable it to configure it.");
-        public static readonly LocString DeclineDelay = new("safety.invites.delay", "Decline delay");
-        public static readonly LocString DeclineDelayHelp = new("safety.invites.delayHelp", "Wait a random time in this range before declining, so it looks like you noticed the popup and dismissed it yourself.");
-        public static readonly LocString InvitesReply = new("safety.invites.reply", "Reply");
-        public static readonly LocString SendReply = new("safety.invites.sendReply", "Send a reply");
-        public static readonly LocString SendReplyHelp = new("safety.invites.sendReplyHelp", "After declining, send a chat message so it reads like a polite human brush-off rather than an instant silent decline.");
-        public static readonly LocString ReplyChannel = new("safety.invites.channel", "Reply channel");
-        public static readonly LocString ReplyChannelHelp = new("safety.invites.channelHelp", "Where the message goes. \"Tell inviter\" whispers the person who invited you. Ignored when your message starts with a slash command.");
-        public static readonly LocString ChannelTellName = new("safety.invites.channelTell.name", "Tell inviter");
-        public static readonly LocString ChannelTellDetail = new("safety.invites.channelTell.detail", "Whisper the person who invited you.");
-        public static readonly LocString ChannelSayName = new("safety.invites.channelSay.name", "Say");
-        public static readonly LocString ChannelSayDetail = new("safety.invites.channelSay.detail", "Local /say, heard by players near you.");
-        public static readonly LocString ChannelYellName = new("safety.invites.channelYell.name", "Yell");
-        public static readonly LocString ChannelYellDetail = new("safety.invites.channelYell.detail", "Zone-wide /yell.");
-        public static readonly LocString ReplyMessage = new("safety.invites.message", "Reply message");
-        public static readonly LocString ReplyMessageHelp = new("safety.invites.messageHelp", "Use {name} for the inviter's character name and {world} for their home world. If the message begins with \"/\", it's sent verbatim as a command (e.g. /tell {name}@{world} busy right now!).");
-        public static readonly LocString ReplyMessageHint = new("safety.invites.messageHint", "Sorry {name}, I'm busy right now!");
+        public static readonly LocString PartyGroup = new("safety.party.group", "Train party");
+        public static readonly LocString AcceptInvites = new("safety.party.accept", "Accept party invites");
+        public static readonly LocString AcceptInvitesHelp = new("safety.party.acceptHelp", "While a ride is running, accept party invites on their own. Nothing is accepted while you are already in a party, while the ride is paused, or while a data center transfer is pending, and invites outside a ride are left to you.");
+        public static readonly LocString LookingForGroup = new("safety.party.lfg", "Post looking for group");
+        public static readonly LocString LookingForGroupHelp = new("safety.party.lfgHelp", "Once per ride, after arriving at the train's start and while not in a party, send one line in Shout asking for a party.");
+        public static readonly LocString LookingForGroupText = new("safety.party.lfgText", "Shout text");
+        public static readonly LocString LookingForGroupTextHelp = new("safety.party.lfgTextHelp", "The line sent in Shout. Keep it short; an empty text sends nothing.");
+        public static readonly LocString LeaveParty = new("safety.party.leave", "Leave the party after the ride");
+        public static readonly LocString LeavePartyHelp = new("safety.party.leaveHelp", "When a ride ends on its own, leave the party before the way home. A party you were in before the ride started is kept. Before a data center transfer the party is always left, since the game refuses the transfer otherwise.");
 
         public static readonly LocString GmAlerts = new("safety.gm.alerts", "Alerts");
         public static readonly LocString GmStopRun = new("safety.gm.stopRun", "Stop the run");

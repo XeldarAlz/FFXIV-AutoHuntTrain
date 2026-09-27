@@ -38,7 +38,7 @@ Hears a hunt train being called anywhere in your region, gets your character to 
 - **Auto-repair**: Dark Matter first, Grand Company mender as fallback.
 - **Auto-consume**: keeps food and medicine buffs up between trains, HQ first.
 - **Pause & resume**: park a ride without losing your progress, and auto-pause while you're in a duty.
-- **Party invites**: auto-declines incoming invites during a ride after a random delay, with an optional reply message.
+- **Train party**: accepts party invites during a ride so the party shares mark credit, can shout for a group at the start, and leaves the party when the ride is over.
 - **GM alert**: stops the bot when a GM is near, with optional toast, beeps, or custom commands.
 - **History**: every train recorded with world, data center, marks credited, time on the rails, and seals earned.
 

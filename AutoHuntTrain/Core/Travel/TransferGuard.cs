@@ -1,10 +1,11 @@
+using AutoHuntTrain.Core.Game.Ops;
 using Dalamud.Game.ClientState.Conditions;
 using ECommons.DalamudServices;
 
 namespace AutoHuntTrain.Core.Travel;
 
-// What keeps a character from a data center transfer it should not make on its own: company it would leave behind,
-// or a window it would tear down mid use. A reason reads as the end of "the transfer was not started: ...".
+// What keeps a character from a data center transfer: a party, which the game refuses to carry across, or a window
+// the transfer would tear down mid use. A reason reads as the end of "the transfer was not started: ...".
 internal static class TransferGuard
 {
     private static readonly string[] blockingAddons =
@@ -21,7 +22,7 @@ internal static class TransferGuard
 
     public static string? Blocker()
     {
-        if (Svc.Party.Length > 1 || Svc.Condition[ConditionFlag.ParticipatingInCrossWorldPartyOrAlliance])
+        if (PartyOps.InParty())
         {
             return "the character is in a party";
         }

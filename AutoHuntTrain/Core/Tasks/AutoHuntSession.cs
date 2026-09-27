@@ -23,6 +23,15 @@ public sealed class AutoHuntSession
 
     internal bool CrossedDataCenter;
 
+    // Set from the moment a data center transfer is cleared to start until the journey is over; the game would refuse
+    // the transfer with a party joined meanwhile.
+    internal bool DataCenterTransferPending;
+
+    // Whether the character was in a party when the ride started: that party is the player's own and is not left.
+    internal bool InPartyAtStart;
+
+    internal bool LookingForGroupPosted;
+
     // Null until the ride decides how it ended; a ride cut by the relog of a transfer never decides.
     internal RideOutcome? Outcome;
 

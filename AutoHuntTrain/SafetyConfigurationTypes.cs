@@ -7,13 +7,6 @@ public enum RepairMode
     NpcOnly,
 }
 
-public enum PartyInviteReplyChannel
-{
-    Tell,
-    Say,
-    Yell,
-}
-
 // Coordinates are scalars so the configuration serializes without a vector converter.
 public sealed class RepairNpc
 {

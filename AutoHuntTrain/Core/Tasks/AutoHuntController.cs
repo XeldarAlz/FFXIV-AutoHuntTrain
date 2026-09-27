@@ -1,5 +1,6 @@
 using AutoHuntTrain.Core.External;
 using AutoHuntTrain.Core.Feed;
+using AutoHuntTrain.Core.Game.Ops;
 using AutoHuntTrain.Core.Ipc;
 using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Train;
@@ -29,6 +30,14 @@ internal sealed partial class AutoHuntController
     };
 
     public HuntPhase Phase => progress.Phase;
+
+    // A ride under way takes a party, since party members share the credit on a mark; the chain after it, a pause and a
+    // data center transfer do not, because the game refuses the transfer to a party member.
+    public bool OpenToParty
+        => session is { DataCenterTransferPending: false }
+        && !Paused
+        && Svc.Automation.Running
+        && progress.Phase is not (HuntPhase.Idle or HuntPhase.Finishing);
 
     public RideProgress Progress => progress;
 
@@ -219,6 +228,7 @@ internal sealed partial class AutoHuntController
         PauseReason = PauseReason.None;
         ResetFaultBudget();
         session = newSession;
+        newSession.InPartyAtStart = PartyOps.InParty();
         rideTaskFactory = taskFactory;
         Diag($"Run starting: {plan}, job {newSession.JobAbbreviation}.");
         RunRide(newSession);

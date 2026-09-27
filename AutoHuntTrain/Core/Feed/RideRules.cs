@@ -15,7 +15,6 @@ internal enum RideVerdict : byte
     TooSoon,
     TooLate,
     InDuty,
-    InParty,
     LifestreamBusy,
     RideRunning,
     Snoozed,
@@ -95,11 +94,6 @@ internal static class RideRules
         if (InDuty())
         {
             return RideVerdict.InDuty;
-        }
-
-        if (Svc.Party.Length > 1)
-        {
-            return RideVerdict.InParty;
         }
 
         if (LifestreamIPC.Instance.IsBusy())
@@ -182,7 +176,6 @@ internal static class RideRules
         RideVerdict.TooSoon => "it starts sooner than the lead time a data center transfer needs",
         RideVerdict.TooLate => "it started too long ago to be worth the trip",
         RideVerdict.InDuty => "the character is in a duty or a duty queue",
-        RideVerdict.InParty => "the character is in a party",
         RideVerdict.LifestreamBusy => "Lifestream is busy",
         RideVerdict.RideRunning => "a ride is already running",
         RideVerdict.Snoozed => "auto-ride is snoozed",

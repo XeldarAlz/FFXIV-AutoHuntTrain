@@ -33,7 +33,6 @@ internal static partial class L
         public static readonly LocString VerdictTooSoon = new("feed.verdict.tooSoon", "Starts sooner than the lead time a data center transfer needs");
         public static readonly LocString VerdictTooLate = new("feed.verdict.tooLate", "Started too long ago to be worth the trip");
         public static readonly LocString VerdictInDuty = new("feed.verdict.inDuty", "Leave the duty or its queue first");
-        public static readonly LocString VerdictInParty = new("feed.verdict.inParty", "Leave the party first");
         public static readonly LocString VerdictLifestreamBusy = new("feed.verdict.lifestreamBusy", "Lifestream is busy with something else");
         public static readonly LocString VerdictRideRunning = new("feed.verdict.rideRunning", "A ride is already running");
         public static readonly LocString VerdictSnoozed = new("feed.verdict.snoozed", "Auto-ride is snoozed");

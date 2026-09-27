@@ -1,4 +1,5 @@
 using AutoHuntTrain.Core.Feed;
+using AutoHuntTrain.Core.Game.Ops;
 using AutoHuntTrain.Core.Marks;
 using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Train;
@@ -79,9 +80,14 @@ internal sealed class AutoRide : AutoCommon
         try
         {
             AdoptConductor();
-            if (announcement is { } plan && !await TravelToAnnouncement(plan))
+            if (announcement is { } plan)
             {
-                return;
+                if (!await TravelToAnnouncement(plan))
+                {
+                    return;
+                }
+
+                PostLookingForGroup();
             }
 
             PublishCredits();
@@ -186,7 +192,16 @@ internal sealed class AutoRide : AutoCommon
         progress.SetRidePhase(RidePhase.Journey);
         Diag($"Ride: {(resumed ? "resuming the journey" : "travelling")} to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}), {LeadText(plan)}");
         var journey = JourneyPlan.ToWorld(plan.World.Name, plan.AetheryteId, plan.TerritoryId, plan.NamesAetheryte ? plan.Instance : 0);
-        var outcome = await TravelToWorld(journey, resumed, plan.StartAtUtc + TrainDuration);
+        JourneyOutcome outcome;
+        try
+        {
+            outcome = await TravelToWorld(journey, resumed, plan.StartAtUtc + TrainDuration);
+        }
+        finally
+        {
+            session.DataCenterTransferPending = false;
+        }
+
         if (CancelToken.IsCancellationRequested)
         {
             NoteJourneyCut(plan, group);
@@ -263,8 +278,19 @@ internal sealed class AutoRide : AutoCommon
 
     // A visited data center has no Grand Company mender for the character and its food may run out there, so the
     // upkeep runs once before leaving, and only when nothing the character is doing would be torn down by the relog.
+    // The game refuses the transfer to a party member, so a party is left first rather than ending the ride.
     private protected override async Task<bool> PrepareDataCenterTransfer(WorldInfo target, string label)
     {
+        if (PartyOps.InParty())
+        {
+            Diag($"{label}: in a party before the data center transfer to {target.Name}; leaving it, since the game refuses the transfer otherwise");
+            await LeaveParty($"{label}-leave-party");
+            if (CancelToken.IsCancellationRequested)
+            {
+                return false;
+            }
+        }
+
         if (TransferGuard.Blocker() is { } reason)
         {
             Warn($"{label}: the data center transfer to {target.Name} was not started: {reason}; the ride ends");
@@ -272,6 +298,7 @@ internal sealed class AutoRide : AutoCommon
             return false;
         }
 
+        session.DataCenterTransferPending = true;
         Diag($"{label}: running the upkeep before the data center transfer to {target.Name}");
         await RunUpkeep();
         return !CancelToken.IsCancellationRequested;
@@ -287,6 +314,29 @@ internal sealed class AutoRide : AutoCommon
 
         Plugin.Instance.Configuration.SetPendingRide(PendingRide.From(plan, session));
         Diag($"Ride: saved the {ExpansionGroups.Name(plan.Group)} train on {plan.World.Name} for the login after the transfer");
+    }
+
+    // Once per ride, at the train's start: a train's parties share the credit on a mark, and a shout finds one.
+    private void PostLookingForGroup()
+    {
+        var configuration = Plugin.Instance.Configuration;
+        if (!configuration.PostLookingForGroup || session.LookingForGroupPosted || PartyOps.InParty())
+        {
+            return;
+        }
+
+        session.LookingForGroupPosted = true;
+        var text = (configuration.LookingForGroupText ?? string.Empty).Trim();
+        if (text.Length == 0)
+        {
+            Diag("Ride: the looking-for-group text is empty; nothing posted");
+            return;
+        }
+
+        if (PartyOps.Shout(text))
+        {
+            Diag($"Ride: posted \"{text}\" in Shout to find a party");
+        }
     }
 
     // The idle limit counts from the announced start, so a train reached early is not given up before it begins.

@@ -1,4 +1,5 @@
 using AutoHuntTrain.Core.Feed;
+using AutoHuntTrain.Core.Game.Ops;
 using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Travel;
 
@@ -80,8 +81,9 @@ internal sealed partial class AutoHuntController
         }
     }
 
-    // One ordered chain once a ride ends on its own: the way home, then the after-run action. A Stop or a fault runs
-    // neither. The finished run stays on screen while the chain runs, and is cleared once it ends.
+    // One ordered chain once a ride ends on its own: leaving the train's party, the way home, then the after-run action.
+    // A Stop or a fault runs none of them. The finished run stays on screen while the chain runs, and is cleared once it
+    // ends.
     private bool TryRunAfterAction(AutoHuntSession ending)
     {
         if (ending.AfterActionDispatched)
@@ -102,37 +104,62 @@ internal sealed partial class AutoHuntController
             return false;
         }
 
-        if (StaysForNextTrain())
-        {
-            return false;
-        }
-
-        var action = AfterActionFor(ending);
-        var wayHome = WayHomeDue();
-        if (!wayHome && action is null)
+        var leaveParty = LeavePartyDue(ending);
+        var stays = StaysForNextTrain();
+        var action = stays ? null : AfterActionFor(ending);
+        var wayHome = !stays && WayHomeDue();
+        if (!leaveParty && !wayHome && action is null)
         {
             return false;
         }
 
         progress.SetPhase(HuntPhase.Finishing);
-        if (!wayHome)
+        RunChain(leaveParty, wayHome, action);
+        return true;
+    }
+
+    private void RunChain(bool leaveParty, bool wayHome, AfterRunAction? action)
+    {
+        if (leaveParty)
         {
-            RunAfterAction(action!.Value);
-            return true;
+            RunTask(new AutoLeaveParty(), () => RunChain(leaveParty: false, wayHome, action));
+            return;
         }
 
-        Diag(action is { } then ? $"Run completed; taking the way home, then after-run action {then}." : "Run completed; taking the way home.");
-        RunTask(new AutoWayHome(), () =>
+        if (wayHome)
         {
-            Diag("The way home finished.");
-            if (action is { } next)
+            Diag(action is { } then ? $"Run completed; taking the way home, then after-run action {then}." : "Run completed; taking the way home.");
+            RunTask(new AutoWayHome(), () =>
             {
-                RunAfterAction(next);
-                return;
-            }
+                Diag("The way home finished.");
+                RunChain(leaveParty: false, wayHome: false, action);
+            });
+            return;
+        }
 
-            ClearRun();
-        });
+        if (action is { } next)
+        {
+            RunAfterAction(next);
+            return;
+        }
+
+        ClearRun();
+    }
+
+    // Only a party joined during the ride belongs to the train; one the character was in before it is the player's own.
+    private static bool LeavePartyDue(AutoHuntSession ending)
+    {
+        if (!Plugin.Instance.Configuration.LeavePartyAfterRide || !PartyOps.InParty())
+        {
+            return false;
+        }
+
+        if (ending.InPartyAtStart)
+        {
+            Diag("The ride is over; the party the character was in before it started is kept.");
+            return false;
+        }
+
         return true;
     }
 
