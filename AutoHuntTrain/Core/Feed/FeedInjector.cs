@@ -97,7 +97,11 @@ internal static class FeedInjector
         var now = DateTimeOffset.UtcNow;
         var startAt = now.AddMinutes(minutes);
         var conductorText = conductor.Length > 0 ? $" (Conductor: [{world.Name}] {conductor})" : string.Empty;
-        var text = $"**[{world.Name}]** Hunt train starting <t:{startAt.ToUnixTimeSeconds()}:R>{place}{conductorText}.";
+        // Shaped like the text HuntAlerts relays: a header with the post time, then the announcement with its Discord
+        // timestamp already turned into a local clock time.
+        var newLine = Environment.NewLine;
+        var body = $"**[{world.Name}]** Hunt train starting {ClockText(startAt)}{place}{conductorText}.";
+        var text = $"Kind: Hunt Train{newLine}Hunt: {ExpansionGroups.Name(group)}{newLine}World: {world.Name}{newLine}Posted: {ClockText(now)}{newLine}{newLine}{body}";
         var currentWorldId = Worlds.TryCurrent(out var current) ? current.Id : 0u;
         var message = new HuntAlertMessage(text, TrainType, ExpansionGroups.Name(group), world.Id, currentWorldId, 0, 0, now, now.ToUnixTimeSeconds(), aetheryteId, territoryId, instance, null, null);
 
@@ -106,6 +110,9 @@ internal static class FeedInjector
         Svc.Chat.Print($"{AhtConstants.LogPrefix} Injected a {ExpansionGroups.Name(group)} train on {world.Name} starting in {minutes} min{place}{instanceText}{conductorNote}.");
         feed.Accept(message);
     }
+
+    private static string ClockText(DateTimeOffset time)
+        => time.ToLocalTime().ToString("hh:mm tt", CultureInfo.GetCultureInfo("en-US"));
 
     // "+5" or "-2": minutes from now, negative for a train that already started.
     private static bool TryParseLead(string token, out int minutes)

@@ -19,6 +19,12 @@ internal static class AnnouncementText
     // A character name is two words of at most fifteen letters each.
     private const int NameWordMaxLength = 15;
     private const int EmojiNameMaxLength = 32;
+    private const string PostedLabel = "Posted:";
+    private const char LineBreak = '\n';
+    // HuntAlerts relays every Discord timestamp as this PC's local clock time in the form "07:45 PM", eight characters.
+    private const int ClockLength = 8;
+    private const int HoursPerHalfDay = 12;
+    private const int MinutesPerHour = 60;
 
     // A start outside the game's lifetime is a mangled tag, not a train.
     private static readonly long EarliestEpoch = new DateTimeOffset(2013, 1, 1, 0, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds();
@@ -51,6 +57,120 @@ internal static class AnnouncementText
         }
 
         return false;
+    }
+
+    // The first "hh:mm AM" or "hh:mm PM" outside the "Posted:" line, read on the day nearest the post: HuntAlerts turns
+    // every Discord timestamp into exactly that before relaying the text, so the tag above is usually gone.
+    public static bool TryReadClockTime(string text, DateTime postedAtUtc, out DateTime startAtUtc)
+    {
+        startAtUtc = default;
+        var lineStart = 0;
+        while (lineStart < text.Length)
+        {
+            var lineEnd = text.IndexOf(LineBreak, lineStart);
+            if (lineEnd < 0)
+            {
+                lineEnd = text.Length;
+            }
+
+            if (!StartsWithLabel(text, lineStart, lineEnd, PostedLabel) && TryFindClock(text, lineStart, lineEnd, out var hour, out var minute))
+            {
+                startAtUtc = NearestLocalTime(hour, minute, postedAtUtc);
+                return true;
+            }
+
+            lineStart = lineEnd + 1;
+        }
+
+        return false;
+    }
+
+    private static bool StartsWithLabel(string text, int start, int end, string label)
+    {
+        var index = start;
+        while (index < end && char.IsWhiteSpace(text[index]))
+        {
+            index++;
+        }
+
+        return end - index >= label.Length && string.Compare(text, index, label, 0, label.Length, StringComparison.OrdinalIgnoreCase) == 0;
+    }
+
+    private static bool TryFindClock(string text, int start, int end, out int hour, out int minute)
+    {
+        for (var index = start; index + ClockLength <= end; index++)
+        {
+            if (index > start && char.IsLetterOrDigit(text[index - 1]))
+            {
+                continue;
+            }
+
+            if (index + ClockLength < end && char.IsLetterOrDigit(text[index + ClockLength]))
+            {
+                continue;
+            }
+
+            if (TryReadClockAt(text, index, out hour, out minute))
+            {
+                return true;
+            }
+        }
+
+        hour = 0;
+        minute = 0;
+        return false;
+    }
+
+    private static bool TryReadClockAt(string text, int index, out int hour, out int minute)
+    {
+        hour = 0;
+        minute = 0;
+        if (!char.IsAsciiDigit(text[index]) || !char.IsAsciiDigit(text[index + 1]) || text[index + 2] != Colon
+            || !char.IsAsciiDigit(text[index + 3]) || !char.IsAsciiDigit(text[index + 4]) || text[index + 5] != ' '
+            || char.ToUpperInvariant(text[index + 7]) != 'M')
+        {
+            return false;
+        }
+
+        var meridiem = char.ToUpperInvariant(text[index + 6]);
+        if (meridiem != 'A' && meridiem != 'P')
+        {
+            return false;
+        }
+
+        var twelveHour = (text[index] - '0') * 10 + (text[index + 1] - '0');
+        minute = (text[index + 3] - '0') * 10 + (text[index + 4] - '0');
+        if (twelveHour is < 1 or > HoursPerHalfDay || minute >= MinutesPerHour)
+        {
+            return false;
+        }
+
+        hour = twelveHour % HoursPerHalfDay + (meridiem == 'P' ? HoursPerHalfDay : 0);
+        return true;
+    }
+
+    // A clock time carries no date; the train starts on whichever day puts it nearest the post, so a train posted at
+    // 23:50 for 00:10 lands on the next day.
+    private static DateTime NearestLocalTime(int hour, int minute, DateTime postedAtUtc)
+    {
+        var postedDate = postedAtUtc.ToLocalTime().Date;
+        var best = postedAtUtc;
+        var bestGap = TimeSpan.MaxValue;
+        for (var dayOffset = -1; dayOffset <= 1; dayOffset++)
+        {
+            var local = DateTime.SpecifyKind(postedDate.AddDays(dayOffset).AddHours(hour).AddMinutes(minute), DateTimeKind.Local);
+            var candidate = local.ToUniversalTime();
+            var gap = (candidate - postedAtUtc).Duration();
+            if (gap >= bestGap)
+            {
+                continue;
+            }
+
+            bestGap = gap;
+            best = candidate;
+        }
+
+        return best;
     }
 
     // "Conductor: First Last" or "Conductor: [World] First Last"; the world is empty when the text named none.

@@ -155,7 +155,10 @@ internal sealed class FeedListener : IDisposable
             return false;
         }
 
-        var startAt = AnnouncementText.TryReadStartTime(text, out var announced) ? announced : PostedAt(message, now);
+        var postedAt = PostedAt(message, now);
+        var startAt = AnnouncementText.TryReadStartTime(text, out var announced) ? announced
+            : AnnouncementText.TryReadClockTime(text, postedAt, out var clock) ? clock
+            : postedAt;
         if (startAt - now > MaxLead || now - startAt > MaxAge)
         {
             problem = $"the start time {startAt:yyyy-MM-dd HH:mm:ss}Z is out of range";
