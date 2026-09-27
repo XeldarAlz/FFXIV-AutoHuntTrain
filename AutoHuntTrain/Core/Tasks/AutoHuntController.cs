@@ -93,6 +93,7 @@ internal sealed partial class AutoHuntController
             DataCenterName = world.DataCenterName,
             Expansion = ExpansionGroups.ToExpansionKind(announcement.Group) ?? (announcement.NamesTerritory ? AutoRide.ExpansionOf(announcement.TerritoryId) : null),
         };
+        lastRiddenAnnouncementId = announcement.Id;
         BeginRun(newSession, owning => new AutoRide(owning, progress, Plugin.Instance.Flags, announcement), $"riding the {group} train on {world.Name} ({world.DataCenterName}) starting {announcement.StartAtUtc:HH:mm}Z");
         ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Riding the {group} train on {world.Name}; travelling to {StartText(announcement)}.");
         return true;
@@ -137,12 +138,13 @@ internal sealed partial class AutoHuntController
     // Resume makes the game state its new zero point.
     public void Tick()
     {
+        var now = Environment.TickCount64;
+        TickAutoRide(now);
         if (session is null || session.Recorded || Paused)
         {
             return;
         }
 
-        var now = Environment.TickCount64;
         if (now < nextSessionSampleAtMs)
         {
             return;
