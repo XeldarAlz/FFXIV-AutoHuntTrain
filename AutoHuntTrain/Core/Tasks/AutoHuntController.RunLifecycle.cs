@@ -14,6 +14,11 @@ internal sealed partial class AutoHuntController
 
     private void OnRideEnded(AutoHuntSession owningSession)
     {
+        if (CutByRelog(owningSession))
+        {
+            return;
+        }
+
         var faulted = ReferenceEquals(session, owningSession) && owningSession.EndedWithFault;
         if (faulted && !owningSession.CompletedByStopCondition && TryAutoResumeAfterFault(owningSession))
         {
@@ -28,8 +33,34 @@ internal sealed partial class AutoHuntController
         EndRun(owningSession);
     }
 
+    // A ride that ended without deciding how, while the character is logged out with a ride saved for the login, was
+    // taken down by the transfer's relog. It is neither recorded nor cleared: the login rebuilds it with its start and
+    // its credits, and the rebuilt ride is recorded once, as the same ride.
+    private bool CutByRelog(AutoHuntSession owningSession)
+    {
+        if (!ReferenceEquals(session, owningSession)
+            || owningSession.Outcome is not null
+            || owningSession.EndedWithFault
+            || ECommons.DalamudServices.Svc.ClientState.IsLoggedIn
+            || Plugin.Instance.Configuration.PendingRide is null)
+        {
+            return false;
+        }
+
+        owningSession.Recorded = true;
+        ReleaseHelpers();
+        ClearRun();
+        Diag("The ride task ended while logged out for the data center transfer; the saved ride is picked up at login.");
+        return true;
+    }
+
     private void EndRun(AutoHuntSession owningSession)
     {
+        if (ReferenceEquals(session, owningSession))
+        {
+            Plugin.Instance.Configuration.ClearPendingRide();
+        }
+
         FinalizeRun(owningSession, sample: true);
         if (!ReferenceEquals(session, owningSession))
         {

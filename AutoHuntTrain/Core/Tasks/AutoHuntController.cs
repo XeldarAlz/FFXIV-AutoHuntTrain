@@ -1,6 +1,7 @@
 using AutoHuntTrain.Core.External;
 using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Ipc;
+using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Train;
 using AutoHuntTrain.Core.Travel;
 using clib.Services;
@@ -87,16 +88,59 @@ internal sealed partial class AutoHuntController
             return false;
         }
 
-        var newSession = new AutoHuntSession
+        RideAnnouncement(announcement, NewRideSession(announcement), "riding");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Riding the {group} train on {world.Name}; travelling to {StartText(announcement)}.");
+        return true;
+    }
+
+    // A ride rebuilt at login after the data center transfer's relog: the rules are not asked again, because the ride
+    // was committed to before the transfer and Lifestream is expected to be busy with it still.
+    public bool ResumeRide(in PendingRide pending)
+    {
+        if (Running)
+        {
+            Diag($"Resume of the ride to {pending.WorldName} ignored: a task is already running.");
+            return false;
+        }
+
+        if (!RequiredPluginsReady())
+        {
+            return false;
+        }
+
+        if (!pending.TryToAnnouncement(out var announcement))
+        {
+            Diag($"Resume of the ride to {pending.WorldName} refused: world {pending.WorldId} is not one this client knows.");
+            return false;
+        }
+
+        var resumed = NewRideSession(announcement);
+        resumed.Restore(pending.SessionStartedAtUtc, pending.MarksCredited);
+        resumed.ArrivedAtTrain = pending.ArrivedAtTrain;
+        resumed.CrossedDataCenter = true;
+        resumed.ResumeJourney = true;
+        RideAnnouncement(announcement, resumed, "resuming after the data center transfer");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Picking the {ExpansionGroups.Name(announcement.Group)} train on {announcement.World.Name} back up after the data center transfer.");
+        return true;
+    }
+
+    private static AutoHuntSession NewRideSession(in Announcement announcement)
+    {
+        var world = announcement.World;
+        return new AutoHuntSession
         {
             WorldName = world.Name,
             DataCenterName = world.DataCenterName,
+            Group = announcement.Group,
             Expansion = ExpansionGroups.ToExpansionKind(announcement.Group) ?? (announcement.NamesTerritory ? AutoRide.ExpansionOf(announcement.TerritoryId) : null),
         };
+    }
+
+    private void RideAnnouncement(Announcement announcement, AutoHuntSession newSession, string verb)
+    {
+        var world = announcement.World;
         lastRiddenAnnouncementId = announcement.Id;
-        BeginRun(newSession, owning => new AutoRide(owning, progress, Plugin.Instance.Flags, announcement), $"riding the {group} train on {world.Name} ({world.DataCenterName}) starting {announcement.StartAtUtc:HH:mm}Z");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Riding the {group} train on {world.Name}; travelling to {StartText(announcement)}.");
-        return true;
+        BeginRun(newSession, owning => new AutoRide(owning, progress, Plugin.Instance.Flags, announcement), $"{verb} the {ExpansionGroups.Name(announcement.Group)} train on {world.Name} ({world.DataCenterName}) starting {announcement.StartAtUtc:HH:mm}Z");
     }
 
     private static string StartText(in Announcement announcement)
@@ -119,7 +163,9 @@ internal sealed partial class AutoHuntController
         Svc.Automation.Stop();
         if (ending is not null)
         {
+            ending.Outcome ??= RideOutcome.Stopped;
             ReleaseHelpers();
+            AbandonTravel();
         }
 
         // Pause already credited the run, and anything done since was the player's own play.
@@ -186,6 +232,23 @@ internal sealed partial class AutoHuntController
     }
 
     private bool CanRestart() => rideTaskFactory is not null;
+
+    // A stopped ride is over for good: neither record may bring it back at the next login, and a transfer Lifestream
+    // still has in hand would otherwise carry the character off after the Stop.
+    private static void AbandonTravel()
+    {
+        var configuration = Plugin.Instance.Configuration;
+        configuration.ClearPendingRide();
+        configuration.ClearPendingJourney();
+        var lifestream = LifestreamIPC.Instance;
+        if (!lifestream.IsBusy())
+        {
+            return;
+        }
+
+        lifestream.Abort();
+        Diag("Stop: Lifestream was busy and its travel was aborted with the ride.");
+    }
 
     // The movement library fires OnCompleted off the game thread: its await of the task does not return to the framework
     // scheduler, and the runtime moves the continuation to the thread pool. Recording a run reads the object table, which

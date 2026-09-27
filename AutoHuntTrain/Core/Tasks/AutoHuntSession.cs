@@ -1,4 +1,6 @@
+using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Marks;
+using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Train;
 using ECommons.DalamudServices;
 using System.Threading;
@@ -16,6 +18,14 @@ public sealed class AutoHuntSession
 
     internal ConductorSource ConductorSource;
 
+    // Set on a ride rebuilt at login, so its first journey waits on the transfer in flight instead of asking again.
+    internal bool ResumeJourney;
+
+    internal bool CrossedDataCenter;
+
+    // Null until the ride decides how it ended; a ride cut by the relog of a transfer never decides.
+    internal RideOutcome? Outcome;
+
     private HuntWallet lastWallet;
     private bool walletKnown;
 
@@ -29,7 +39,7 @@ public sealed class AutoHuntSession
         Rebaseline();
     }
 
-    public DateTime StartedAt { get; } = DateTime.UtcNow;
+    public DateTime StartedAt { get; private set; } = DateTime.UtcNow;
 
     public string JobAbbreviation { get; private set; }
 
@@ -39,6 +49,8 @@ public sealed class AutoHuntSession
     public string DataCenterName { get; internal set; } = string.Empty;
 
     public ExpansionKind? Expansion { get; internal set; }
+
+    public ExpansionGroup? Group { get; internal set; }
 
     public int MarksCredited { get; private set; }
 
@@ -67,6 +79,13 @@ public sealed class AutoHuntSession
         => pausedMs + (pauseStartedAtMs == 0 ? 0 : Environment.TickCount64 - pauseStartedAtMs);
 
     internal void CreditMark() => MarksCredited++;
+
+    // A ride rebuilt after the relog is the same ride: it keeps the clock and the credits from before the transfer.
+    internal void Restore(DateTime startedAtUtc, int marksCredited)
+    {
+        StartedAt = startedAtUtc;
+        MarksCredited = marksCredited;
+    }
 
     public void Sample()
     {

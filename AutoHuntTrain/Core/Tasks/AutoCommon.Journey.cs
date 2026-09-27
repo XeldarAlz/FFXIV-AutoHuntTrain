@@ -193,6 +193,7 @@ public abstract partial class AutoCommon
         {
             // Written before the request, because Lifestream logs the character out to make the transfer.
             Plugin.Instance.Configuration.SetPendingJourney(plan);
+            OnDataCenterTransferRequested();
         }
 
         Status = crossDataCenter ? $"Travelling to {target.Name} on {target.DataCenterName}" : $"Changing world to {target.Name}";
@@ -220,6 +221,11 @@ public abstract partial class AutoCommon
         }
 
         return false;
+    }
+
+    // A ride persists itself here, next to the journey's plan, so a login can rebuild the ride and not just the trip.
+    private protected virtual void OnDataCenterTransferRequested()
+    {
     }
 
     private static bool HopStarted(uint targetWorldId)

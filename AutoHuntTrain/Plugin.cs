@@ -32,6 +32,7 @@ public sealed class Plugin : IDalamudPlugin
     private const string NavmeshIpcProviderMarker = "Navmesh.IPCProvider";
     // Lifestream's own budget for a data center transfer is up to an hour; a plan older than this is a leftover, not a journey in flight.
     private static readonly TimeSpan PendingJourneyMaxAge = TimeSpan.FromMinutes(90);
+    private static readonly TimeSpan PendingRideMaxAge = TimeSpan.FromMinutes(90);
 
     [PluginService]
     internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
@@ -277,7 +278,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnLogin()
     {
-        ResumePendingJourney();
+        ResumePendingTravel();
         if (!Configuration.AutoShowOnLogin)
         {
             return;
@@ -286,18 +287,66 @@ public sealed class Plugin : IDalamudPlugin
         appWindow.Show(AppWindow.Page.Train);
     }
 
-    // A data center transfer logs the character out; when the journey task did not live through that, the plan it
-    // wrote first picks the journey up here. A task that did live through it keeps the journey for itself.
-    private void ResumePendingJourney()
+    // A data center transfer logs the character out; when the task did not live through that, what it wrote first
+    // picks it up here: the whole ride when a ride made the transfer, else the journey alone. A task that did live
+    // through it keeps the ride and the journey for itself.
+    private void ResumePendingTravel()
     {
-        if (Configuration.PendingJourney is not { } plan)
+        if (Configuration.PendingRide is null && Configuration.PendingJourney is null)
         {
             return;
         }
 
         if (Controller.Running)
         {
-            RunLog.Info($"A journey to {plan.World} is pending and a task is already running; leaving the journey to it.");
+            RunLog.Info("Travel is pending and a task is already running; leaving it to that task.");
+            return;
+        }
+
+        if (!ResumePendingRide())
+        {
+            ResumePendingJourney();
+        }
+    }
+
+    // A ride is rebuilt only while its journey is still pending: a ride saved without one had already arrived, and
+    // a relog after that is the player's own, not the transfer's.
+    private bool ResumePendingRide()
+    {
+        if (Configuration.PendingRide is not { } ride)
+        {
+            return false;
+        }
+
+        var age = DateTime.UtcNow - ride.SavedAtUtc;
+        if (age > PendingRideMaxAge)
+        {
+            RunLog.Info($"Dropping the saved ride to {ride.WorldName}: it was saved {age.TotalMinutes:F0} minutes ago.");
+            Configuration.ClearPendingRide();
+            return false;
+        }
+
+        if (Configuration.PendingJourney is not { ReturnTrip: false } plan || !string.Equals(plan.World, ride.WorldName, StringComparison.OrdinalIgnoreCase))
+        {
+            RunLog.Info($"Dropping the saved ride to {ride.WorldName}: no journey to it is pending.");
+            Configuration.ClearPendingRide();
+            return false;
+        }
+
+        RunLog.Info($"Resuming the ride to {ride.WorldName} after login.");
+        if (Controller.ResumeRide(ride))
+        {
+            return true;
+        }
+
+        Configuration.ClearPendingRide();
+        return false;
+    }
+
+    private void ResumePendingJourney()
+    {
+        if (Configuration.PendingJourney is not { } plan)
+        {
             return;
         }
 

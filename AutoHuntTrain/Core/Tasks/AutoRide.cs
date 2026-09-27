@@ -1,5 +1,6 @@
 using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Marks;
+using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Train;
 using AutoHuntTrain.Core.Travel;
 using Dalamud.Game.ClientState.Conditions;
@@ -85,6 +86,11 @@ internal sealed class AutoRide : AutoCommon
             PrimeFromRecentFlags();
             BeginWaiting();
             await FollowConductor();
+        }
+        catch (Exception exception)
+        {
+            session.RecordFault(exception, CancelToken);
+            throw;
         }
         finally
         {
@@ -173,9 +179,11 @@ internal sealed class AutoRide : AutoCommon
             return true;
         }
 
+        var resumed = session.ResumeJourney;
+        session.ResumeJourney = false;
         progress.SetRidePhase(RidePhase.Journey);
-        Diag($"Ride: travelling to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}), {LeadText(plan)}");
-        var outcome = await TravelToWorld(JourneyPlan.ToWorld(plan.World.Name, plan.AetheryteId, plan.TerritoryId, plan.NamesAetheryte ? plan.Instance : 0));
+        Diag($"Ride: {(resumed ? "resuming the journey" : "travelling")} to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}), {LeadText(plan)}");
+        var outcome = await TravelToWorld(JourneyPlan.ToWorld(plan.World.Name, plan.AetheryteId, plan.TerritoryId, plan.NamesAetheryte ? plan.Instance : 0), resumed);
         if (CancelToken.IsCancellationRequested)
         {
             NoteJourneyCut(plan, group);
@@ -184,13 +192,13 @@ internal sealed class AutoRide : AutoCommon
 
         if (outcome != JourneyOutcome.Arrived)
         {
-            Warn($"Ride: the journey to the {group} train on {plan.World.Name} ended with {outcome}; the ride ends");
-            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Could not reach the {group} train on {plan.World.Name} ({outcome}); the ride ends. The log has the details.");
+            EndOnJourney(plan, group, outcome);
             return false;
         }
 
         if (!plan.NamesAetheryte && plan.NamesTerritory && !await TravelToStartZone(plan))
         {
+            session.Outcome = RideOutcome.Abandoned;
             return false;
         }
 
@@ -223,17 +231,40 @@ internal sealed class AutoRide : AutoCommon
         return !plan.NamesInstance || await SwitchToInstance(plan.Instance, JourneyLabel);
     }
 
-    // A data center transfer logs the character out and takes the task with it; picking the ride up after the relog
-    // is not built yet, so the cut is named plainly for the log.
+    // A journey the character never left for was refused before anything moved, and it said why in chat already.
+    private void EndOnJourney(in Announcement plan, string group, JourneyOutcome outcome)
+    {
+        session.Outcome = RideOutcome.Abandoned;
+        Warn($"Ride: the journey to the {group} train on {plan.World.Name} ended with {outcome}; the ride ends");
+        if (outcome == JourneyOutcome.Refused)
+        {
+            return;
+        }
+
+        Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Could not reach the {group} train on {plan.World.Name} ({outcome}); the ride ends. The log has the details.");
+    }
+
     private void NoteJourneyCut(in Announcement plan, string group)
     {
-        if (Svc.ClientState.IsLoggedIn)
+        if (Svc.ClientState.IsLoggedIn || Plugin.Instance.Configuration.PendingRide is null)
         {
             Diag($"Ride: the journey to the {group} train on {plan.World.Name} was cancelled");
             return;
         }
 
-        Warn($"Ride: the journey to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}) was cut by the logout of the data center transfer. The ride does not pick itself up after the relog yet: the journey alone resumes at login, so start the ride again from the Train page once you are on {plan.World.Name}");
+        Warn($"Ride: the journey to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}) was cut while logged out for the data center transfer; the ride is picked up again at login");
+    }
+
+    private protected override void OnDataCenterTransferRequested()
+    {
+        session.CrossedDataCenter = true;
+        if (announcement is not { } plan)
+        {
+            return;
+        }
+
+        Plugin.Instance.Configuration.SetPendingRide(PendingRide.From(plan, session));
+        Diag($"Ride: saved the {ExpansionGroups.Name(plan.Group)} train on {plan.World.Name} for the login after the transfer");
     }
 
     // The idle limit counts from the announced start, so a train reached early is not given up before it begins.
@@ -627,6 +658,7 @@ internal sealed class AutoRide : AutoCommon
     {
         var expected = ExpectedMarks.For(expansion);
         session.CompletedByStopCondition = true;
+        session.Outcome = RideOutcome.AllCredited;
         Status = "Ride ended";
         Diag($"Ride: all {expected} A ranks of {expansion.ShortName()} credited ({session.MarksCredited} marks in all) after {progress.FlagsFollowed} flag(s); the ride ends");
         Svc.Chat.Print($"{AhtConstants.LogPrefix} All {expected} A ranks of {expansion.ShortName()} are credited; the ride ends.");
@@ -651,6 +683,7 @@ internal sealed class AutoRide : AutoCommon
         var minutes = IdleLimitMs() / TimeUnits.MillisecondsPerMinute;
         var silence = conductor.IsSet ? $"no flag from {Conductor.Describe(conductor)}" : $"no flag in {StartZoneName()}";
         session.CompletedByStopCondition = true;
+        session.Outcome = RideOutcome.ConductorQuiet;
         Status = "Ride ended";
         Diag($"Ride: {silence} for {minutes} minutes after {progress.FlagsFollowed} flag(s); the ride ends");
         Svc.Chat.Print($"{AhtConstants.LogPrefix} {char.ToUpperInvariant(silence[0])}{silence[1..]} for {minutes} minutes; the ride ends.");
