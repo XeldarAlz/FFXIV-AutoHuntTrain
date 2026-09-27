@@ -22,6 +22,11 @@ internal static partial class L
         public static readonly LocString ReachSameDataCenter = new("feed.reach.sameDataCenter", "Same data center");
         public static readonly LocString ReachCrossDataCenter = new("feed.reach.crossDataCenter", "Other data center");
         public static readonly LocString ReachOutOfRegion = new("feed.reach.outOfRegion", "Other region");
+        public static readonly LocString RegionNorthAmerica = new("feed.region.northAmerica", "NA");
+        public static readonly LocString RegionEurope = new("feed.region.europe", "EU");
+        public static readonly LocString RegionJapan = new("feed.region.japan", "JP");
+        public static readonly LocString RegionOceania = new("feed.region.oceania", "OCE");
+        public static readonly LocString RegionUnknown = new("feed.region.unknown", "??");
         public static readonly LocString Ride = new("feed.ride", "Ride");
         public static readonly LocString RideHint = new("feed.rideHint", "Travel to the start of this train and follow it");
 
@@ -49,10 +54,14 @@ internal static partial class L
         public static readonly LocString RideShadowbringers = new("feed.settings.rideShb", "Ride Shadowbringers trains");
         public static readonly LocString RideEndwalker = new("feed.settings.rideEw", "Ride Endwalker trains");
         public static readonly LocString RideDawntrail = new("feed.settings.rideDt", "Ride Dawntrail trains");
-        public static readonly LocString RideGroupHelp = new("feed.settings.rideGroupHelp", "Announced trains of this expansion group are listed and ridden. Off hides them from the Upcoming trains list and from auto-ride.");
+        public static readonly LocString RideGroupHelp = new("feed.settings.rideGroupHelp", "Announced trains of this expansion group are ridden. Off keeps them out of auto-ride and hides them from the My data centers and My region views.");
         public static readonly LocString DataCenters = new("feed.settings.dataCenters", "Allowed data centers");
-        public static readonly LocString DataCentersHelp = new("feed.settings.dataCentersHelp", "Only trains on the ticked data centers are listed and ridden. With none ticked, only your home data center counts. Trains in other regions are never listed.");
-        public static readonly LocString AllHidden = new("feed.allHidden", "Trains were announced, but none match your Feed settings: their data center or expansion is switched off.");
+        public static readonly LocString DataCentersHelp = new("feed.settings.dataCentersHelp", "Only trains on the ticked data centers are ridden, and the My data centers view lists only them. With none ticked, only your home data center counts.");
+        public static readonly LocString AllHidden = new("feed.allHidden", "Trains were announced, but none on your data centers match your Feed settings. Pick My region or Everywhere to see the others.");
+        public static readonly LocString AllHiddenRegion = new("feed.allHiddenRegion", "Trains were announced, but none in your region are of an expansion switched on in the Feed settings. Pick Everywhere to see them all.");
+        public static readonly LocString ViewMyDataCenters = new("feed.view.myDataCenters", "My data centers");
+        public static readonly LocString ViewMyRegion = new("feed.view.myRegion", "My region");
+        public static readonly LocString ViewEverywhere = new("feed.view.everywhere", "Everywhere");
         public static readonly LocString HomeMarker = new("feed.settings.home", "(home)");
         public static readonly LocString NoHomeRegion = new("feed.settings.noHomeRegion", "Log in to list the data centers of your region.");
         public static readonly LocString CrossDataCenter = new("feed.settings.crossDataCenter", "Rides to other data centers");

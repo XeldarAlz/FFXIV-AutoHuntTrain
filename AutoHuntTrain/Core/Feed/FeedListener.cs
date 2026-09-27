@@ -13,7 +13,8 @@ namespace AutoHuntTrain.Core.Feed;
 // only what checked out. Alerts may arrive off the game thread; every one is moved onto it before it touches the ring.
 internal sealed class FeedListener : IDisposable
 {
-    public const int Capacity = 16;
+    // Every region's trains are kept, so the ring holds a few hours of them; eviction favours the player's own.
+    public const int Capacity = 48;
 
     private const string EventName = "HuntAlerts.OnHuntAlertMessageReceived";
     private const string TrainType = "new_hunt";
@@ -108,14 +109,6 @@ internal sealed class FeedListener : IDisposable
         if (!TryBuild(message, out var announcement, out var problem))
         {
             RunLog.Warning($"Feed: dropped a train announcement, {problem}");
-            return;
-        }
-
-        // HuntAlerts relays every region, and a train in another region can never be reached; kept, it would only
-        // push the player's own trains out of the ring.
-        if (Worlds.TryHome(out var home) && home.Region != announcement.World.Region)
-        {
-            RunLog.Debug($"Feed: skipped a train on {announcement.World.Name}, outside the character's region");
             return;
         }
 
@@ -270,19 +263,21 @@ internal sealed class FeedListener : IDisposable
         return false;
     }
 
-    // Kept in start order; a full ring lets go of the train starting last, the least pressing one.
+    // Kept in start order. A full ring lets go of the train that matters least to the player: one in another region
+    // before one on a data center they do not ride, and the one starting last among equals.
     private bool Insert(in Announcement announcement)
     {
         if (count == Capacity)
         {
-            if (announcement.StartAtUtc >= items[count - 1].StartAtUtc)
+            var victim = EvictionCandidate();
+            if (!Outranks(announcement, items[victim]))
             {
-                RunLog.Warning($"Feed: {Capacity} trains are already listed; the {ExpansionGroups.Name(announcement.Group)} train on {announcement.World.Name} starts last and is not kept");
+                RunLog.Debug($"Feed: {Capacity} trains are already kept; the {ExpansionGroups.Name(announcement.Group)} train on {announcement.World.Name} matters least and is not kept");
                 return false;
             }
 
-            RunLog.Warning($"Feed: {Capacity} trains are already listed; the {ExpansionGroups.Name(items[count - 1].Group)} train on {items[count - 1].World.Name} starts last and makes room");
-            count--;
+            RunLog.Debug($"Feed: {Capacity} trains are already kept; the {ExpansionGroups.Name(items[victim].Group)} train on {items[victim].World.Name} matters least and makes room");
+            RemoveAt(victim);
         }
 
         var slot = count;
@@ -296,6 +291,60 @@ internal sealed class FeedListener : IDisposable
         count++;
         version++;
         return true;
+    }
+
+    private int EvictionCandidate()
+    {
+        var candidate = count - 1;
+        var candidatePriority = KeepPriorityOf(items[candidate]);
+        for (var index = count - 2; index >= 0 && candidatePriority > KeepPriority.OtherRegion; index--)
+        {
+            var priority = KeepPriorityOf(items[index]);
+            if (priority >= candidatePriority)
+            {
+                continue;
+            }
+
+            candidate = index;
+            candidatePriority = priority;
+        }
+
+        return candidate;
+    }
+
+    private static bool Outranks(in Announcement incoming, in Announcement kept)
+    {
+        var incomingPriority = KeepPriorityOf(incoming);
+        var keptPriority = KeepPriorityOf(kept);
+        return incomingPriority > keptPriority || (incomingPriority == keptPriority && incoming.StartAtUtc < kept.StartAtUtc);
+    }
+
+    // With no character logged in there is no home to measure against, and every train ranks the same.
+    private static KeepPriority KeepPriorityOf(in Announcement announcement)
+    {
+        if (!Worlds.TryHome(out var home))
+        {
+            return KeepPriority.AllowedDataCenter;
+        }
+
+        if (home.Region != announcement.World.Region)
+        {
+            return KeepPriority.OtherRegion;
+        }
+
+        return RideRules.IsAllowedDataCenter(announcement.World) ? KeepPriority.AllowedDataCenter : KeepPriority.OtherDataCenter;
+    }
+
+    private void RemoveAt(int index)
+    {
+        for (var slot = index; slot < count - 1; slot++)
+        {
+            items[slot] = items[slot + 1];
+        }
+
+        count--;
+        items[count] = default;
+        version++;
     }
 
     private void Prune(DateTime nowUtc)
@@ -326,6 +375,13 @@ internal sealed class FeedListener : IDisposable
 
         count = kept;
         version++;
+    }
+
+    private enum KeepPriority : byte
+    {
+        OtherRegion,
+        OtherDataCenter,
+        AllowedDataCenter,
     }
 
     private static string Describe(in Announcement announcement)

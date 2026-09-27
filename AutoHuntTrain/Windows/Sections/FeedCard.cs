@@ -10,9 +10,10 @@ using System.Numerics;
 
 namespace AutoHuntTrain.Windows.Sections;
 
-// The announced trains, soonest first: group, world, countdown, how far away the world is, the conductor when the
-// announcement named one, and a Ride button that says why it is off. Verdicts are refreshed a few times a second
-// rather than every frame, because each one asks Lifestream whether it is busy.
+// The announced trains the picked view shows, soonest first: group, region when it is not the player's, world,
+// countdown, how far away the world is, the conductor when the announcement named one, and a Ride button that says
+// why it is off. Verdicts are refreshed a few times a second rather than every frame, because each one asks Lifestream
+// whether it is busy.
 internal static class FeedCard
 {
     private const float PadX = 18f;
@@ -32,12 +33,14 @@ internal static class FeedCard
     private static readonly RideVerdict[] verdicts = new RideVerdict[FeedListener.Capacity];
     private static readonly Reachability[] reachabilities = new Reachability[FeedListener.Capacity];
     private static readonly bool[] listed = new bool[FeedListener.Capacity];
+    private static readonly bool[] homeRegion = new bool[FeedListener.Capacity];
 
     private static int listedCount;
 
     private static CachedText verdictTooltip;
     private static long verdictsRefreshedAtMs;
     private static int verdictsVersion = -1;
+    private static TrainListView verdictsView;
 
     public static void Draw(Plugin plugin)
     {
@@ -80,7 +83,7 @@ internal static class FeedCard
         ImGui.Dummy(new Vector2(width, end.Y - origin.Y));
     }
 
-    // How many trains pass the Feed settings, so the page can show its empty state instead of an empty card.
+    // How many trains the picked view shows, so the page can show its empty state instead of an empty card.
     public static int ListedCount(FeedListener feed)
     {
         RefreshVerdicts(feed, DateTime.UtcNow);
@@ -90,18 +93,21 @@ internal static class FeedCard
     private static void RefreshVerdicts(FeedListener feed, DateTime nowUtc)
     {
         var now = Environment.TickCount64;
-        if (feed.Version == verdictsVersion && now - verdictsRefreshedAtMs < VerdictRefreshMs)
+        var view = Plugin.Instance.Configuration.TrainListView;
+        if (feed.Version == verdictsVersion && view == verdictsView && now - verdictsRefreshedAtMs < VerdictRefreshMs)
         {
             return;
         }
 
         verdictsVersion = feed.Version;
+        verdictsView = view;
         verdictsRefreshedAtMs = now;
         listedCount = 0;
         for (var index = 0; index < feed.Count; index++)
         {
             verdicts[index] = RideRules.Evaluate(feed[index], nowUtc, forAutoRide: false, out reachabilities[index]);
-            listed[index] = RideRules.IsListed(feed[index]);
+            listed[index] = TrainListFilter.Shows(feed[index], view);
+            homeRegion[index] = TrainListFilter.InHomeRegion(feed[index].World);
             if (listed[index])
             {
                 listedCount++;
@@ -124,8 +130,12 @@ internal static class FeedCard
         var verdict = verdicts[index];
         var rideable = verdict == RideVerdict.Rideable;
 
-        var badgeWidth = Badge.DrawLeft(drawList, GroupLabels.Name(announcement.Group), GroupLabels.Color(announcement.Group), x, top + lineHeight * 0.5f);
-        var textX = x + badgeWidth + BadgeGap * scale;
+        var badgeMidY = top + lineHeight * 0.5f;
+        var textX = x + Badge.DrawLeft(drawList, GroupLabels.Name(announcement.Group), GroupLabels.Color(announcement.Group), x, badgeMidY) + BadgeGap * scale;
+        if (!homeRegion[index])
+        {
+            textX += Badge.DrawLeft(drawList, RegionLabels.Name(announcement.World.Region), Styling.AccentRose, textX, badgeMidY) + BadgeGap * scale;
+        }
 
         var label = Loc.T(L.Feed.Ride);
         var buttonWidth = PillButton.Width(label, FontAwesomeIcon.Train);

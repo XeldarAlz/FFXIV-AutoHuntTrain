@@ -7,3 +7,10 @@ public enum AfterRunAction
     ReturnToInn,
     CloseGame,
 }
+
+public enum TrainListView
+{
+    MyDataCenters,
+    MyRegion,
+    Everywhere,
+}

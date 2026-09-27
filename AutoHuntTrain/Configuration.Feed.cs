@@ -25,6 +25,9 @@ public sealed partial class Configuration
 
     public int SnoozeMinutes { get; set; } = 30;
 
+    // Only what the Upcoming list and the chat line show; the ride rules above decide what is ridden.
+    public TrainListView TrainListView { get; set; } = TrainListView.MyDataCenters;
+
     public bool IsGroupEnabled(ExpansionGroup group) => group switch
     {
         ExpansionGroup.Centurio => RideCenturio,

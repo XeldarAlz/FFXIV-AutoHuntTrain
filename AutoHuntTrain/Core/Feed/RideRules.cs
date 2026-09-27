@@ -75,7 +75,7 @@ internal static class RideRules
             return RideVerdict.OutOfRegion;
         }
 
-        if (!DataCenterAllowed(configuration, announcement.World))
+        if (!IsAllowedDataCenter(announcement.World))
         {
             return RideVerdict.NotAllowedDataCenter;
         }
@@ -104,15 +104,12 @@ internal static class RideRules
         return RideVerdict.Rideable;
     }
 
-    // Whether a train belongs in the list at all: its expansion group is on and its data center is one the player
+    // Whether a train is one the player rides at all: its expansion group is on and its data center is one the player
     // allows. The rest of the rules only decide whether it can be ridden right now.
     public static bool IsListed(in Announcement announcement)
-    {
-        var configuration = Plugin.Instance.Configuration;
-        return announcement.World.Id != 0
-            && configuration.IsGroupEnabled(announcement.Group)
-            && DataCenterAllowed(configuration, announcement.World);
-    }
+        => announcement.World.Id != 0
+        && Plugin.Instance.Configuration.IsGroupEnabled(announcement.Group)
+        && IsAllowedDataCenter(announcement.World);
 
     public static bool TryReachability(in WorldInfo target, out Reachability reachability)
     {
@@ -161,8 +158,9 @@ internal static class RideRules
         return RideVerdict.Rideable;
     }
 
-    private static bool DataCenterAllowed(Configuration configuration, in WorldInfo world)
+    public static bool IsAllowedDataCenter(in WorldInfo world)
     {
+        var configuration = Plugin.Instance.Configuration;
         if (configuration.AllowedDataCenters.Length == 0)
         {
             return Worlds.TryHome(out var home) && home.DataCenterId == world.DataCenterId;

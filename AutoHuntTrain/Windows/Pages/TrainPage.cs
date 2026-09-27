@@ -14,6 +14,11 @@ internal sealed class TrainPage
     private const float SwitchRevealMs = 320f;
     private const float EmptyCardHeight = 118f;
     private const float EmptyCardPadX = 24f;
+    private const float ViewPickerHeight = 32f;
+    private const float ViewPickerGap = 10f;
+    private const string ViewPickerId = "##aht_train_view";
+
+    private static readonly Segmented.Item[] viewItems = new Segmented.Item[3];
 
     public void Draw(Plugin plugin, AppWindow window)
     {
@@ -39,13 +44,14 @@ internal sealed class TrainPage
 
         Styling.VSpace(20f);
         SectionTitle(Loc.T(L.Train.Upcoming), FeedStatusLine.Get(plugin.Configuration));
+        DrawViewPicker(plugin.Configuration);
         if (plugin.Feed.Count == 0)
         {
             EmptyCard(FontAwesomeIcon.Train, Loc.T(L.Train.UpcomingEmpty));
         }
         else if (FeedCard.ListedCount(plugin.Feed) == 0)
         {
-            EmptyCard(FontAwesomeIcon.Filter, Loc.T(L.Feed.AllHidden));
+            EmptyCard(FontAwesomeIcon.Filter, Loc.T(HiddenText(plugin.Configuration.TrainListView)));
         }
         else
         {
@@ -57,6 +63,26 @@ internal sealed class TrainPage
         RideCard.Draw(plugin);
         Styling.VSpace(12f);
     }
+
+    private static void DrawViewPicker(Configuration configuration)
+    {
+        viewItems[0] = new Segmented.Item(FontAwesomeIcon.Server, Loc.T(L.Feed.ViewMyDataCenters));
+        viewItems[1] = new Segmented.Item(FontAwesomeIcon.MapMarkedAlt, Loc.T(L.Feed.ViewMyRegion));
+        viewItems[2] = new Segmented.Item(FontAwesomeIcon.Globe, Loc.T(L.Feed.ViewEverywhere));
+        var width = MathF.Min(Segmented.PreferredWidth(viewItems), ImGui.GetContentRegionAvail().X);
+        var selected = (int)configuration.TrainListView;
+        if (Segmented.Draw(ViewPickerId, viewItems, ref selected, height: ViewPickerHeight, width: width))
+        {
+            configuration.TrainListView = (TrainListView)selected;
+            configuration.SaveDebounced();
+        }
+
+        Styling.VSpace(ViewPickerGap);
+    }
+
+    // Everywhere shows every train, so only the two narrower views can hide the whole list.
+    private static LocString HiddenText(TrainListView view)
+        => view == TrainListView.MyRegion ? L.Feed.AllHiddenRegion : L.Feed.AllHidden;
 
     private static void SectionTitle(string text, string? trailing = null)
     {
