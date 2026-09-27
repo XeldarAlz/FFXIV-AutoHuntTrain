@@ -36,7 +36,7 @@ public abstract partial class AutoCommon
     private const int InstanceChangeAttempts = 3;
     private const int InstanceChangeTimeoutMs = 30_000;
     private const int InstanceRetryBackoffMs = 5_000;
-    private const int InstancePollFrames = 10;
+    private const int JourneyPollFrames = 10;
     private const string JourneyLabel = "Journey";
     private const string ReturnLabel = "Journey home";
     private const string NoWorld = "none";
@@ -198,7 +198,7 @@ public abstract partial class AutoCommon
         Status = crossDataCenter ? $"Travelling to {target.Name} on {target.DataCenterName}" : $"Changing world to {target.Name}";
         Diag($"{label}: asking Lifestream for a {kind} to {target.Name} ({ConditionTag()})");
         lifestream.TeleportAndChangeWorld(target.Name, crossDataCenter);
-        if (await WaitUntilTimed(() => HopStarted(target.Id), HopStartWindowMs, $"{label}-hop-start", InstancePollFrames))
+        if (await WaitUntilTimed(() => HopStarted(target.Id), HopStartWindowMs, $"{label}-hop-start", JourneyPollFrames))
         {
             return true;
         }
@@ -408,7 +408,7 @@ public abstract partial class AutoCommon
             Status = $"Switching to instance {instance}";
             Diag($"{scope}: asking Lifestream to switch from instance {lifestream.CurrentInstance()} to {instance} of {zoneName} ({ConditionTag()})");
             lifestream.ChangeInstance(instance);
-            if (await WaitUntilTimed(() => InInstance(instance), InstanceChangeTimeoutMs, scope, InstancePollFrames))
+            if (await WaitUntilTimed(() => InInstance(instance), InstanceChangeTimeoutMs, scope, JourneyPollFrames))
             {
                 Diag($"{label}: now in instance {instance} of {zoneName}");
                 return true;

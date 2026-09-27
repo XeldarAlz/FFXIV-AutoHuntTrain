@@ -50,6 +50,8 @@
   "train.rideEmpty": "La logique de trajet n'est pas encore construite. Le train suivi, son conducteur et le prochain drapeau apparaîtront ici.",
   "train.whenDone": "À la fin du trajet",
   "train.whenDoneHelp": "Que faire quand un trajet se termine de lui-même. Un arrêt manuel ou une erreur ne le déclenche jamais.",
+  "train.returnHome": "Rentrer après le trajet",
+  "train.returnHomeHelp": "Retourne sur votre monde d'origine une fois le trajet terminé, en changeant de centre de données si le train circulait sur un autre. Désactivé, vous restez sur le monde du train, prêt pour le suivant.",
   "train.after.stay.name": "Rester sur place",
   "train.after.stay.detail": "Simplement s'arrêter. Vous restez là où la dernière cible est tombée.",
   "train.after.inn.name": "Rentrer à l'auberge",

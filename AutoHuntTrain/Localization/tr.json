@@ -50,6 +50,8 @@
   "train.rideEmpty": "Yolculuk mantığı henüz yazılmadı. Takip edilen tren, kondüktörü ve bir sonraki işaret burada görünür.",
   "train.whenDone": "Yolculuk bittiğinde",
   "train.whenDoneHelp": "Bir yolculuk kendiliğinden bittiğinde ne yapılacağı. Elle durdurma ya da bir hata bunu asla tetiklemez.",
+  "train.returnHome": "Yolculuktan sonra eve dön",
+  "train.returnHomeHelp": "Yolculuk bitince ana dünyanıza geri döner; tren başka bir veri merkezindeyse veri merkezleri arasında da geçer. Kapalıyken trenin dünyasında kalır, bir sonrakine hazır olursunuz.",
   "train.after.stay.name": "Olduğun yerde kal",
   "train.after.stay.detail": "Sadece dur. Son hedefin düştüğü yerde kalırsınız.",
   "train.after.inn.name": "Hana dön",

@@ -50,6 +50,8 @@
   "train.rideEmpty": "A lógica da viagem ainda não foi construída. O trem seguido, seu condutor e a próxima marcação aparecerão aqui.",
   "train.whenDone": "Quando a viagem terminar",
   "train.whenDoneHelp": "O que fazer quando uma viagem termina sozinha. Uma parada manual ou uma falha nunca o acionam.",
+  "train.returnHome": "Voltar para casa após a viagem",
+  "train.returnHomeHelp": "Volta ao seu mundo de origem quando a viagem termina, trocando de data center se o trem corria em outro. Desligado, você fica no mundo do trem, pronto para o próximo.",
   "train.after.stay.name": "Ficar onde está",
   "train.after.stay.detail": "Apenas parar. Você fica onde o último alvo caiu.",
   "train.after.inn.name": "Voltar para a estalagem",

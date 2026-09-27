@@ -65,6 +65,8 @@ internal static partial class L
 
         public static readonly LocString WhenDone = new("train.whenDone", "When the ride ends");
         public static readonly LocString WhenDoneHelp = new("train.whenDoneHelp", "What to do once a ride ends on its own. A manual Stop or a fault never triggers it.");
+        public static readonly LocString ReturnHome = new("train.returnHome", "Return home after the ride");
+        public static readonly LocString ReturnHomeHelp = new("train.returnHomeHelp", "Travel back to your home world once the ride ends, crossing data centers when the train ran on another one. Off leaves you on the train's world, ready for the next one.");
         public static readonly LocString AfterStayName = new("train.after.stay.name", "Stay where you are");
         public static readonly LocString AfterStayDetail = new("train.after.stay.detail", "Just stop. You're left standing wherever the last mark fell.");
         public static readonly LocString AfterInnName = new("train.after.inn.name", "Return to the inn");
