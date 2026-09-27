@@ -55,7 +55,7 @@ internal static class ActionDock
         var stopSub = session is null ? state : Loc.T(L.Train.StopSub, state, Formatting.Elapsed(session.Elapsed));
         if (StopButton.Draw(stopSub, half))
         {
-            controller.Stop();
+            controller.StopByPlayer();
         }
     }
 

@@ -149,6 +149,7 @@ internal sealed partial class AutoHuntController
     {
         var world = announcement.World;
         lastRiddenAnnouncementId = announcement.Id;
+        RememberTaken(announcement.Id);
         BeginRun(newSession, owning => new AutoRide(owning, progress, Plugin.Instance.Flags, announcement), $"{verb} the {ExpansionGroups.Name(announcement.Group)} train on {world.Name} ({world.DataCenterName}) starting {announcement.StartAtUtc:HH:mm}Z");
     }
 

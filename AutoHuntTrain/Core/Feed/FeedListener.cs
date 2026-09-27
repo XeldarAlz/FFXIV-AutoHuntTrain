@@ -53,6 +53,9 @@ internal sealed class FeedListener : IDisposable
 
     public int Count => count;
 
+    // The id the next announcement will get; every train already in the ring has a lower one.
+    public int NextId => nextId;
+
     // Bumps on every change, so a view rebuilds what it derives from the ring only when the ring changed.
     public int Version => version;
 

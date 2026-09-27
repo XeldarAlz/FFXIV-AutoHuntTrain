@@ -145,14 +145,16 @@ internal static class RideRules
             return RideVerdict.Rideable;
         }
 
-        if (lead <= TimeSpan.Zero)
-        {
-            return -lead > AutoRideJoinWindow ? RideVerdict.TooLate : RideVerdict.Rideable;
-        }
-
+        // A transfer takes minutes plus a queue, so a train on another data center that starts within the lead, or has
+        // already started, cannot be reached in time.
         if (reachability == Reachability.CrossDataCenter && lead.TotalSeconds < Math.Max(0, configuration.MinimumLeadSeconds))
         {
             return RideVerdict.TooSoon;
+        }
+
+        if (lead <= TimeSpan.Zero && -lead > AutoRideJoinWindow)
+        {
+            return RideVerdict.TooLate;
         }
 
         return RideVerdict.Rideable;
