@@ -138,7 +138,7 @@
   "plugins.purpose.vnavmesh": "寻路、飞行以及前往狩猎目标的移动。",
   "plugins.purpose.bossMod": "与目标战斗时的自动循环、选中目标与躲避。",
   "plugins.purpose.lifestream": "切换服务器、数据中心和副本分线以赶上车队。",
-  "plugins.purpose.huntAlerts": "来自社区推送的车队公告。没有它也可以在当前服务器跟随车头。",
+  "plugins.purpose.huntAlerts": "来自社区推送的车队公告。",
   "log.title": "控制台",
   "log.entries.one": "缓冲区中有 {0} 行",
   "log.entries.other": "缓冲区中有 {0} 行",

@@ -138,7 +138,7 @@
   "plugins.purpose.vnavmesh": "経路探索、飛行、討伐対象への移動。",
   "plugins.purpose.bossMod": "討伐対象との戦闘中の自動ローテーション、ターゲット、回避。",
   "plugins.purpose.lifestream": "トレインに向かうためのワールド、データセンター、インスタンスの移動。",
-  "plugins.purpose.huntAlerts": "コミュニティのフィードからトレインの告知を受け取ります。なくても、現在のワールドで先導者に付いていけます。",
+  "plugins.purpose.huntAlerts": "コミュニティのフィードからトレインの告知を受け取ります。",
   "log.title": "コンソール",
   "log.entries.one": "バッファ内に{0}行",
   "log.entries.other": "バッファ内に{0}行",
