@@ -1,3 +1,4 @@
+using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Marks;
 using AutoHuntTrain.Core.Train;
 using AutoHuntTrain.Core.Travel;
@@ -10,12 +11,14 @@ using System.Threading.Tasks;
 
 namespace AutoHuntTrain.Core.Tasks;
 
-// Follows the conductor's flags on the current world: each one is a leg, the newest flag always wins, and at every flag
-// the zone's mark is fought for credit once someone has pulled it. The ride ends on Stop, once every mark of the
-// expansion is credited, or once the conductor has gone quiet for the idle limit.
+// Follows the conductor's flags: each one is a leg, the newest flag always wins, and at every flag the zone's mark is
+// fought for credit once someone has pulled it. A ride from an announcement first travels to the train's start and,
+// when the announcement named no conductor, takes the first player to post a flag there as one. The ride ends on
+// Stop, once every mark of the expansion is credited, or once the conductor has gone quiet for the idle limit.
 internal sealed class AutoRide : AutoCommon
 {
     private const string Scope = "ride";
+    private const string JourneyLabel = "ride-journey";
     private const int WaitPollFrames = 10;
     private const int MarkPollFrames = 6;
     // Room for a teleport, an instance change and the longest flight a zone allows, well inside the idle limit.
@@ -23,14 +26,21 @@ internal sealed class AutoRide : AutoCommon
     // A conductor flags where the mark stands, and it roams a little before the pull.
     private const float FlagMarkRadiusMeters = 80f;
     private const int MarkHealthSampleMs = 250;
+    private const int ZoneTeleportWatchdogMs = 60_000;
+    private const string UnknownStartZone = "the start zone";
+    // A conductor flags the first mark a little before the announced start.
+    private static readonly TimeSpan PickWindowBeforeStart = TimeSpan.FromMinutes(2);
 
     private readonly AutoHuntSession session;
     private readonly RideProgress progress;
     private readonly FlagListener listener;
+    private readonly Announcement? announcement;
     private readonly Action<FlagPost> onPosted;
     private readonly Func<bool> newerFlagArrived;
     private readonly IFramework.OnUpdateDelegate sampleMarkHealth;
 
+    private ConductorIdentity conductor = ConductorIdentity.None;
+    private ConductorIdentity manualAtStart = ConductorIdentity.None;
     private FlagPost pending;
     private bool hasPending;
     private bool travelling;
@@ -41,14 +51,21 @@ internal sealed class AutoRide : AutoCommon
     private MarkSighting engagedMark;
     private long nextHealthSampleAtMs;
 
-    public AutoRide(AutoHuntSession session, RideProgress progress, FlagListener listener)
+    public AutoRide(AutoHuntSession session, RideProgress progress, FlagListener listener, Announcement? announcement = null)
     {
         this.session = session;
         this.progress = progress;
         this.listener = listener;
+        this.announcement = announcement;
         onPosted = OnPosted;
         newerFlagArrived = () => hasPending;
         sampleMarkHealth = SampleMarkHealth;
+    }
+
+    internal static ExpansionKind? ExpansionOf(uint territoryId)
+    {
+        var territory = Svc.Data.GetExcelSheet<TerritoryType>().GetRowOrDefault(territoryId);
+        return territory is { } row ? ExpansionKindExtensions.FromExVersion(row.ExVersion.RowId) : null;
     }
 
     protected override async Task Execute()
@@ -58,6 +75,12 @@ internal sealed class AutoRide : AutoCommon
         await HoldCombatMovementAndSettle(Scope);
         try
         {
+            AdoptConductor();
+            if (announcement is { } plan && !await TravelToAnnouncement(plan))
+            {
+                return;
+            }
+
             PublishCredits();
             PrimeFromRecentFlags();
             BeginWaiting();
@@ -77,6 +100,154 @@ internal sealed class AutoRide : AutoCommon
         {
             progress.SetPhase(phase);
         }
+    }
+
+    // A manual ride follows the conductor the player set. An announced ride follows the one it kept through a pause,
+    // else the one the announcement named, else whoever posts the first flag at the start.
+    private void AdoptConductor()
+    {
+        manualAtStart = Conductor.Current;
+        if (announcement is not { } plan)
+        {
+            SetConductor(manualAtStart, ConductorSource.Manual);
+            return;
+        }
+
+        progress.SetStartTerritory(plan.TerritoryId);
+        if (session.Conductor.IsSet)
+        {
+            SetConductor(session.Conductor, session.ConductorSource);
+            return;
+        }
+
+        if (plan.NamesConductor)
+        {
+            SetConductor(plan.Conductor, ConductorSource.Announced);
+            Diag($"Ride: the announcement names {Conductor.Describe(plan.Conductor)} as the conductor");
+            return;
+        }
+
+        SetConductor(ConductorIdentity.None, ConductorSource.None);
+        Diag($"Ride: the announcement names no conductor; the first player to post a flag in {StartZoneName()} from {PickWindowBeforeStart.TotalMinutes:F0} minutes before the start becomes one");
+    }
+
+    private void SetConductor(in ConductorIdentity identity, ConductorSource source)
+    {
+        conductor = identity;
+        session.Conductor = identity;
+        session.ConductorSource = source;
+        progress.SetConductor(identity, source);
+    }
+
+    // A manual ride follows whatever the player sets, at any time. On an announced ride a conductor set by hand after
+    // the ride started overrides the announced or picked one; the one set before it started is an old pick.
+    private ConductorIdentity RefreshConductor()
+    {
+        var manual = Conductor.Current;
+        if (announcement is null)
+        {
+            if (!manual.SameAs(conductor))
+            {
+                SetConductor(manual, ConductorSource.Manual);
+                Diag(manual.IsSet ? $"Ride: the conductor is now {Conductor.Describe(manual)}" : "Ride: the conductor was cleared; waiting until one is set");
+            }
+
+            return conductor;
+        }
+
+        if (manual.IsSet && !manual.SameAs(manualAtStart) && !manual.SameAs(conductor))
+        {
+            SetConductor(manual, ConductorSource.Manual);
+            Diag($"Ride: {Conductor.Describe(manual)} was set by hand after the ride started and is followed instead");
+        }
+
+        return conductor;
+    }
+
+    private async Task<bool> TravelToAnnouncement(Announcement plan)
+    {
+        var group = ExpansionGroups.Name(plan.Group);
+        if (session.ArrivedAtTrain)
+        {
+            Diag($"Ride: already at the start of the {group} train on {plan.World.Name} from before the pause; not travelling again");
+            return true;
+        }
+
+        progress.SetRidePhase(RidePhase.Journey);
+        Diag($"Ride: travelling to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}), {LeadText(plan)}");
+        var outcome = await TravelToWorld(JourneyPlan.ToWorld(plan.World.Name, plan.AetheryteId, plan.TerritoryId, plan.NamesAetheryte ? plan.Instance : 0));
+        if (CancelToken.IsCancellationRequested)
+        {
+            NoteJourneyCut(plan, group);
+            return false;
+        }
+
+        if (outcome != JourneyOutcome.Arrived)
+        {
+            Warn($"Ride: the journey to the {group} train on {plan.World.Name} ended with {outcome}; the ride ends");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Could not reach the {group} train on {plan.World.Name} ({outcome}); the ride ends. The log has the details.");
+            return false;
+        }
+
+        if (!plan.NamesAetheryte && plan.NamesTerritory && !await TravelToStartZone(plan))
+        {
+            return false;
+        }
+
+        session.ArrivedAtTrain = true;
+        lastFlagAtMs = IdleClockStart(plan);
+        Diag($"Ride: at the start of the {group} train on {plan.World.Name} in {TerritoryNames.Of(Svc.ClientState.TerritoryType)}, {LeadText(plan)} ({ConditionTag()})");
+        return true;
+    }
+
+    // The relay named the zone but not its aetheryte: the attuned one nearest the flagged spot, or any attuned one, is the stop.
+    private async Task<bool> TravelToStartZone(Announcement plan)
+    {
+        var zoneName = TerritoryNames.Of(plan.TerritoryId);
+        var destination = plan.MapCoordinates is { } coordinates && MapCoordinates.TryToWorld(plan.TerritoryId, coordinates, out var point) ? point : Vector3.Zero;
+        var reached = false;
+        await RunWithStatusPinned(
+            $"Teleporting to {zoneName}",
+            async () => reached = await TeleportToTerritory(plan.TerritoryId, destination, $"{JourneyLabel}-zone", ZoneTeleportWatchdogMs));
+        if (!reached)
+        {
+            if (!CancelToken.IsCancellationRequested)
+            {
+                Warn($"Ride: could not reach {zoneName}, the start of the train (still in territory {Svc.ClientState.TerritoryType}); the ride ends");
+                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Could not reach {zoneName}, the start of the train; the ride ends. The log has the details.");
+            }
+
+            return false;
+        }
+
+        return !plan.NamesInstance || await SwitchToInstance(plan.Instance, JourneyLabel);
+    }
+
+    // A data center transfer logs the character out and takes the task with it; picking the ride up after the relog
+    // is not built yet, so the cut is named plainly for the log.
+    private void NoteJourneyCut(in Announcement plan, string group)
+    {
+        if (Svc.ClientState.IsLoggedIn)
+        {
+            Diag($"Ride: the journey to the {group} train on {plan.World.Name} was cancelled");
+            return;
+        }
+
+        Warn($"Ride: the journey to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}) was cut by the logout of the data center transfer. The ride does not pick itself up after the relog yet: the journey alone resumes at login, so start the ride again from the Train page once you are on {plan.World.Name}");
+    }
+
+    // The idle limit counts from the announced start, so a train reached early is not given up before it begins.
+    private static long IdleClockStart(in Announcement plan)
+    {
+        var lead = plan.LeadAt(DateTime.UtcNow);
+        var leadMs = lead > TimeSpan.Zero ? (long)lead.TotalMilliseconds : 0;
+        return Environment.TickCount64 + leadMs;
+    }
+
+    private static string LeadText(in Announcement plan)
+    {
+        var lead = plan.LeadAt(DateTime.UtcNow);
+        return lead > TimeSpan.Zero ? $"it starts in {lead.TotalMinutes:F0} min" : $"it started {(-lead).TotalMinutes:F0} min ago";
     }
 
     private async Task FollowConductor()
@@ -104,14 +275,22 @@ internal sealed class AutoRide : AutoCommon
         }
     }
 
-    // A flag the conductor posted shortly before the ride started is still the train's current stop.
+    // A flag posted shortly before the ride started, or while the journey ran, is still the train's current stop.
     private void PrimeFromRecentFlags()
     {
-        var conductor = Conductor.Current;
-        var name = Conductor.Describe(conductor);
-        if (!listener.TryLatestBy(conductor, out var latest))
+        var active = RefreshConductor();
+        FlagPost latest;
+        if (active.IsSet)
         {
-            Diag($"Ride: no recent flag from {name}; waiting for one");
+            if (!listener.TryLatestBy(active, out latest))
+            {
+                Diag($"Ride: no recent flag from {Conductor.Describe(active)}; waiting for one");
+                return;
+            }
+        }
+        else if (!TryLatestQualifying(out latest) || !TryPickConductor(latest))
+        {
+            Diag($"Ride: no flag posted in {StartZoneName()} since the train's start yet; waiting for the first one");
             return;
         }
 
@@ -119,19 +298,26 @@ internal sealed class AutoRide : AutoCommon
         var limitSeconds = Math.Max(0, Plugin.Instance.Configuration.LateJoinLimitSeconds);
         if (age.TotalSeconds > limitSeconds)
         {
-            Diag($"Ride: the last flag from {name} is {age.TotalSeconds:F0}s old, past the late-join limit of {limitSeconds}s; waiting for a new one");
+            Diag($"Ride: the last flag from {Conductor.Describe(conductor)} is {age.TotalSeconds:F0}s old, past the late-join limit of {limitSeconds}s; waiting for a new one");
             return;
         }
 
-        Diag($"Ride: late join, the flag {name} posted {age.TotalSeconds:F0}s ago in {TerritoryNames.Of(latest.TerritoryId)} is followed first");
+        Diag($"Ride: late join, the flag {Conductor.Describe(conductor)} posted {age.TotalSeconds:F0}s ago in {TerritoryNames.Of(latest.TerritoryId)} is followed first");
         pending = latest;
         hasPending = true;
     }
 
     private void OnPosted(FlagPost post)
     {
-        var conductor = Conductor.Current;
-        if (!conductor.Matches(post))
+        var active = RefreshConductor();
+        if (active.IsSet)
+        {
+            if (!active.Matches(post))
+            {
+                return;
+            }
+        }
+        else if (!TryPickConductor(post))
         {
             return;
         }
@@ -140,6 +326,47 @@ internal sealed class AutoRide : AutoCommon
         hasPending = true;
         var note = travelling ? "; it supersedes the leg in progress" : engaging ? "; it is taken once the fight ends" : string.Empty;
         Diag($"Ride: flag from {Conductor.Describe(conductor)} in {TerritoryNames.Of(post.TerritoryId)} at ({post.MapX:F1}, {post.MapY:F1}){InstanceText(post)} via {post.ChatType}{note}");
+    }
+
+    // Only an announced ride picks, and only from a flag in the start zone, when known, posted from shortly before the start.
+    private bool TryPickConductor(in FlagPost post)
+    {
+        if (announcement is not { } plan || !QualifiesAsFirstFlag(plan, post))
+        {
+            return false;
+        }
+
+        var picked = new ConductorIdentity(post.SenderName, post.SenderWorldId);
+        SetConductor(picked, ConductorSource.Picked);
+        var zoneName = TerritoryNames.Of(post.TerritoryId);
+        Diag($"Ride: {Conductor.Describe(picked)} picked as the conductor from the first flag in {zoneName} at ({post.MapX:F1}, {post.MapY:F1}), posted {(DateTime.UtcNow - post.PostedAtUtc).TotalSeconds:F0}s ago via {post.ChatType}");
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Following {Conductor.Describe(picked)}, the first to post a flag in {zoneName}.");
+        return true;
+    }
+
+    private static bool QualifiesAsFirstFlag(in Announcement plan, in FlagPost post)
+        => (!plan.NamesTerritory || post.TerritoryId == plan.TerritoryId)
+        && post.PostedAtUtc >= plan.StartAtUtc - PickWindowBeforeStart;
+
+    private bool TryLatestQualifying(out FlagPost post)
+    {
+        if (announcement is { } plan)
+        {
+            for (var index = 0; index < listener.Count; index++)
+            {
+                var candidate = listener.FromNewest(index);
+                if (!QualifiesAsFirstFlag(plan, candidate))
+                {
+                    continue;
+                }
+
+                post = candidate;
+                return true;
+            }
+        }
+
+        post = default;
+        return false;
     }
 
     private bool TryTakePending(out FlagPost flag)
@@ -408,7 +635,9 @@ internal sealed class AutoRide : AutoCommon
     private void BeginWaiting()
     {
         progress.SetRidePhase(RidePhase.WaitingForFlag);
-        Status = $"Waiting for a flag from {Conductor.Describe(Conductor.Current)}";
+        Status = conductor.IsSet
+            ? $"Waiting for a flag from {Conductor.Describe(conductor)}"
+            : $"Waiting for the first flag in {StartZoneName()}";
     }
 
     private bool IdleLimitReached()
@@ -420,41 +649,40 @@ internal sealed class AutoRide : AutoCommon
     private void EndOnIdle()
     {
         var minutes = IdleLimitMs() / TimeUnits.MillisecondsPerMinute;
-        var name = Conductor.Describe(Conductor.Current);
+        var silence = conductor.IsSet ? $"no flag from {Conductor.Describe(conductor)}" : $"no flag in {StartZoneName()}";
         session.CompletedByStopCondition = true;
         Status = "Ride ended";
-        Diag($"Ride: no flag from {name} for {minutes} minutes after {progress.FlagsFollowed} flag(s); the ride ends");
-        Svc.Chat.Print($"{AhtConstants.LogPrefix} No flag from {name} for {minutes} minutes; the ride ends.");
+        Diag($"Ride: {silence} for {minutes} minutes after {progress.FlagsFollowed} flag(s); the ride ends");
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} {char.ToUpperInvariant(silence[0])}{silence[1..]} for {minutes} minutes; the ride ends.");
     }
 
+    // The world is known from the announcement on an announced ride, and the expansion from the first flag's zone
+    // unless the announcement's group already named it.
     private void NoteFirstFlag(in FlagPost flag)
     {
-        if (session.WorldName.Length > 0)
+        if (session.WorldName.Length > 0 && session.Expansion is not null)
         {
             return;
         }
 
-        if (Worlds.TryCurrent(out var world))
+        if (session.WorldName.Length == 0 && Worlds.TryCurrent(out var world))
         {
             session.WorldName = world.Name;
             session.DataCenterName = world.DataCenterName;
         }
 
-        session.Expansion = ExpansionOf(flag.TerritoryId);
+        session.Expansion ??= ExpansionOf(flag.TerritoryId);
         PublishCredits();
         Diag($"Ride: on {session.WorldName} ({session.DataCenterName}), {session.Expansion?.ShortName() ?? "unknown expansion"}, {ExpectedMarks.For(session.Expansion)} mark(s) expected");
     }
+
+    private string StartZoneName()
+        => announcement is { NamesTerritory: true } plan ? TerritoryNames.Of(plan.TerritoryId) : UnknownStartZone;
 
     private string CreditTally()
     {
         var expected = ExpectedMarks.For(session.Expansion);
         return expected > 0 ? $"{session.MarksCredited} of {expected}" : session.MarksCredited.ToString();
-    }
-
-    private static ExpansionKind? ExpansionOf(uint territoryId)
-    {
-        var territory = Svc.Data.GetExcelSheet<TerritoryType>().GetRowOrDefault(territoryId);
-        return territory is { } row ? ExpansionKindExtensions.FromExVersion(row.ExVersion.RowId) : null;
     }
 
     private static long SecondsSince(long startedAtMs) => (Environment.TickCount64 - startedAtMs) / TimeUnits.MillisecondsPerSecond;

@@ -115,6 +115,7 @@ internal static class ReadyState
 
     public static string RidePhaseLabel(RidePhase phase) => phase switch
     {
+        RidePhase.Journey        => Loc.T(L.Feed.PhaseJourney),
         RidePhase.Travelling     => Loc.T(L.Ride.PhaseTravelling),
         RidePhase.AtFlag         => Loc.T(L.Ride.PhaseAtFlag),
         RidePhase.WaitingForMark => Loc.T(L.Ride.PhaseWaitingForMark),

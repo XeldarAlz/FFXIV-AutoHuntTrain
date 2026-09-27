@@ -178,7 +178,7 @@ internal sealed partial class AutoHuntController
         owningSession.ClearFault();
         Diag($"Ride task ended on an unexpected fault; auto-resuming (resume {faultResumeCount}/{MaxFaultResumes} in this {FaultResumeWindowMs / TimeUnits.MillisecondsPerMinute} minute window, {runFaultResumeCount}/{MaxFaultResumesPerRun} in this run).");
         ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} The ride stopped on an unexpected error; restarting it ({faultResumeCount}/{MaxFaultResumes}).");
-        StartRide(owningSession);
+        RunRide(owningSession);
         return true;
     }
 }

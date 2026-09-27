@@ -1,13 +1,21 @@
 using AutoHuntTrain.Core.Marks;
+using AutoHuntTrain.Core.Train;
 using ECommons.DalamudServices;
 using System.Threading;
 
 namespace AutoHuntTrain.Core.Tasks;
 
-// One run of the controller. The ride it carries is not built yet, so a session only keeps the clock, the job, the
-// marks the kill ledger credited and what the wallet gained.
+// One run of the controller: the clock, the job, the marks the kill ledger credited, what the wallet gained, and what
+// the ride learned that has to outlive a pause, since every resume builds the ride task afresh.
 public sealed class AutoHuntSession
 {
+    // Set once an announced ride stands at the train's start, so a resume does not travel there again.
+    internal bool ArrivedAtTrain;
+
+    internal ConductorIdentity Conductor = ConductorIdentity.None;
+
+    internal ConductorSource ConductorSource;
+
     private HuntWallet lastWallet;
     private bool walletKnown;
 

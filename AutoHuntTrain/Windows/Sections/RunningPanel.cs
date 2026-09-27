@@ -17,6 +17,7 @@ internal static class RunningPanel
     // Sized to sit on a line of body text.
     private const float InlineRankSize = 18f;
     private const float RankGap = 8f;
+    private const float ConductorLineGap = 4f;
     private const int TileCount = 3;
 
     private static uint cachedTerritoryId = uint.MaxValue;
@@ -122,6 +123,8 @@ internal static class RunningPanel
         using (Fonts.PushCaption())
         {
             TextDraw.At(ProgressLine(progress), new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
+            y += ImGui.GetTextLineHeight() + ConductorLineGap * scale;
+            TextDraw.At(TextDraw.Truncate(ConductorLine.Get(progress), columnWidth), new Vector2(columnX, y), Styling.TextDim);
         }
 
         ImGui.Dummy(size);

@@ -1,6 +1,8 @@
 using AutoHuntTrain.Core.External;
+using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Ipc;
 using AutoHuntTrain.Core.Train;
+using AutoHuntTrain.Core.Travel;
 using clib.Services;
 
 namespace AutoHuntTrain.Core.Tasks;
@@ -58,6 +60,52 @@ internal sealed partial class AutoHuntController
         var name = Conductor.Describe(conductor);
         BeginRun(new AutoHuntSession(), owning => new AutoRide(owning, progress, Plugin.Instance.Flags), $"following {name}");
         ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Following {name}'s flags.");
+    }
+
+    // A ride from the feed: the journey to the train's start, then the follow loop. The rules are checked once more
+    // here, because the list a button was clicked on can be seconds old.
+    public bool StartRide(Announcement announcement)
+    {
+        var group = ExpansionGroups.Name(announcement.Group);
+        var world = announcement.World;
+        if (Running)
+        {
+            Diag($"Ride of the {group} train on {world.Name} ignored: a ride is already running.");
+            return false;
+        }
+
+        if (!RequiredPluginsReady())
+        {
+            return false;
+        }
+
+        var verdict = RideRules.Evaluate(announcement);
+        if (verdict != RideVerdict.Rideable)
+        {
+            Diag($"Ride of the {group} train on {world.Name} refused: {RideRules.Explain(verdict)}.");
+            ECommons.DalamudServices.Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Cannot ride the {group} train on {world.Name}: {RideRules.Explain(verdict)}.");
+            return false;
+        }
+
+        var newSession = new AutoHuntSession
+        {
+            WorldName = world.Name,
+            DataCenterName = world.DataCenterName,
+            Expansion = ExpansionGroups.ToExpansionKind(announcement.Group) ?? (announcement.NamesTerritory ? AutoRide.ExpansionOf(announcement.TerritoryId) : null),
+        };
+        BeginRun(newSession, owning => new AutoRide(owning, progress, Plugin.Instance.Flags, announcement), $"riding the {group} train on {world.Name} ({world.DataCenterName}) starting {announcement.StartAtUtc:HH:mm}Z");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Riding the {group} train on {world.Name}; travelling to {StartText(announcement)}.");
+        return true;
+    }
+
+    private static string StartText(in Announcement announcement)
+    {
+        if (announcement.NamesAetheryte && ZoneAetherytes.TryFindById(announcement.AetheryteId, out _, out var aetheryte))
+        {
+            return $"{aetheryte.Name} in {TerritoryNames.Of(announcement.TerritoryId)}";
+        }
+
+        return announcement.NamesTerritory ? TerritoryNames.Of(announcement.TerritoryId) : "the train's world";
     }
 
     public void Stop()
@@ -125,10 +173,10 @@ internal sealed partial class AutoHuntController
         session = newSession;
         rideTaskFactory = taskFactory;
         Diag($"Run starting: {plan}, job {newSession.JobAbbreviation}.");
-        StartRide(newSession);
+        RunRide(newSession);
     }
 
-    private void StartRide(AutoHuntSession owningSession)
+    private void RunRide(AutoHuntSession owningSession)
     {
         progress.Reset();
         progress.SetPhase(HuntPhase.Preparing);
