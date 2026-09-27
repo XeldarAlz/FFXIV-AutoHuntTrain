@@ -37,6 +37,7 @@ internal sealed class AutoRide : AutoCommon
     private bool engaging;
     private long lastFlagAtMs;
     private int legCount;
+    private int rankACredited;
     private MarkSighting engagedMark;
     private long nextHealthSampleAtMs;
 
@@ -249,6 +250,11 @@ internal sealed class AutoRide : AutoCommon
         }
 
         session.CreditMark();
+        if (mark.Rank == HuntMarkRank.A)
+        {
+            rankACredited++;
+        }
+
         PublishCredits();
         Diag($"{label}: {name} credited {seconds}s after arriving at the flag; {CreditTally()} credited so far");
     }
@@ -385,15 +391,18 @@ internal sealed class AutoRide : AutoCommon
 
         expansion = known;
         var expected = ExpectedMarks.For(known);
-        return expected > 0 && session.MarksCredited >= expected;
+        // An S rank called on the train is credited too, but only the A ranks count toward the expansion's total, or
+        // the ride would end one A rank early.
+        return expected > 0 && rankACredited >= expected;
     }
 
     private void EndOnAllCredited(ExpansionKind expansion)
     {
+        var expected = ExpectedMarks.For(expansion);
         session.CompletedByStopCondition = true;
         Status = "Ride ended";
-        Diag($"Ride: all {session.MarksCredited} marks of {expansion.ShortName()} credited after {progress.FlagsFollowed} flag(s); the ride ends");
-        Svc.Chat.Print($"{AhtConstants.LogPrefix} All {session.MarksCredited} marks of {expansion.ShortName()} are credited; the ride ends.");
+        Diag($"Ride: all {expected} A ranks of {expansion.ShortName()} credited ({session.MarksCredited} marks in all) after {progress.FlagsFollowed} flag(s); the ride ends");
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} All {expected} A ranks of {expansion.ShortName()} are credited; the ride ends.");
     }
 
     private void BeginWaiting()
