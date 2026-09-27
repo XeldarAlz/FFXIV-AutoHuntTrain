@@ -35,11 +35,11 @@ Hears a hunt train being called anywhere in your region, gets your character to 
 - **Knows when it's over**: ends the ride when the conductor calls it, the expected marks are credited, or the flags stop.
 - **Way home**: return to your home world after the train, stay for the next one, or run the after-ride action.
 - **Recovery**: gets back up after a death and rejoins the train; re-paths, jumps, or teleports out when it gets stuck.
-- **Auto-repair**: Dark Matter first, Grand Company mender as fallback.
-- **Auto-consume**: keeps food and medicine buffs up between trains, HQ first.
-- **Pause & resume**: park a ride without losing your progress, and auto-pause while you're in a duty.
+- **Auto-repair**: Dark Matter during a lull between flags; the Grand Company mender only before a data center transfer.
+- **Auto-consume**: keeps food and medicine buffs up in the lulls between flags, HQ first.
+- **Pause & resume**: park a ride without losing your progress, auto-pause while you're in a duty, and hold new moves while you type in chat.
 - **Train party**: accepts party invites during a ride so the party shares mark credit, can shout for a group at the start, and leaves the party when the ride is over.
-- **GM alert**: stops the bot when a GM is near, with optional toast, beeps, or custom commands.
+- **GM alert**: ends the ride when a GM is near, with optional toast, beeps, or custom commands.
 - **History**: every train recorded with world, data center, marks credited, time on the rails, and seals earned.
 
 ## Install

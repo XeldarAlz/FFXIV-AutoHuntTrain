@@ -11,6 +11,8 @@ using AutoHuntTrain.Windows;
 using AutoHuntTrain.Windows.Shell;
 using clib;
 using Dalamud.Game.Command;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.IoC;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
@@ -30,6 +32,7 @@ public sealed class Plugin : IDalamudPlugin
     private const string SnoozeSubcommand = "snooze";
     private const string InjectSubcommand = "inject";
     private const string NavmeshIpcProviderMarker = "Navmesh.IPCProvider";
+    private const uint OpenTrainLinkCommandId = 1;
     // Lifestream's own budget for a data center transfer is up to an hour; a plan older than this is a leftover, not a journey in flight.
     private static readonly TimeSpan PendingJourneyMaxAge = TimeSpan.FromMinutes(90);
     private static readonly TimeSpan PendingRideMaxAge = TimeSpan.FromMinutes(90);
@@ -50,6 +53,7 @@ public sealed class Plugin : IDalamudPlugin
     internal AutoHuntController Controller { get; }
     internal FlagListener Flags { get; }
     internal FeedListener Feed { get; }
+    internal DalamudLinkPayload OpenTrainLink { get; }
 
     private readonly DutyWatcher dutyWatcher;
     private readonly GmAlertWatcher gmAlertWatcher;
@@ -67,6 +71,7 @@ public sealed class Plugin : IDalamudPlugin
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        OpenTrainLink = Svc.Chat.AddChatLinkHandler(OpenTrainLinkCommandId, OnOpenTrainLink);
         History = new RunHistory();
         Controller = new AutoHuntController();
         Flags = new FlagListener();
@@ -119,6 +124,7 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(AhtConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AhtConstants.AliasCommand);
 
+        Svc.Chat.RemoveChatLinkHandler(OpenTrainLinkCommandId);
         dutyWatcher.Dispose();
         gmAlertWatcher.Dispose();
         partyInviteWatcher.Dispose();
@@ -210,6 +216,8 @@ public sealed class Plugin : IDalamudPlugin
             ToggleMainUi();
         }
     }
+
+    private void OnOpenTrainLink(uint commandId, SeString message) => appWindow.Show(AppWindow.Page.Train);
 
     private void OnDraw()
     {

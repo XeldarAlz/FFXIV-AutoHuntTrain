@@ -11,7 +11,7 @@ namespace AutoHuntTrain.Windows.Pages;
 
 internal sealed class SettingsPage
 {
-    private enum Tab { General, Repair, Consumables, Party, GmAlert }
+    private enum Tab { General, Upkeep, Party, GmAlert }
 
     private readonly record struct Entry(Tab Tab, LocString Label, FontAwesomeIcon Icon, LocString Subtitle);
 
@@ -19,8 +19,7 @@ internal sealed class SettingsPage
     private static readonly Entry[] entries =
     [
         new(Tab.General, L.Settings.CatGeneral, FontAwesomeIcon.Cog, L.Settings.CatGeneralSub),
-        new(Tab.Repair, L.Safety.CatRepair, FontAwesomeIcon.Wrench, L.Safety.CatRepairSub),
-        new(Tab.Consumables, L.Safety.CatConsumables, FontAwesomeIcon.Utensils, L.Safety.CatConsumablesSub),
+        new(Tab.Upkeep, L.Safety.CatUpkeep, FontAwesomeIcon.Wrench, L.Safety.CatUpkeepSub),
         new(Tab.Party, L.Safety.CatParty, FontAwesomeIcon.Users, L.Safety.CatPartySub),
         new(Tab.GmAlert, L.Safety.CatGmAlert, FontAwesomeIcon.UserSecret, L.Safety.CatGmAlertSub),
     ];
@@ -109,11 +108,8 @@ internal sealed class SettingsPage
             case Tab.General:
                 GeneralSettings.Draw(configuration);
                 break;
-            case Tab.Repair:
-                RepairSettings.Draw(configuration);
-                break;
-            case Tab.Consumables:
-                ConsumableSettings.Draw(configuration);
+            case Tab.Upkeep:
+                UpkeepSettings.Draw(configuration);
                 break;
             case Tab.Party:
                 PartySettings.Draw(configuration);

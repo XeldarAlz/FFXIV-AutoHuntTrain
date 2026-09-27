@@ -315,6 +315,8 @@ internal static partial class L
         public static readonly LocString GeneralBehavior = new("settings.general.behavior", "Behavior");
         public static readonly LocString AutoPause = new("settings.general.autoPause", "Auto-pause in content");
         public static readonly LocString AutoPauseHelp = new("settings.general.autoPauseHelp", "Pause the ride while you are inside a duty, trial, raid, or any other instanced content, then resume it once you are back outside. Your ride and session stats are kept.");
+        public static readonly LocString PauseTyping = new("settings.general.pauseTyping", "Hold while typing");
+        public static readonly LocString PauseTypingHelp = new("settings.general.pauseTypingHelp", "While a text box of the game has focus, like the chat line, the ride starts no new move until you close it. A move already under way carries on, and the latest flag is taken once you are done.");
     }
 
     internal static class Plugin

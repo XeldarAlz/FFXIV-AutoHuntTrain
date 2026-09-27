@@ -122,7 +122,7 @@ internal sealed class GmAlertWatcher : IDisposable
 
         if (configuration.GmAlertStopRun)
         {
-            RunGuarded(() => Plugin.Instance.Controller.Stop(), "stopping the run");
+            RunGuarded(() => Plugin.Instance.Controller.StopForAlert(), "stopping the ride");
         }
 
         if (configuration.GmAlertToast)

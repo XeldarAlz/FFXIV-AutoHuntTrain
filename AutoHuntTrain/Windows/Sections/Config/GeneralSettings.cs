@@ -59,6 +59,12 @@ internal static class GeneralSettings
             () => SettingsControls.DrawToggle(configuration, () => configuration.AutoPauseInContent, value => configuration.AutoPauseInContent = value, "##aht_general_autopause"),
             SettingsRow.ToggleHeight);
 
+        SettingsRow.Draw(Loc.T(L.Settings.PauseTyping),
+            Loc.T(L.Settings.PauseTypingHelp),
+            SettingsControls.ToggleWidth,
+            () => SettingsControls.DrawToggle(configuration, () => configuration.PauseWhileTyping, value => configuration.PauseWhileTyping = value, "##aht_general_pausetyping"),
+            SettingsRow.ToggleHeight);
+
         SettingsRow.Draw(Loc.T(L.Session.AutoResume),
             Loc.T(L.Session.AutoResumeHelp),
             SettingsControls.ToggleWidth,

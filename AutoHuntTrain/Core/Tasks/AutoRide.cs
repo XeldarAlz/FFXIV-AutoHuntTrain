@@ -1,4 +1,5 @@
 using AutoHuntTrain.Core.Feed;
+using AutoHuntTrain.Core.Game;
 using AutoHuntTrain.Core.Game.Ops;
 using AutoHuntTrain.Core.Marks;
 using AutoHuntTrain.Core.Stats;
@@ -29,6 +30,9 @@ internal sealed class AutoRide : AutoCommon
     private const float FlagMarkRadiusMeters = 80f;
     private const int MarkHealthSampleMs = 250;
     private const int ZoneTeleportWatchdogMs = 60_000;
+    private const int TypingPollFrames = 10;
+    // The upkeep conditions read the bag and the status list, so a quiet wait asks at most this often.
+    private const int UpkeepCheckIntervalMs = 5_000;
     private const string UnknownStartZone = "the start zone";
     // A conductor flags the first mark a little before the announced start.
     private static readonly TimeSpan PickWindowBeforeStart = TimeSpan.FromMinutes(2);
@@ -54,6 +58,8 @@ internal sealed class AutoRide : AutoCommon
     private int rankACredited;
     private MarkSighting engagedMark;
     private long nextHealthSampleAtMs;
+    private long quietSinceMs;
+    private long nextUpkeepCheckAtMs;
 
     public AutoRide(AutoHuntSession session, RideProgress progress, FlagListener listener, Announcement? announcement = null)
     {
@@ -300,7 +306,7 @@ internal sealed class AutoRide : AutoCommon
 
         session.DataCenterTransferPending = true;
         Diag($"{label}: running the upkeep before the data center transfer to {target.Name}");
-        await RunUpkeep();
+        await RunUpkeep(travelAllowed: true);
         return !CancelToken.IsCancellationRequested;
     }
 
@@ -357,7 +363,7 @@ internal sealed class AutoRide : AutoCommon
     {
         while (!CancelToken.IsCancellationRequested)
         {
-            if (!TryTakePending(out var flag))
+            if (!hasPending)
             {
                 if (IdleLimitReached())
                 {
@@ -365,7 +371,14 @@ internal sealed class AutoRide : AutoCommon
                     return;
                 }
 
+                await UpkeepWhenQuiet();
                 await NextFrame(WaitPollFrames);
+                continue;
+            }
+
+            await HoldWhileTyping("the way to the flag");
+            if (!TryTakePending(out var flag))
+            {
                 continue;
             }
 
@@ -394,6 +407,12 @@ internal sealed class AutoRide : AutoCommon
         else if (!TryLatestQualifying(out latest) || !TryPickConductor(latest))
         {
             Diag($"Ride: no flag posted in {StartZoneName()} since the train's start yet; waiting for the first one");
+            return;
+        }
+
+        if (latest.PostedAtUtc <= session.LastSettledFlagAtUtc)
+        {
+            Diag($"Ride: the last flag from {Conductor.Describe(conductor)} was already followed before this start; waiting for a new one");
             return;
         }
 
@@ -427,6 +446,7 @@ internal sealed class AutoRide : AutoCommon
 
         pending = post;
         hasPending = true;
+        quietSinceMs = Environment.TickCount64;
         var note = travelling ? "; it supersedes the leg in progress" : engaging ? "; it is taken once the fight ends" : string.Empty;
         Diag($"Ride: flag from {Conductor.Describe(conductor)} in {TerritoryNames.Of(post.TerritoryId)} at ({post.MapX:F1}, {post.MapY:F1}){InstanceText(post)} via {post.ChatType}{note}");
     }
@@ -519,6 +539,7 @@ internal sealed class AutoRide : AutoCommon
 
         if (!ReachedFlag(leg, completed, label, zoneName))
         {
+            session.LastSettledFlagAtUtc = flag.PostedAtUtc;
             BeginWaiting();
             return;
         }
@@ -529,6 +550,11 @@ internal sealed class AutoRide : AutoCommon
         Diag($"{label}: at the flag in {zoneName}, {progress.FlagsFollowed} flag(s) followed so far ({ConditionTag()})");
         await EngageAtFlag(flag, label, zoneName);
         progress.ClearMark();
+        if (!CancelToken.IsCancellationRequested)
+        {
+            session.LastSettledFlagAtUtc = flag.PostedAtUtc;
+        }
+
         BeginWaiting();
     }
 
@@ -569,6 +595,12 @@ internal sealed class AutoRide : AutoCommon
         }
 
         var name = HuntMarkRegistry.NameOf(mark.NameId);
+        await HoldWhileTyping($"the fight with {name}");
+        if (CancelToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         progress.SetRidePhase(RidePhase.Engaging);
         Diag($"{label}: engaging {name} (rank {mark.Rank}, {PullText(mark)}) {mark.Sighting.DistanceToHitbox:F0}m away, {SecondsSince(arrivedAtMs)}s after arriving");
         var outcome = await FightSightedMark(mark, territoryId);
@@ -738,10 +770,67 @@ internal sealed class AutoRide : AutoCommon
 
     private void BeginWaiting()
     {
+        quietSinceMs = Environment.TickCount64;
         progress.SetRidePhase(RidePhase.WaitingForFlag);
-        Status = conductor.IsSet
+        ShowWaiting();
+    }
+
+    private void ShowWaiting()
+        => Status = conductor.IsSet
             ? $"Waiting for a flag from {Conductor.Describe(conductor)}"
             : $"Waiting for the first flag in {StartZoneName()}";
+
+    // Repair and food run only in a lull: the ride waits for a flag, and none has come or been taken for the quiet
+    // time. The countdown before the first flag is such a lull too; the upkeep never travels, so the character stays at
+    // the start. A flag that arrives meanwhile stops it between steps.
+    private async Task UpkeepWhenQuiet()
+    {
+        var now = Environment.TickCount64;
+        if (now < nextUpkeepCheckAtMs || now - quietSinceMs < UpkeepQuietMs() || TypingHoldsMovement())
+        {
+            return;
+        }
+
+        nextUpkeepCheckAtMs = now + UpkeepCheckIntervalMs;
+        if (!UpkeepDue(travelAllowed: false))
+        {
+            return;
+        }
+
+        Diag($"Ride: no new flag for {(now - quietSinceMs) / TimeUnits.MillisecondsPerSecond}s; running the upkeep while waiting ({ConditionTag()})");
+        await RunUpkeep(travelAllowed: false, newerFlagArrived);
+        if (hasPending)
+        {
+            Diag("Ride: a flag arrived during the upkeep; the rest of it waits for the next lull");
+        }
+
+        ShowWaiting();
+    }
+
+    private static long UpkeepQuietMs()
+        => Math.Max(Configuration.UpkeepQuietSecondsMin, Plugin.Instance.Configuration.UpkeepQuietSeconds) * (long)TimeUnits.MillisecondsPerSecond;
+
+    private static bool TypingHoldsMovement()
+        => Plugin.Instance.Configuration.PauseWhileTyping && TextInputFocus.Active();
+
+    // No new move starts while the player types. The flag listener keeps hearing flags, and the newest is taken after.
+    private async Task HoldWhileTyping(string what)
+    {
+        if (!TypingHoldsMovement())
+        {
+            return;
+        }
+
+        var previous = Status;
+        Status = "Holding while you type";
+        Diag($"Ride: a text input has focus; {what} waits until it is closed");
+        while (!CancelToken.IsCancellationRequested && TypingHoldsMovement())
+        {
+            await NextFrame(TypingPollFrames);
+        }
+
+        Diag($"Ride: the text input closed; {what} goes ahead");
+        Status = previous;
     }
 
     private bool IdleLimitReached()

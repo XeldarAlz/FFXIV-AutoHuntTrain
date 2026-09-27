@@ -13,6 +13,12 @@ public sealed partial class Configuration
     public int AutoConsumeMinMinutes { get; set; } = 3;
     public List<ConsumableEntry> AutoConsumeItems { get; set; } = [];
 
+    // A conductor posts the next flag within seconds of a kill, so a lull shorter than this is not one.
+    public const int UpkeepQuietSecondsMin = 20;
+
+    // How long a ride waits with no new flag before it repairs or eats.
+    public int UpkeepQuietSeconds { get; set; } = UpkeepQuietSecondsMin;
+
     public bool AcceptPartyInvites { get; set; } = true;
     public bool PostLookingForGroup { get; set; } = false;
     public string LookingForGroupText { get; set; } = "LFG";

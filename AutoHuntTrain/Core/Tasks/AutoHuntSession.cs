@@ -32,6 +32,9 @@ public sealed class AutoHuntSession
 
     internal bool LookingForGroupPosted;
 
+    // When the last flag the ride finished with was posted, so a resume does not follow that flag a second time.
+    internal DateTime LastSettledFlagAtUtc = DateTime.MinValue;
+
     // Null until the ride decides how it ended; a ride cut by the relog of a transfer never decides.
     internal RideOutcome? Outcome;
 

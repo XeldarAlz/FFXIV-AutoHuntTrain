@@ -9,18 +9,20 @@ internal static partial class L
         public static readonly LocString Test = new("safety.test", "Test");
         public static readonly LocString Preview = new("safety.preview", "Preview");
 
-        public static readonly LocString CatRepair = new("safety.cat.repair", "Repair");
-        public static readonly LocString CatRepairSub = new("safety.cat.repairSub", "Auto-repair gear when equipped item condition drops below the threshold.");
-        public static readonly LocString CatConsumables = new("safety.cat.consumables", "Consumables");
-        public static readonly LocString CatConsumablesSub = new("safety.cat.consumablesSub", "Keep food and medicine buffs up while hunting: Well Fed is a free +3% EXP.");
+        public static readonly LocString CatUpkeep = new("safety.cat.upkeep", "Upkeep");
+        public static readonly LocString CatUpkeepSub = new("safety.cat.upkeepSub", "Repair and food during a ride. They run only in a lull while the ride waits for a flag, never on the way to one or during a fight.");
         public static readonly LocString CatParty = new("safety.cat.partyInvites", "Party");
         public static readonly LocString CatPartySub = new("safety.cat.partyInvitesSub", "On a train, party members share the credit on a mark. Join the parties the crowd offers, find one with a shout, and leave it once the ride is over.");
         public static readonly LocString CatGmAlert = new("safety.cat.gmAlert", "GM alert");
-        public static readonly LocString CatGmAlertSub = new("safety.cat.gmAlertSub", "Detects nearby Game Masters and reacts: stop the bot, ping you, or take more drastic action.");
+        public static readonly LocString CatGmAlertSub = new("safety.cat.gmAlertSub", "Detects nearby Game Masters and reacts: stop the ride, ping you, or take more drastic action.");
+
+        public static readonly LocString UpkeepTiming = new("safety.upkeep.timing", "Timing");
+        public static readonly LocString UpkeepQuiet = new("safety.upkeep.quiet", "Quiet time before upkeep");
+        public static readonly LocString UpkeepQuietHelp = new("safety.upkeep.quietHelp", "Repair and food wait until the ride has been waiting this long without a new flag, so they never hold you back when the conductor moves on. A flag that arrives meanwhile stops them. The upkeep before a data center transfer does not wait.");
 
         public static readonly LocString RepairTrigger = new("safety.repair.trigger", "Repair trigger");
         public static readonly LocString AutoRepair = new("safety.repair.autoRepair", "Auto-repair gear");
-        public static readonly LocString AutoRepairHelp = new("safety.repair.autoRepairHelp", "Between marks, when the lowest equipped item drops to or below the threshold, the plugin runs a repair. At 0% the gear stops working, so keep some margin.");
+        public static readonly LocString AutoRepairHelp = new("safety.repair.autoRepairHelp", "When the lowest equipped item drops to or below the threshold, the plugin repairs in a lull between flags and before a data center transfer. During a ride only Dark Matter from your bag is used; a trip to a repair NPC waits for the upkeep before a transfer. At 0% the gear stops working, so keep some margin.");
         public static readonly LocString AutoRepairOff = new("safety.repair.autoRepairOff", "Auto-repair is off. Enable it to configure repair.");
         public static readonly LocString RepairThreshold = new("safety.repair.threshold", "Repair threshold");
         public static readonly LocString RepairThresholdHelp = new("safety.repair.thresholdHelp", "Trips when the worst equipped slot reaches this condition percentage. 20% leaves comfortable margin before the 0% breakdown.");
@@ -43,7 +45,7 @@ internal static partial class L
 
         public static readonly LocString ConsumablesGroup = new("safety.consumables.group", "Consumables");
         public static readonly LocString AutoConsume = new("safety.consumables.autoConsume", "Auto-consume food & medicine");
-        public static readonly LocString AutoConsumeHelp = new("safety.consumables.autoConsumeHelp", "Use food and medicine between marks to keep their buffs up; Well Fed alone is a free +3% EXP. Items are consumed only when out of combat, and refreshed before the buff runs out.");
+        public static readonly LocString AutoConsumeHelp = new("safety.consumables.autoConsumeHelp", "Use food and medicine in a lull between flags to keep their buffs up; Well Fed alone is a free +3% EXP. Items are consumed only out of combat, and refreshed before the buff runs out.");
         public static readonly LocString AutoConsumeOff = new("safety.consumables.autoConsumeOff", "Auto-consume is off. Enable it to pick items.");
         public static readonly LocString RefreshUnder = new("safety.consumables.refreshUnder", "Refresh when under");
         public static readonly LocString RefreshUnderHelp = new("safety.consumables.refreshUnderHelp", "Re-consume once the buff has fewer than this many minutes left. 0 only re-applies after it fully wears off. A meal lasts 30 minutes.");
@@ -79,8 +81,8 @@ internal static partial class L
         public static readonly LocString LeavePartyHelp = new("safety.party.leaveHelp", "When a ride ends on its own, leave the party before the way home. A party you were in before the ride started is kept. Before a data center transfer the party is always left, since the game refuses the transfer otherwise.");
 
         public static readonly LocString GmAlerts = new("safety.gm.alerts", "Alerts");
-        public static readonly LocString GmStopRun = new("safety.gm.stopRun", "Stop the run");
-        public static readonly LocString GmStopRunHelp = new("safety.gm.stopRunHelp", "Halt automation immediately when a GM appears nearby. Strongly recommended; the rest of the alerts are useless if the bot keeps hunting.");
+        public static readonly LocString GmStopRun = new("safety.gm.stopRun", "Stop the ride");
+        public static readonly LocString GmStopRunHelp = new("safety.gm.stopRunHelp", "End the ride at once when a GM appears nearby. It is recorded as stopped, and nothing runs after it: no way home and no after-ride action. Strongly recommended; the other alerts are little use if the ride keeps going.");
         public static readonly LocString GmToast = new("safety.gm.toast", "Toast notification");
         public static readonly LocString GmToastHelp = new("safety.gm.toastHelp", "Pop a Dalamud toast: \"GM <name> is nearby!\"");
         public static readonly LocString GmChat = new("safety.gm.chat", "Chat alert");

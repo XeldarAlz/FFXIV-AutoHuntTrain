@@ -69,7 +69,7 @@ internal sealed partial class AutoHuntController
 
         var name = Conductor.Describe(conductor);
         BeginRun(new AutoHuntSession(), owning => new AutoRide(owning, progress, Plugin.Instance.Flags), $"following {name}");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Following {name}'s flags.");
+        RideChat.PrintStart($"{AhtConstants.LogPrefix} Following {name}'s flags.");
     }
 
     // A ride from the feed: the journey to the train's start, then the follow loop. The rules are checked once more
@@ -98,7 +98,7 @@ internal sealed partial class AutoHuntController
         }
 
         RideAnnouncement(announcement, NewRideSession(announcement), "riding");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Riding the {group} train on {world.Name}; travelling to {StartText(announcement)}.");
+        RideChat.PrintStart($"{AhtConstants.LogPrefix} Riding the {group} train on {world.Name}; travelling to {StartText(announcement)}.");
         return true;
     }
 
@@ -129,7 +129,7 @@ internal sealed partial class AutoHuntController
         resumed.CrossedDataCenter = true;
         resumed.ResumeJourney = true;
         RideAnnouncement(announcement, resumed, "resuming after the data center transfer");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Picking the {ExpansionGroups.Name(announcement.Group)} train on {announcement.World.Name} back up after the data center transfer.");
+        RideChat.PrintStart($"{AhtConstants.LogPrefix} Picking the {ExpansionGroups.Name(announcement.Group)} train on {announcement.World.Name} back up after the data center transfer.");
         return true;
     }
 
@@ -160,6 +160,18 @@ internal sealed partial class AutoHuntController
         }
 
         return announcement.NamesTerritory ? TerritoryNames.Of(announcement.TerritoryId) : "the train's world";
+    }
+
+    // A GM nearby ends the ride as stopped, whatever it was about to become, and nothing runs after it: no leaving the
+    // party, no way home, no after-run action.
+    public void StopForAlert()
+    {
+        if (session is { Recorded: false } live)
+        {
+            live.Outcome = RideOutcome.Stopped;
+        }
+
+        Stop();
     }
 
     public void Stop()

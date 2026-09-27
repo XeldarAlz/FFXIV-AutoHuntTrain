@@ -20,15 +20,16 @@ public abstract partial class AutoCommon
     // Above this with the window closed, the repair has landed even if its animation flag was missed.
     private const float RepairDoneConditionPercent = 95f;
 
-    protected async Task<bool> RepairGear()
+    // Without travel the mender is never visited, whatever the mode says.
+    protected async Task<bool> RepairGear(bool travelAllowed)
     {
         var configuration = Plugin.Instance.Configuration;
         var before = RepairOps.LowestEquippedConditionPercent();
-        Diag($"Repair: lowest condition {before:F1}%, threshold {configuration.AutoRepairThresholdPercent}%, mode {configuration.RepairMode}");
+        Diag($"Repair: lowest condition {before:F1}%, threshold {configuration.AutoRepairThresholdPercent}%, mode {configuration.RepairMode}{(travelAllowed ? string.Empty : ", no travel")}");
         Svc.Chat.Print($"{AhtConstants.LogPrefix} Repairing gear (lowest at {before:F0}%).");
 
         var allowSelf = configuration.RepairMode is RepairMode.SelfThenNpc or RepairMode.SelfOnly;
-        var allowNpc = configuration.RepairMode is RepairMode.SelfThenNpc or RepairMode.NpcOnly;
+        var allowNpc = travelAllowed && configuration.RepairMode is RepairMode.SelfThenNpc or RepairMode.NpcOnly;
         var repaired = allowSelf && await TrySelfRepair();
         if (!repaired && allowNpc && !CancelToken.IsCancellationRequested)
         {
@@ -36,7 +37,7 @@ public abstract partial class AutoCommon
         }
         else if (!repaired && !allowNpc && !CancelToken.IsCancellationRequested)
         {
-            Warn("Repair: self-repair failed and NPC repair is off");
+            Warn(travelAllowed ? "Repair: self-repair failed and NPC repair is off" : "Repair: self-repair failed and the mender waits for the upkeep before a transfer");
         }
 
         var after = RepairOps.LowestEquippedConditionPercent();
