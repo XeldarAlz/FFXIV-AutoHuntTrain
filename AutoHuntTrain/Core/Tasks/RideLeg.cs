@@ -87,7 +87,13 @@ internal sealed class RideLeg(FlagPost flag, string label) : AutoCommon
         var reached = false;
         await RunWithStatusPinned(
             $"Teleporting to {zoneName}",
-            async () => reached = await TeleportToTerritory(territoryId, EstimateMarkHeight(territoryId, flat), $"{label}-teleport", TeleportWatchdogMs));
+            async () =>
+            {
+                if (await HumanDelay(HumanAction.Teleport, label))
+                {
+                    reached = await TeleportToTerritory(territoryId, EstimateMarkHeight(territoryId, flat), $"{label}-teleport", TeleportWatchdogMs);
+                }
+            });
         if (reached || CancelToken.IsCancellationRequested)
         {
             return reached;
@@ -110,6 +116,11 @@ internal sealed class RideLeg(FlagPost flag, string label) : AutoCommon
         }
 
         Diag($"{label}: instance {flag.Instance} named while in instance {LifestreamIPC.Instance.CurrentInstance()}; teleporting to {aetheryte.Name} to switch");
+        if (!await HumanDelay(HumanAction.Teleport, label))
+        {
+            return;
+        }
+
         await TeleportToAetheryte(territoryId, aetheryte, $"{label}-aetheryte");
     }
 

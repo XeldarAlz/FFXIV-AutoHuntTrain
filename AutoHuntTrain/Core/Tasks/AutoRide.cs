@@ -30,6 +30,7 @@ internal sealed partial class AutoRide : AutoCommon
     // A conductor flags where the mark stands, and it roams a little before the pull.
     private const float FlagMarkRadiusMeters = 80f;
     private const int MarkHealthSampleMs = 250;
+    private const float EngageAtOnceBelowHealth = 0.5f;
     private const int ZoneTeleportWatchdogMs = 60_000;
     private const int TypingPollFrames = 10;
     // The upkeep conditions read the bag and the status list, so a quiet wait asks at most this often.
@@ -98,7 +99,7 @@ internal sealed partial class AutoRide : AutoCommon
                     return;
                 }
 
-                PostLookingForGroup();
+                await PostLookingForGroup();
             }
 
             PublishCredits();
@@ -276,7 +277,14 @@ internal sealed partial class AutoRide : AutoCommon
         var reached = false;
         await RunWithStatusPinned(
             $"Teleporting to {zoneName}",
-            async () => reached = await TeleportToTerritory(plan.TerritoryId, destination, $"{JourneyLabel}-zone", ZoneTeleportWatchdogMs));
+            async () =>
+            {
+                var label = $"{JourneyLabel}-zone";
+                if (await HumanDelayBeforeTeleport(plan.TerritoryId, label))
+                {
+                    reached = await TeleportToTerritory(plan.TerritoryId, destination, label, ZoneTeleportWatchdogMs);
+                }
+            });
         if (!reached)
         {
             if (!CancelToken.IsCancellationRequested)
@@ -290,6 +298,10 @@ internal sealed partial class AutoRide : AutoCommon
 
         return !plan.NamesInstance || await SwitchToInstance(plan.Instance, JourneyLabel);
     }
+
+    // Already in the zone there is no teleport to hesitate before.
+    private async Task<bool> HumanDelayBeforeTeleport(uint territoryId, string label)
+        => Svc.ClientState.TerritoryType == territoryId || await HumanDelay(HumanAction.Teleport, label);
 
     // A refused journey never moved the character, so only a journey that did go somewhere hands on to the way home.
     // A refused journey and an overdue transfer have said why in chat already.
@@ -357,8 +369,9 @@ internal sealed partial class AutoRide : AutoCommon
         Diag($"Ride: saved the {ExpansionGroups.Name(plan.Group)} train on {plan.World.Name} for the login after the transfer");
     }
 
-    // Once per ride, at the train's start: a train's parties share the credit on a mark, and a shout finds one.
-    private void PostLookingForGroup()
+    // Once per ride, at the train's start: a train's parties share the credit on a mark, and a shout finds one. A flag
+    // heard during the pause before it cuts the pause short, so the shout never holds up the ride.
+    private async Task PostLookingForGroup()
     {
         var configuration = Plugin.Instance.Configuration;
         if (!configuration.PostLookingForGroup || session.LookingForGroupPosted || PartyOps.InParty())
@@ -366,14 +379,21 @@ internal sealed partial class AutoRide : AutoCommon
             return;
         }
 
-        session.LookingForGroupPosted = true;
         var text = (configuration.LookingForGroupText ?? string.Empty).Trim();
         if (text.Length == 0)
         {
+            session.LookingForGroupPosted = true;
             Diag("Ride: the looking-for-group text is empty; nothing posted");
             return;
         }
 
+        await HumanDelay(HumanAction.LookingForGroup, "Ride", newerFlagArrived);
+        if (CancelToken.IsCancellationRequested || PartyOps.InParty())
+        {
+            return;
+        }
+
+        session.LookingForGroupPosted = true;
         if (PartyOps.Shout(text))
         {
             Diag($"Ride: posted \"{text}\" in Shout to find a party");
@@ -579,7 +599,11 @@ internal sealed partial class AutoRide : AutoCommon
         travelling = true;
         try
         {
-            await RunWithStatusFrom(leg, async () => completed = await RunCancellable(leg, LegBudgetMs, label, newerFlagArrived));
+            Status = $"Moving off to the flag in {zoneName}";
+            if (await HumanDelay(HumanAction.MoveOff, label, newerFlagArrived))
+            {
+                await RunWithStatusFrom(leg, async () => completed = await RunCancellable(leg, LegBudgetMs, label, newerFlagArrived));
+            }
         }
         finally
         {
@@ -659,7 +683,7 @@ internal sealed partial class AutoRide : AutoCommon
 
         var name = HuntMarkRegistry.NameOf(mark.NameId);
         await HoldWhileTyping($"the fight with {name}");
-        if (CancelToken.IsCancellationRequested)
+        if (CancelToken.IsCancellationRequested || !await HumanDelayBeforeEngaging(mark, label, name))
         {
             return;
         }
@@ -682,6 +706,18 @@ internal sealed partial class AutoRide : AutoCommon
 
         PublishCredits();
         Diag($"{label}: {name} credited {seconds}s after arriving at the flag; {CreditTally()} credited so far");
+    }
+
+    // A mark already under half health goes down in seconds, so it is joined at once.
+    private async Task<bool> HumanDelayBeforeEngaging(ZoneMarkSighting mark, string label, string name)
+    {
+        if (MarkFinder.TryReadHealth(mark.Sighting, out var fraction) && fraction < EngageAtOnceBelowHealth)
+        {
+            RunLog.Debug($"{label}: {name} is at {fraction:P0} health; engaging without a pause");
+            return true;
+        }
+
+        return await HumanDelay(HumanAction.Engage, label);
     }
 
     // Stays put, mounted or not, until a mark of the zone stands near the flag and someone has pulled it, unless the

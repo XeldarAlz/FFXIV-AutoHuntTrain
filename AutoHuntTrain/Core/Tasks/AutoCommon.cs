@@ -32,6 +32,30 @@ public abstract partial class AutoCommon : TaskBase
         }
     }
 
+    // True once the drawn wait ran out; false when the run was cancelled or abortIf tripped first.
+    protected async Task<bool> HumanDelay(HumanAction action, string label, Func<bool>? abortIf = null)
+    {
+        var delayMs = Humanizer.DrawDelayMs(action);
+        if (delayMs <= 0)
+        {
+            return !CancelToken.IsCancellationRequested;
+        }
+
+        RunLog.Debug($"{label}: waiting {delayMs} ms before {Humanizer.Describe(action)}");
+        var deadline = Environment.TickCount64 + delayMs;
+        while (Environment.TickCount64 < deadline)
+        {
+            if (CancelToken.IsCancellationRequested || (abortIf is not null && abortIf()))
+            {
+                return false;
+            }
+
+            await NextFrame(DelayPollFrames);
+        }
+
+        return !CancelToken.IsCancellationRequested;
+    }
+
     // Pinned every frame because the movement library overwrites Status with raw coordinates mid-teleport.
     protected async Task RunWithStatusPinned(string label, Func<Task> work)
     {

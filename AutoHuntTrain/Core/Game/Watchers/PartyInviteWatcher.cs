@@ -25,8 +25,9 @@ internal sealed unsafe class PartyInviteWatcher : IDisposable
     private const ushort NoInvite = 0;
     private const string SelectYesnoAddonName = "SelectYesno";
     private const uint JoinPartyPromptRow = 120;
-    // A prompt clicked the frame it opens can drop the click, so the accept waits a moment.
-    private const int AcceptDelayMs = 500;
+    // A prompt clicked the frame it opens can drop the click, so the accept waits at least this long even with the
+    // humanizer off.
+    private const int MinimumAcceptDelayMs = 500;
     private const int NotReadyAbandonMs = 15_000;
 
     private PromptTemplate joinPrompt = PromptTemplate.Invalid;
@@ -75,8 +76,10 @@ internal sealed unsafe class PartyInviteWatcher : IDisposable
 
         CaptureInviter();
         inviteAddonId = addon->Id;
-        acceptAtTick = Environment.TickCount64 + AcceptDelayMs;
+        var delayMs = Math.Max(MinimumAcceptDelayMs, Humanizer.DrawDelayMs(HumanAction.AcceptInvite));
+        acceptAtTick = Environment.TickCount64 + delayMs;
         RunLog.Info($"Party invite from {DisplayName()} during the ride; accepting it.");
+        RunLog.Debug($"Party invite: waiting {delayMs} ms before {Humanizer.Describe(HumanAction.AcceptInvite)}");
     }
 
     private void OnUpdate(IFramework _)

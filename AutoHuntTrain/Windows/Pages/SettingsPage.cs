@@ -11,7 +11,7 @@ namespace AutoHuntTrain.Windows.Pages;
 
 internal sealed class SettingsPage
 {
-    private enum Tab { General, Feed, Ride, Upkeep, Party, GmAlert }
+    private enum Tab { General, Feed, Ride, Humanizer, Upkeep, Party, GmAlert }
 
     private readonly record struct Entry(Tab Tab, LocString Label, FontAwesomeIcon Icon, LocString Subtitle);
 
@@ -21,6 +21,7 @@ internal sealed class SettingsPage
         new(Tab.General, L.Settings.CatGeneral, FontAwesomeIcon.Cog, L.Settings.CatGeneralSub),
         new(Tab.Feed, L.Feed.SettingsGroup, FontAwesomeIcon.Rss, L.Settings.CatFeedSub),
         new(Tab.Ride, L.Train.Ride, FontAwesomeIcon.Train, L.Settings.CatRideSub),
+        new(Tab.Humanizer, L.Humanizer.Tab, FontAwesomeIcon.UserClock, L.Humanizer.TabSub),
         new(Tab.Upkeep, L.Safety.CatUpkeep, FontAwesomeIcon.Wrench, L.Safety.CatUpkeepSub),
         new(Tab.Party, L.Safety.CatParty, FontAwesomeIcon.Users, L.Safety.CatPartySub),
         new(Tab.GmAlert, L.Safety.CatGmAlert, FontAwesomeIcon.UserSecret, L.Safety.CatGmAlertSub),
@@ -119,6 +120,9 @@ internal sealed class SettingsPage
                 ConductorSettings.Draw(configuration);
                 EngagementSettings.Draw(configuration);
                 AfterRideSettings.Draw(configuration);
+                break;
+            case Tab.Humanizer:
+                HumanizerSettings.Draw(configuration);
                 break;
             case Tab.Upkeep:
                 UpkeepSettings.Draw(configuration);

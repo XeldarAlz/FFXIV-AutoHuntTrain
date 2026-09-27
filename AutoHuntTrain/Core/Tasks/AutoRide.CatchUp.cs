@@ -124,7 +124,14 @@ internal sealed partial class AutoRide
         var reached = false;
         await RunWithStatusPinned(
             $"Catching up: teleporting to {zoneName} ({step + 1} of {stops})",
-            async () => reached = await TeleportToTerritory(territoryId, destination, $"{CatchUpLabel}-{step + 1}", ZoneTeleportWatchdogMs));
+            async () =>
+            {
+                var label = $"{CatchUpLabel}-{step + 1}";
+                if (await HumanDelayBeforeTeleport(territoryId, label))
+                {
+                    reached = await TeleportToTerritory(territoryId, destination, label, ZoneTeleportWatchdogMs);
+                }
+            });
         if (!reached && !CancelToken.IsCancellationRequested)
         {
             Warn($"{CatchUpLabel}: could not reach {zoneName} (still in territory {Svc.ClientState.TerritoryType}); stepping on to the next zone");
