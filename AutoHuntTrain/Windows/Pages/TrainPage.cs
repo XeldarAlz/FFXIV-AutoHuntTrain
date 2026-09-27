@@ -43,7 +43,7 @@ internal sealed class TrainPage
 
         Styling.VSpace(16f);
         SectionTitle(Loc.T(L.Train.Ride));
-        EmptyCard(FontAwesomeIcon.Route, Loc.T(L.Train.RideEmpty));
+        RideCard.Draw(plugin);
         Styling.VSpace(12f);
     }
 

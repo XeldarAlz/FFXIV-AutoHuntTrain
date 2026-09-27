@@ -61,7 +61,6 @@ internal static partial class L
         public static readonly LocString Upcoming = new("train.upcoming", "Upcoming trains");
         public static readonly LocString UpcomingEmpty = new("train.upcomingEmpty", "No announcements have arrived yet. HuntAlerts provides them as trains are called.");
         public static readonly LocString Ride = new("train.ride", "Ride");
-        public static readonly LocString RideEmpty = new("train.rideEmpty", "The ride logic is not built yet. The train being ridden, its conductor and the next flag will show here.");
 
         public static readonly LocString WhenDone = new("train.whenDone", "When the ride ends");
         public static readonly LocString WhenDoneHelp = new("train.whenDoneHelp", "What to do once a ride ends on its own. A manual Stop or a fault never triggers it.");
@@ -89,8 +88,7 @@ internal static partial class L
         public static readonly LocString ResumeCaps = new("train.resume", "RESUME");
         public static readonly LocString InContent = new("train.inContent", "in content");
         public static readonly LocString ReasonInstall = new("train.reason.install", "install the required plugins");
-        public static readonly LocString ReasonNotBuilt = new("train.reason.notBuilt", "the ride logic is not built yet");
-        public static readonly LocString StartSub = new("train.startSub", "no ride to start yet");
+        public static readonly LocString StartSub = new("train.startSub", "follow the conductor's flags");
         public static readonly LocString StateRunning = new("train.state.running", "riding");
         public static readonly LocString StatePaused = new("train.state.paused", "paused");
         public static readonly LocString StopSub = new("train.stopSub", "{0} · {1}");
@@ -315,7 +313,7 @@ internal static partial class L
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).");
+        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /aht.");
     }
 }

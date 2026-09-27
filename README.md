@@ -68,6 +68,8 @@ The plugin needs a few helpers for movement, combat and travel to be installed a
 | `/aht changelog` | Open the Changelog page |
 | `/aht about` | Open the About page |
 | `/aht pause` | Pause or resume the current ride |
+| `/aht conductor <First Last>[@World]` | Follow this player's flags; the world defaults to yours. Alone, shows the current conductor |
+| `/aht conductor clear` | Stop following anyone |
 | `/aht target` | Log targeted NPC's BaseId (debug helper) |
 | `/aht goto <territory> <x> <y> <z>` | Travel to a point, `/aht goto stop` cancels (debug helper) |
 | `/aht goto <world> [<aetheryte>] [i<n>]` | Travel to a world in your region, and on it to a named aetheryte and instance, e.g. `/aht goto Zalera Wachunpelo i2` (debug helper) |

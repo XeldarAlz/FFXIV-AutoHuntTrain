@@ -21,7 +21,7 @@ internal static class RunningPanel
 
     private static uint cachedTerritoryId = uint.MaxValue;
     private static string cachedZoneName = string.Empty;
-    private static CachedText creditedText;
+    private static CachedText progressText;
 
     public static void Draw(AutoHuntController controller)
     {
@@ -88,9 +88,18 @@ internal static class RunningPanel
         var y = origin.Y + 16f * scale;
 
         y += DrawPhaseChip(columnX, y, label, accent, accentSoft) + 10f * scale;
-        y = CurrentMark.TryGet(controller, out var mark)
-            ? DrawMark(mark, controller.Status, columnX, columnWidth, y)
-            : DrawStatus(controller.Status, columnX, columnWidth, y);
+        if (CurrentMark.TryGet(controller, out var mark))
+        {
+            y = DrawMark(mark, controller.Status, columnX, columnWidth, y);
+        }
+        else if (CurrentFlag.TryGet(controller, out var flag))
+        {
+            y = DrawFlag(flag, controller.Status, columnX, columnWidth, y);
+        }
+        else
+        {
+            y = DrawStatus(controller.Status, columnX, columnWidth, y);
+        }
 
         var barHeight = 8f * scale;
         var barOrigin = new Vector2(columnX, y);
@@ -106,7 +115,7 @@ internal static class RunningPanel
         y += barHeight + 8f * scale;
         using (Fonts.PushCaption())
         {
-            TextDraw.At(Credited(controller), new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
+            TextDraw.At(ProgressLine(controller), new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
         }
 
         ImGui.Dummy(size);
@@ -138,6 +147,21 @@ internal static class RunningPanel
         return y + 10f * scale;
     }
 
+    private static float DrawFlag(in CurrentFlag.View flag, string status, float x, float width, float y)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        TextDraw.At(TextDraw.Truncate(flag.Line, width), new Vector2(x, y), Styling.TextStrong);
+        y += ImGui.GetTextLineHeight() + 3f * scale;
+
+        using (Fonts.PushCaption())
+        {
+            TextDraw.At(TextDraw.Truncate(status, width), new Vector2(x, y), Styling.TextMuted);
+            y += ImGui.GetTextLineHeight();
+        }
+
+        return y + 10f * scale;
+    }
+
     private static float DrawRankBadge(HuntMarkRank? rank, float leftX, float midY)
     {
         if (rank is not { } markRank)
@@ -161,10 +185,18 @@ internal static class RunningPanel
         ProgressRing.CenterIcon(center, FontAwesomeIcon.Train, Styling.TextDim, radius * 0.55f);
     }
 
-    private static string Credited(AutoHuntController controller)
+    // Flags followed and marks credited, rebuilt only when either count changes.
+    private static string ProgressLine(AutoHuntController controller)
     {
+        var flags = controller.Progress.FlagsFollowed;
         var credited = controller.SessionSnapshot?.MarksCredited ?? 0;
-        return creditedText.Get(credited, static key => Loc.Plural(L.Run.MarksCredited, (int)key));
+        var key = ((long)flags << 32) | (uint)credited;
+        if (progressText.TryGet(key, out var line))
+        {
+            return line;
+        }
+
+        return progressText.Set(key, Loc.T(L.Ride.ProgressLine, Loc.Plural(L.Ride.FlagsFollowed, flags), Loc.Plural(L.Run.MarksCredited, credited)));
     }
 
     private static float DrawPhaseChip(float x, float y, string text, Vector4 accent, Vector4 accentSoft)
@@ -205,7 +237,8 @@ internal static class RunningPanel
             HuntPhase.Fighting  => (Styling.AccentGlow, Styling.AccentGlowSoft, Loc.T(L.Run.PhaseFighting)),
             HuntPhase.Finishing => (Styling.AccentMint,  Styling.AccentMintSoft,  Loc.T(L.Run.PhaseFinishing)),
             HuntPhase.Idle      => (Styling.TextDim,     Styling.TextSecondary,   Loc.T(L.Run.PhaseStandingBy)),
-            _                   => (Styling.AccentBlue,  Styling.AccentBlueSoft,  ReadyState.PhaseLabel(controller.Phase)),
+            HuntPhase.Waiting   => (Styling.TextDim,     Styling.TextSecondary,   ReadyState.ActivityLabel(controller)),
+            _                   => (Styling.AccentBlue,  Styling.AccentBlueSoft,  ReadyState.ActivityLabel(controller)),
         };
     }
 

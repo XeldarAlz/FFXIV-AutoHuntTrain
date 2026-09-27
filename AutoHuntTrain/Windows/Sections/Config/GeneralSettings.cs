@@ -22,6 +22,7 @@ internal static class GeneralSettings
         DrawLanguageGroup(configuration);
         DrawWindowGroup(configuration);
         DrawBehaviorGroup(configuration);
+        ConductorSettings.Draw(configuration);
         DrawAfterRideGroup(configuration);
     }
 

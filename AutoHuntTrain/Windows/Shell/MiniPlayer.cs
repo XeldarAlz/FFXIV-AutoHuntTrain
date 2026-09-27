@@ -57,13 +57,13 @@ internal static class MiniPlayer
         }
 
         var textX = origin.X + padX + 22f * scale;
-        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.PhaseLabel(controller.Phase);
+        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.ActivityLabel(controller);
         var phaseSize = TextDraw.SmallCapsSize(phase);
         var lineHeight = ImGui.GetTextLineHeight();
         var gap = 2f * scale;
         var top = midY - (phaseSize.Y + gap + lineHeight) * 0.5f;
         TextDraw.SmallCaps(phase, new Vector2(textX, top), info.AccentSoft);
-        var detail = CurrentMark.TryGet(controller, out var mark) ? mark.Line : controller.Status;
+        var detail = ReadyState.ActivityDetail(controller);
         TextDraw.At(TextDraw.Truncate(detail, barX - 16f * scale - textX), new Vector2(textX, top + phaseSize.Y + gap), Styling.TextStrong);
 
         var resumeBlocked = controller.Paused && controller.PauseReason == PauseReason.InContent;
