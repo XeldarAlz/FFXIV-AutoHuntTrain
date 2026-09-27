@@ -27,7 +27,6 @@ internal static partial class L
         public static readonly LocString StatusRunning = new("shell.status.running", "Riding");
         public static readonly LocString StatusPaused = new("shell.status.paused", "Paused");
         public static readonly LocString StatusFeedReady = new("shell.status.feedReady", "Feed ready");
-        public static readonly LocString StatusChatOnly = new("shell.status.chatOnly", "Chat only");
         public static readonly LocString StatusSetupNeeded = new("shell.status.setupNeeded", "Setup needed");
         public static readonly LocString StatusIdle = new("shell.status.idle", "Idle");
         public static readonly LocString Minimize = new("shell.minimize", "Minimize to the title strip");
@@ -45,8 +44,6 @@ internal static partial class L
         public static readonly LocString DetailSetupNeeded = new("train.detail.setupNeeded", "Install the required plugins before your first ride.");
         public static readonly LocString TitleFeedReady = new("train.title.feedReady", "HuntAlerts is listening");
         public static readonly LocString DetailFeedReady = new("train.detail.feedReady", "Train announcements from the community feed will show up on this page.");
-        public static readonly LocString TitleChatOnly = new("train.title.chatOnly", "Chat only");
-        public static readonly LocString DetailChatOnly = new("train.detail.chatOnly", "HuntAlerts is not loaded, so a train can only be followed from a conductor's chat on your current world.");
         public static readonly LocString TitleRiding = new("train.title.riding", "Riding");
         public static readonly LocString TitlePaused = new("train.title.paused", "Paused");
         public static readonly LocString DetailPausedInContent = new("train.detail.pausedInContent", "Resumes once you leave the duty");

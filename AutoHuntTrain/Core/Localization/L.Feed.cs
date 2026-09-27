@@ -5,7 +5,6 @@ internal static partial class L
     internal static class Feed
     {
         public static readonly LocString HeadlineHuntAlerts = new("feed.headline.huntAlerts", "Feed: HuntAlerts");
-        public static readonly LocString HeadlineChatOnly = new("feed.headline.chatOnly", "Feed: chat only");
         public static readonly LocString HeadlineDetail = new("feed.headline.detail", "{0}  ·  {1}");
         public static readonly LocString AutoRideOn = new("feed.autoRide.on", "Auto-ride on");
         public static readonly LocString AutoRideOff = new("feed.autoRide.off", "Auto-ride off");

@@ -4,9 +4,6 @@ internal static partial class L
 {
     internal static class Ride
     {
-        public static readonly LocString TitlePickConductor = new("ride.title.pickConductor", "Pick a conductor");
-        public static readonly LocString DetailPickConductor = new("ride.detail.pickConductor", "Choose whose flags to follow on the Ride card below, or type /aht conductor First Last@World.");
-        public static readonly LocString StatusPickConductor = new("ride.status.pickConductor", "No conductor");
         public static readonly LocString ReasonPickConductor = new("ride.reason.pickConductor", "pick a conductor");
 
         public static readonly LocString CardConductor = new("ride.card.conductor", "Conductor");

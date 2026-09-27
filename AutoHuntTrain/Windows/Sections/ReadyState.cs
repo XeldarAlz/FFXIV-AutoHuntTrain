@@ -10,7 +10,7 @@ namespace AutoHuntTrain.Windows.Sections;
 
 internal static class ReadyState
 {
-    public enum Kind { SetupNeeded, PickConductor, FeedReady, ChatOnly, Running, Paused }
+    public enum Kind { SetupNeeded, FeedReady, Running, Paused }
 
     public readonly record struct Info(Kind Kind, Vector4 Accent, Vector4 AccentSoft, FontAwesomeIcon Icon, string Title, string Detail);
 
@@ -53,21 +53,9 @@ internal static class ReadyState
                 Loc.T(L.Train.TitleSetupNeeded), Loc.T(L.Train.DetailSetupNeeded));
         }
 
-        // With the feed loaded a ride needs no conductor of the player's own; without it, one is the only way to ride.
-        if (Plugin.Instance.Feed.IsFeedLoaded)
-        {
-            return new Info(Kind.FeedReady, Styling.AccentMint, Styling.AccentMintSoft, FontAwesomeIcon.Rss,
-                Loc.T(L.Train.TitleFeedReady), FeedDetail(Kind.FeedReady, L.Feed.HeadlineHuntAlerts, L.Train.DetailFeedReady));
-        }
-
-        if (!Conductor.IsSet)
-        {
-            return new Info(Kind.PickConductor, Styling.AccentAmber, Styling.AccentAmberSoft, FontAwesomeIcon.Flag,
-                Loc.T(L.Ride.TitlePickConductor), FeedDetail(Kind.PickConductor, L.Feed.HeadlineChatOnly, L.Ride.DetailPickConductor));
-        }
-
-        return new Info(Kind.ChatOnly, Styling.AccentAmber, Styling.AccentAmberSoft, FontAwesomeIcon.CommentDots,
-            Loc.T(L.Train.TitleChatOnly), FeedDetail(Kind.ChatOnly, L.Feed.HeadlineChatOnly, L.Train.DetailChatOnly));
+        // HuntAlerts is required, so past the setup check the feed is loaded and a ride needs no conductor of the player's own.
+        return new Info(Kind.FeedReady, Styling.AccentMint, Styling.AccentMintSoft, FontAwesomeIcon.Rss,
+            Loc.T(L.Train.TitleFeedReady), FeedDetail(Kind.FeedReady, L.Feed.HeadlineHuntAlerts, L.Train.DetailFeedReady));
     }
 
     // The detail line opens with which feed the trains come from; composed once per kind and language.
@@ -87,9 +75,7 @@ internal static class ReadyState
         Kind.Running       => Loc.T(L.Shell.StatusRunning),
         Kind.Paused        => Loc.T(L.Shell.StatusPaused),
         Kind.FeedReady     => Loc.T(L.Shell.StatusFeedReady),
-        Kind.ChatOnly      => Loc.T(L.Shell.StatusChatOnly),
         Kind.SetupNeeded   => Loc.T(L.Shell.StatusSetupNeeded),
-        Kind.PickConductor => Loc.T(L.Ride.StatusPickConductor),
         _                  => Loc.T(L.Shell.StatusIdle),
     };
 
