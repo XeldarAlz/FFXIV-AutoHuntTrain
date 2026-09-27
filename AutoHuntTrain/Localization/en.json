@@ -258,6 +258,8 @@
   "settings.searchHint": "Search...",
   "settings.cat.general": "General",
   "settings.cat.generalSub": "Window and behavior preferences.",
+  "settings.cat.feedSub": "Which announced trains to ride, and how to hear about them.",
+  "settings.cat.rideSub": "Following the conductor, fighting the marks, and what happens after.",
   "settings.general.window": "Window",
   "settings.general.openOnLogin": "Open on login",
   "settings.general.openOnLoginHelp": "Pop the main window automatically the next time you log in.",

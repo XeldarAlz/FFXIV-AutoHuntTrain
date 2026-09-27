@@ -258,6 +258,8 @@
   "settings.searchHint": "搜索...",
   "settings.cat.general": "常规",
   "settings.cat.generalSub": "窗口与行为偏好。",
+  "settings.cat.feedSub": "乘坐哪些公告的车队，以及如何得知它们。",
+  "settings.cat.rideSub": "跟随车头、讨伐目标，以及结束后做什么。",
   "settings.general.window": "窗口",
   "settings.general.openOnLogin": "登录时打开",
   "settings.general.openOnLoginHelp": "下次登录时自动打开主窗口。",

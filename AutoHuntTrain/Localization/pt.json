@@ -258,6 +258,8 @@
   "settings.searchHint": "Buscar...",
   "settings.cat.general": "Geral",
   "settings.cat.generalSub": "Preferências de janela e comportamento.",
+  "settings.cat.feedSub": "Quais trens anunciados pegar e como ficar sabendo deles.",
+  "settings.cat.rideSub": "Seguir o condutor, enfrentar os alvos e o que acontece depois.",
   "settings.general.window": "Janela",
   "settings.general.openOnLogin": "Abrir ao entrar",
   "settings.general.openOnLoginHelp": "Abre a janela principal automaticamente na próxima vez que você entrar.",

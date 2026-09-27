@@ -258,6 +258,8 @@
   "settings.searchHint": "Rechercher...",
   "settings.cat.general": "Général",
   "settings.cat.generalSub": "Préférences de fenêtre et de comportement.",
+  "settings.cat.feedSub": "Quels trains annoncés prendre, et comment en être averti.",
+  "settings.cat.rideSub": "Suivre le conducteur, combattre les cibles, et ce qui se passe ensuite.",
   "settings.general.window": "Fenêtre",
   "settings.general.openOnLogin": "Ouvrir à la connexion",
   "settings.general.openOnLoginHelp": "Ouvre automatiquement la fenêtre principale à votre prochaine connexion.",

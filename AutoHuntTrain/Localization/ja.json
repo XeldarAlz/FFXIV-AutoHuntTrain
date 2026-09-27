@@ -258,6 +258,8 @@
   "settings.searchHint": "検索...",
   "settings.cat.general": "一般",
   "settings.cat.generalSub": "ウィンドウと動作の設定。",
+  "settings.cat.feedSub": "どの告知トレインに乗るか、そしてどう知らせを受けるか。",
+  "settings.cat.rideSub": "先導者への追従、討伐対象との戦闘、そして乗車後の動き。",
   "settings.general.window": "ウィンドウ",
   "settings.general.openOnLogin": "ログイン時に開く",
   "settings.general.openOnLoginHelp": "次回ログイン時にメインウィンドウを自動で開きます。",

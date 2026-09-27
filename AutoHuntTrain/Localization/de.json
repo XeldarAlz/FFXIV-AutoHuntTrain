@@ -258,6 +258,8 @@
   "settings.searchHint": "Suchen...",
   "settings.cat.general": "Allgemein",
   "settings.cat.generalSub": "Fenster- und Verhaltenseinstellungen.",
+  "settings.cat.feedSub": "Welche angekündigten Züge du mitfährst und wie du von ihnen erfährst.",
+  "settings.cat.rideSub": "Dem Zugführer folgen, die Ziele bekämpfen und was danach passiert.",
   "settings.general.window": "Fenster",
   "settings.general.openOnLogin": "Beim Einloggen öffnen",
   "settings.general.openOnLoginHelp": "Öffnet das Hauptfenster beim nächsten Einloggen automatisch.",

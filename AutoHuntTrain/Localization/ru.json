@@ -258,6 +258,8 @@
   "settings.searchHint": "Поиск...",
   "settings.cat.general": "Общие",
   "settings.cat.generalSub": "Настройки окна и поведения.",
+  "settings.cat.feedSub": "На какие объявленные поезда садиться и как о них узнавать.",
+  "settings.cat.rideSub": "Следование за кондуктором, бой с целями и что происходит потом.",
   "settings.general.window": "Окно",
   "settings.general.openOnLogin": "Открывать при входе",
   "settings.general.openOnLoginHelp": "Автоматически открывать главное окно при следующем входе в игру.",

@@ -258,6 +258,8 @@
   "settings.searchHint": "Ara...",
   "settings.cat.general": "Genel",
   "settings.cat.generalSub": "Pencere ve davranış tercihleri.",
+  "settings.cat.feedSub": "Duyurulan hangi trenlere binileceği ve onlardan nasıl haberdar olacağınız.",
+  "settings.cat.rideSub": "Kondüktörü takip etmek, hedeflerle savaşmak ve sonrasında olanlar.",
   "settings.general.window": "Pencere",
   "settings.general.openOnLogin": "Girişte aç",
   "settings.general.openOnLoginHelp": "Bir sonraki girişinizde ana pencereyi otomatik açar.",

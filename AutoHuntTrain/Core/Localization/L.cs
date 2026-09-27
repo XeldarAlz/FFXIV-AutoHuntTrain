@@ -313,6 +313,8 @@ internal static partial class L
 
         public static readonly LocString CatGeneral = new("settings.cat.general", "General");
         public static readonly LocString CatGeneralSub = new("settings.cat.generalSub", "Window and behavior preferences.");
+        public static readonly LocString CatFeedSub = new("settings.cat.feedSub", "Which announced trains to ride, and how to hear about them.");
+        public static readonly LocString CatRideSub = new("settings.cat.rideSub", "Following the conductor, fighting the marks, and what happens after.");
 
         public static readonly LocString GeneralWindow = new("settings.general.window", "Window");
         public static readonly LocString OpenOnLogin = new("settings.general.openOnLogin", "Open on login");
