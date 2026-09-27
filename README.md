@@ -24,8 +24,9 @@ Hears a hunt train being called anywhere in your region, gets your character to 
 
 ## Features
 
-- **Rides announced trains**: subscribes to the HuntAlerts feed for train announcements across every data center in your region, with a countdown and a Ride button for each.
-- **Train notifications**: when a train you could ride is announced, the Train page opens by itself and the taskbar flashes while the game is in the background.
+- **Rides announced trains**: HuntAlerts detects the trains; this plugin lists them from every region under a view you pick (My data centers, My region or Everywhere), each with a countdown, a region tag when it runs outside yours, and a Ride button that says why it is off.
+- **Train details**: click a train for its start time and countdown, start zone, aetheryte, conductor, post time and the full announcement cleaned for reading, with buttons to ride it, flag its start on the map, open the Party Finder on Hunts, point an on-screen arrow at the start, or relay a one-line summary (with `<flag>`) to any chat channel.
+- **Train notifications**: a chat line with a link to the train's details and an optional game sound, and, for a train you could ride, the Train page opening by itself and the taskbar flashing while the game is in the background. Switch HuntAlerts' own chat alert and banner off to avoid doubles.
 - **Ride rules**: choose expansions and data centers, whether cross-data-center rides are allowed, and how much lead time a train on another data center needs before auto-ride commits.
 - **Gets you there**: world change, data center travel and instance switching through Lifestream, then the plugin's own teleport and flight to the start aetheryte.
 - **Follows the conductor**: reads the conductor's map flags from Shout, Yell and Say, picks the nearest aetheryte or flies when the flag is close, and understands instance numbers.
@@ -70,7 +71,7 @@ The plugin needs a few helpers to be installed and loaded: movement, combat, tra
 | `/aht conductor clear` | Stop following anyone |
 | `/aht snooze [<minutes>]` | Suspend auto-ride for the snooze length set in Settings, or for the minutes given |
 | `/aht snooze off` | Lift the snooze |
-| `/aht inject <World> <DT\|EW\|SHB\|Centurio> [<aetheryte>] [i<n>] [+<minutes>] [conductor:<First Last>]` | Push a made-up train announcement through the same intake as HuntAlerts, so the rules and the whole ride can be tried with no real train, e.g. `/aht inject Raiden DT Wachunpelo +5 conductor:Pandora Rainfall` (debug helper) |
+| `/aht inject <World> <DT\|EW\|SHB\|Centurio> [<aetheryte>] [i<n>] [+<minutes>] [conductor:<First Last>] [body:<text>]` | Push a made-up train announcement through the same intake as HuntAlerts, on a world in any region, so the rules, the details and the whole ride can be tried with no real train, e.g. `/aht inject Raiden DT Wachunpelo +5 conductor:Pandora Rainfall`. Everything after `body:` is the Discord post, with `\n` for a line break (debug helper) |
 | `/aht target` | Log targeted NPC's BaseId (debug helper) |
 | `/aht goto <territory> <x> <y> <z>` | Travel to a point, `/aht goto stop` cancels (debug helper) |
 | `/aht goto <world> [<aetheryte>] [i<n>]` | Travel to a world in your region, and on it to a named aetheryte and instance, e.g. `/aht goto Zalera Wachunpelo i2` (debug helper) |
