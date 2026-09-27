@@ -30,8 +30,8 @@ internal static partial class L
         public static readonly LocString VerdictNotAllowedDataCenter = new("feed.verdict.notAllowedDataCenter", "{0} is not an allowed data center");
         public static readonly LocString VerdictOutOfRegion = new("feed.verdict.outOfRegion", "This train runs in another region");
         public static readonly LocString VerdictCrossDataCenterOff = new("feed.verdict.crossDataCenterOff", "Rides to other data centers are off in the Feed settings");
-        public static readonly LocString VerdictTooSoon = new("feed.verdict.tooSoon", "Starts sooner than the minimum lead time");
-        public static readonly LocString VerdictTooLate = new("feed.verdict.tooLate", "Started longer ago than the late-join limit");
+        public static readonly LocString VerdictTooSoon = new("feed.verdict.tooSoon", "Starts sooner than the lead time a data center transfer needs");
+        public static readonly LocString VerdictTooLate = new("feed.verdict.tooLate", "Started too long ago to be worth the trip");
         public static readonly LocString VerdictInDuty = new("feed.verdict.inDuty", "Leave the duty or its queue first");
         public static readonly LocString VerdictInParty = new("feed.verdict.inParty", "Leave the party first");
         public static readonly LocString VerdictLifestreamBusy = new("feed.verdict.lifestreamBusy", "Lifestream is busy with something else");
@@ -58,8 +58,8 @@ internal static partial class L
         public static readonly LocString NoHomeRegion = new("feed.settings.noHomeRegion", "Log in to list the data centers of your region.");
         public static readonly LocString CrossDataCenter = new("feed.settings.crossDataCenter", "Rides to other data centers");
         public static readonly LocString CrossDataCenterHelp = new("feed.settings.crossDataCenterHelp", "Allow a ride that needs a data center transfer. The transfer logs the character out and back in, and Lifestream must have data center travel enabled.");
-        public static readonly LocString MinimumLead = new("feed.settings.minimumLead", "Minimum lead time");
-        public static readonly LocString MinimumLeadHelp = new("feed.settings.minimumLeadHelp", "A train whose start is closer than this is not ridden, so no journey starts with no time to arrive. A train that already started is still ridden within the late-join limit.");
+        public static readonly LocString MinimumLead = new("feed.settings.minimumLead", "Lead time for another data center");
+        public static readonly LocString MinimumLeadHelp = new("feed.settings.minimumLeadHelp", "Auto-ride skips a train on another data center whose start is closer than this, because a data center transfer takes minutes plus a queue. Trains on your own data center are ridden as soon as they are announced, and a train that already started is still joined for ten minutes after its start.");
         public static readonly LocString AutoRide = new("feed.settings.autoRide", "Auto-ride");
         public static readonly LocString AutoRideHelp = new("feed.settings.autoRideHelp", "Ride the soonest announced train that passes every rule as soon as one does, with no click from you. Off leaves the Ride buttons to you.");
         public static readonly LocString SnoozeLength = new("feed.settings.snoozeLength", "Snooze length");

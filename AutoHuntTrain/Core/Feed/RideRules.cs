@@ -34,6 +34,8 @@ internal enum Reachability : byte
 // player would explain a refusal: what is running, the rules, the clock, then what the character is doing right now.
 internal static class RideRules
 {
+    private static readonly TimeSpan AutoRideJoinWindow = TimeSpan.FromMinutes(10);
+
     public static RideVerdict Evaluate(in Announcement announcement)
         => Evaluate(announcement, DateTime.UtcNow, forAutoRide: false, out _);
 
@@ -76,7 +78,7 @@ internal static class RideRules
             return RideVerdict.CrossDataCenterOff;
         }
 
-        var timing = Timing(configuration, announcement.LeadAt(nowUtc));
+        var timing = Timing(configuration, announcement.LeadAt(nowUtc), reachability, forAutoRide);
         if (timing != RideVerdict.Rideable)
         {
             return timing;
@@ -124,15 +126,27 @@ internal static class RideRules
         return true;
     }
 
-    // A train not started yet needs the minimum lead; one already started is still taken within the late-join limit.
-    private static RideVerdict Timing(Configuration configuration, TimeSpan lead)
+    // The clock only ever refuses auto-ride; a train the player clicks is the player's call. A data center transfer
+    // takes minutes plus a queue, so a train there is committed to only with the configured lead, and a train that
+    // started longer ago than the join window has lost most of its marks.
+    private static RideVerdict Timing(Configuration configuration, TimeSpan lead, Reachability reachability, bool forAutoRide)
     {
-        if (lead <= TimeSpan.Zero)
+        if (!forAutoRide)
         {
-            return -lead.TotalSeconds > Math.Max(0, configuration.LateJoinLimitSeconds) ? RideVerdict.TooLate : RideVerdict.Rideable;
+            return RideVerdict.Rideable;
         }
 
-        return lead.TotalSeconds < Math.Max(0, configuration.MinimumLeadSeconds) ? RideVerdict.TooSoon : RideVerdict.Rideable;
+        if (lead <= TimeSpan.Zero)
+        {
+            return -lead > AutoRideJoinWindow ? RideVerdict.TooLate : RideVerdict.Rideable;
+        }
+
+        if (reachability == Reachability.CrossDataCenter && lead.TotalSeconds < Math.Max(0, configuration.MinimumLeadSeconds))
+        {
+            return RideVerdict.TooSoon;
+        }
+
+        return RideVerdict.Rideable;
     }
 
     private static bool DataCenterAllowed(Configuration configuration, in WorldInfo world)
@@ -157,8 +171,8 @@ internal static class RideRules
         RideVerdict.NotAllowedDataCenter => "its data center is not an allowed one",
         RideVerdict.OutOfRegion => "it runs in another region",
         RideVerdict.CrossDataCenterOff => "rides to other data centers are off",
-        RideVerdict.TooSoon => "it starts sooner than the minimum lead time",
-        RideVerdict.TooLate => "it started longer ago than the late-join limit",
+        RideVerdict.TooSoon => "it starts sooner than the lead time a data center transfer needs",
+        RideVerdict.TooLate => "it started too long ago to be worth the trip",
         RideVerdict.InDuty => "the character is in a duty or a duty queue",
         RideVerdict.InParty => "the character is in a party",
         RideVerdict.LifestreamBusy => "Lifestream is busy",
