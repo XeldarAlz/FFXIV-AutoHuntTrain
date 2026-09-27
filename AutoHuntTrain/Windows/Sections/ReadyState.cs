@@ -78,16 +78,18 @@ internal static class ReadyState
         _                  => Loc.T(L.Shell.StatusIdle),
     };
 
-    // The ride phase names what the ride is doing between marks; a hunt phase, once one is set, is the finer word.
+    // The ride phase names what the ride is doing between marks; while a mark is engaged the hunt's own phase is the
+    // finer word, fighting or travelling back after a knockout.
     public static string ActivityLabel(AutoHuntController controller)
     {
         var phase = controller.Phase;
-        if (phase is HuntPhase.Waiting or HuntPhase.Travelling && controller.Progress.RidePhase != RidePhase.None)
+        var ridePhase = controller.Progress.RidePhase;
+        if (ridePhase is RidePhase.None or RidePhase.Engaging || phase is not (HuntPhase.Waiting or HuntPhase.Travelling))
         {
-            return RidePhaseLabel(controller.Progress.RidePhase);
+            return PhaseLabel(phase);
         }
 
-        return PhaseLabel(phase);
+        return RidePhaseLabel(ridePhase);
     }
 
     public static string ActivityDetail(AutoHuntController controller)
@@ -113,8 +115,10 @@ internal static class ReadyState
 
     public static string RidePhaseLabel(RidePhase phase) => phase switch
     {
-        RidePhase.Travelling => Loc.T(L.Ride.PhaseTravelling),
-        RidePhase.AtFlag     => Loc.T(L.Ride.PhaseAtFlag),
-        _                    => Loc.T(L.Ride.PhaseWaiting),
+        RidePhase.Travelling     => Loc.T(L.Ride.PhaseTravelling),
+        RidePhase.AtFlag         => Loc.T(L.Ride.PhaseAtFlag),
+        RidePhase.WaitingForMark => Loc.T(L.Ride.PhaseWaitingForMark),
+        RidePhase.Engaging       => Loc.T(L.Run.PhaseFighting),
+        _                        => Loc.T(L.Ride.PhaseWaiting),
     };
 }

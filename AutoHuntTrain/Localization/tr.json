@@ -399,9 +399,11 @@
   "ride.phase.waiting": "İşaret bekleniyor",
   "ride.phase.travelling": "İşarete gidiliyor",
   "ride.phase.atFlag": "İşarette",
+  "ride.phase.waitingForMark": "Hedef bekleniyor",
   "ride.flagsFollowed.one": "{0} işaret takip edildi",
   "ride.flagsFollowed.other": "{0} işaret takip edildi",
   "ride.progressLine": "{0}  ·  {1}",
+  "ride.creditedOf": "{1} hedeften {0} tanesi sayıldı",
   "ride.settings.group": "Kondüktör",
   "ride.settings.shout": "Shout kanalını dinle",
   "ride.settings.shoutHelp": "Kondüktörün Shout kanalında paylaştığı işaretleri takip et; çoğu tren bu kanalı kullanır.",
@@ -412,5 +414,12 @@
   "ride.settings.lateJoin": "Geç katılım sınırı",
   "ride.settings.lateJoinHelp": "Yolculuk başladığında kondüktörün son işareti en fazla bu kadar eskiyse yine takip edilir. Daha eski bir işaret atlanır ve yolculuk bir sonrakini bekler.",
   "ride.settings.idle": "Boşta kalma sınırı",
-  "ride.settings.idleHelp": "Kondüktörden bu süre boyunca hiç işaret gelmezse yolculuk kendiliğinden biter."
+  "ride.settings.idleHelp": "Kondüktörden bu süre boyunca hiç işaret gelmezse yolculuk kendiliğinden biter.",
+  "ride.settings.engagement": "Saldırı",
+  "ride.settings.waitForPull": "Pull'u bekle",
+  "ride.settings.waitForPullHelp": "Başka biri hedefi pull edene kadar işarette bekle, sonra savaşa katıl. Kapalıyken hedef görünür görünmez saldırılır, bu da pull'u senin yapman demektir.",
+  "ride.settings.pullWait": "Pull bekleme süresi",
+  "ride.settings.pullWaitHelp": "Bir işarette hedefin ortaya çıkıp pull edilmesi için ne kadar bekleneceği. Süre dolduğunda yolculuk hedeften vazgeçer ve bir sonraki işareti bekler.",
+  "ride.settings.endWhenAllCredited": "Tüm hedefler sayılınca bitir",
+  "ride.settings.endWhenAllCreditedHelp": "Sayılan hedef sayısı genişleme paketindeki A rütbesi sayısına ulaşınca yolculuğu kendiliğinden bitir: A Realm Reborn'da 17, sonraki her genişleme paketinde 12."
 }

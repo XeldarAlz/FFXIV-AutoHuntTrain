@@ -173,6 +173,7 @@ internal static class HeaderBar
         }
 
         var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.ActivityLabel(controller);
+        var credited = CreditedLine.Get(controller.Progress);
         var detail = ReadyState.ActivityDetail(controller);
         using (Fonts.PushCaption())
         {
@@ -180,7 +181,9 @@ internal static class HeaderBar
             var phaseSize = TextDraw.Measure(phaseText);
             var textY = midY - phaseSize.Y * 0.5f;
             TextDraw.At(phaseText, new Vector2(x, textY), Styling.TextSecondary);
-            TextDraw.Trailing(detail, x + phaseSize.X, x + textWidth, textY, Styling.TextSecondary);
+            var creditedX = x + phaseSize.X;
+            TextDraw.Trailing(credited, creditedX, x + textWidth, textY, Styling.TextSecondary);
+            TextDraw.Trailing(detail, creditedX + TextDraw.TrailingWidth(credited), x + textWidth, textY, Styling.TextSecondary);
         }
     }
 }

@@ -399,9 +399,11 @@
   "ride.phase.waiting": "Esperando una marca",
   "ride.phase.travelling": "Yendo a la marca",
   "ride.phase.atFlag": "En la marca",
+  "ride.phase.waitingForMark": "Esperando al objetivo",
   "ride.flagsFollowed.one": "{0} marca seguida",
   "ride.flagsFollowed.other": "{0} marcas seguidas",
   "ride.progressLine": "{0}  ·  {1}",
+  "ride.creditedOf": "{0} de {1} acreditados",
   "ride.settings.group": "Conductor",
   "ride.settings.shout": "Escuchar Vocear",
   "ride.settings.shoutHelp": "Seguir las marcas que el conductor publica en Vocear (Shout), el canal de la mayoría de los trenes.",
@@ -412,5 +414,12 @@
   "ride.settings.lateJoin": "Límite de incorporación tardía",
   "ride.settings.lateJoinHelp": "Al iniciar un viaje, la última marca del conductor aún se sigue si no es más antigua que esto. Una más antigua se omite y el viaje espera la siguiente.",
   "ride.settings.idle": "Límite de inactividad",
-  "ride.settings.idleHelp": "El viaje termina por sí solo cuando no llega ninguna marca del conductor durante este tiempo."
+  "ride.settings.idleHelp": "El viaje termina por sí solo cuando no llega ninguna marca del conductor durante este tiempo.",
+  "ride.settings.engagement": "Enfrentamiento",
+  "ride.settings.waitForPull": "Esperar al pull",
+  "ride.settings.waitForPullHelp": "Quedarse en la marca hasta que otro jugador haya hecho el pull del objetivo y luego unirse al combate. Desactivado, ataca al objetivo en cuanto está a la vista, con lo que el pull lo haces tú.",
+  "ride.settings.pullWait": "Espera del pull",
+  "ride.settings.pullWaitHelp": "Cuánto esperar en una marca a que el objetivo aparezca y reciba el pull. Cuando se agota el tiempo, el viaje abandona el objetivo y espera la siguiente marca.",
+  "ride.settings.endWhenAllCredited": "Terminar cuando todos los objetivos estén acreditados",
+  "ride.settings.endWhenAllCreditedHelp": "Terminar el viaje por sí solo en cuanto haya tantos objetivos acreditados como rangos A tiene la expansión: 17 en A Realm Reborn y 12 en cada expansión posterior."
 }

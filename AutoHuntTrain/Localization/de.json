@@ -399,9 +399,11 @@
   "ride.phase.waiting": "Wartet auf eine Markierung",
   "ride.phase.travelling": "Unterwegs zur Markierung",
   "ride.phase.atFlag": "An der Markierung",
+  "ride.phase.waitingForMark": "Wartet auf das Ziel",
   "ride.flagsFollowed.one": "{0} Markierung gefolgt",
   "ride.flagsFollowed.other": "{0} Markierungen gefolgt",
   "ride.progressLine": "{0}  ·  {1}",
+  "ride.creditedOf": "{0} von {1} angerechnet",
   "ride.settings.group": "Zugführer",
   "ride.settings.shout": "Schreien mithören",
   "ride.settings.shoutHelp": "Markierungen folgen, die der Zugführer in Schreien postet, dem Kanal der meisten Züge.",
@@ -412,5 +414,12 @@
   "ride.settings.lateJoin": "Späteinstieg-Limit",
   "ride.settings.lateJoinHelp": "Beim Start der Fahrt wird der letzten Markierung des Zugführers noch gefolgt, wenn sie höchstens so alt ist. Eine ältere wird übersprungen, und die Fahrt wartet auf die nächste.",
   "ride.settings.idle": "Leerlauf-Limit",
-  "ride.settings.idleHelp": "Die Fahrt endet von selbst, wenn so lange keine Markierung des Zugführers eintrifft."
+  "ride.settings.idleHelp": "Die Fahrt endet von selbst, wenn so lange keine Markierung des Zugführers eintrifft.",
+  "ride.settings.engagement": "Angriff",
+  "ride.settings.waitForPull": "Auf den Pull warten",
+  "ride.settings.waitForPullHelp": "An der Markierung warten, bis jemand anderes das Ziel gepullt hat, und dann in den Kampf einsteigen. Aus greift das Ziel an, sobald es in Sicht ist, womit du selbst pullst.",
+  "ride.settings.pullWait": "Pull-Wartezeit",
+  "ride.settings.pullWaitHelp": "Wie lange an einer Markierung darauf gewartet wird, dass das Ziel auftaucht und gepullt wird. Läuft die Zeit ab, gibt die Fahrt das Ziel auf und wartet auf die nächste Markierung.",
+  "ride.settings.endWhenAllCredited": "Beenden, wenn alle Ziele angerechnet sind",
+  "ride.settings.endWhenAllCreditedHelp": "Die Fahrt endet von selbst, sobald so viele Ziele angerechnet sind, wie die Erweiterung A-Ränge hat: 17 in A Realm Reborn, 12 in jeder späteren Erweiterung."
 }

@@ -399,9 +399,11 @@
   "ride.phase.waiting": "Ожидание метки",
   "ride.phase.travelling": "В пути к метке",
   "ride.phase.atFlag": "У метки",
+  "ride.phase.waitingForMark": "Ожидание цели",
   "ride.flagsFollowed.one": "{0} метка пройдена",
   "ride.flagsFollowed.other": "{0} меток пройдено",
   "ride.progressLine": "{0}  ·  {1}",
+  "ride.creditedOf": "засчитано {0} из {1}",
   "ride.settings.group": "Кондуктор",
   "ride.settings.shout": "Слушать Shout",
   "ride.settings.shoutHelp": "Следовать меткам, которые кондуктор размещает в Shout, основном канале большинства поездов.",
@@ -412,5 +414,12 @@
   "ride.settings.lateJoin": "Лимит позднего входа",
   "ride.settings.lateJoinHelp": "При запуске поездки последняя метка кондуктора всё ещё выполняется, если она не старше этого срока. Более старая пропускается, и поездка ждёт следующую.",
   "ride.settings.idle": "Лимит простоя",
-  "ride.settings.idleHelp": "Поездка завершается сама, если за это время не приходит ни одной метки от кондуктора."
+  "ride.settings.idleHelp": "Поездка завершается сама, если за это время не приходит ни одной метки от кондуктора.",
+  "ride.settings.engagement": "Вступление в бой",
+  "ride.settings.waitForPull": "Ждать пулла",
+  "ride.settings.waitForPullHelp": "Стоять у метки, пока кто-то другой не спуллит цель, и только затем вступать в бой. Если выключено, цель атакуется, как только попадает в поле зрения, и пуллите её вы.",
+  "ride.settings.pullWait": "Ожидание пулла",
+  "ride.settings.pullWaitHelp": "Сколько ждать у метки, пока цель появится и её спуллят. Когда время выходит, поездка отказывается от цели и ждёт следующую метку.",
+  "ride.settings.endWhenAllCredited": "Завершать, когда засчитаны все цели",
+  "ride.settings.endWhenAllCreditedHelp": "Завершать поездку самостоятельно, как только засчитано столько целей, сколько рангов A в дополнении: 17 в A Realm Reborn и 12 в каждом последующем."
 }

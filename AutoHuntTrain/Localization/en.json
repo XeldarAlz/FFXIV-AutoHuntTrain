@@ -399,9 +399,11 @@
   "ride.phase.waiting": "Waiting for a flag",
   "ride.phase.travelling": "Riding to the flag",
   "ride.phase.atFlag": "At the flag",
+  "ride.phase.waitingForMark": "Waiting for the mark",
   "ride.flagsFollowed.one": "{0} flag followed",
   "ride.flagsFollowed.other": "{0} flags followed",
   "ride.progressLine": "{0}  ·  {1}",
+  "ride.creditedOf": "{0} of {1} credited",
   "ride.settings.group": "Conductor",
   "ride.settings.shout": "Listen to Shout",
   "ride.settings.shoutHelp": "Follow flags the conductor posts in Shout, the channel most trains run on.",
@@ -412,5 +414,12 @@
   "ride.settings.lateJoin": "Late-join limit",
   "ride.settings.lateJoinHelp": "When a ride starts, the conductor's last flag is still followed if it is at most this old. An older flag is skipped and the ride waits for the next one.",
   "ride.settings.idle": "Idle limit",
-  "ride.settings.idleHelp": "The ride ends on its own when no flag from the conductor arrives for this long."
+  "ride.settings.idleHelp": "The ride ends on its own when no flag from the conductor arrives for this long.",
+  "ride.settings.engagement": "Engagement",
+  "ride.settings.waitForPull": "Wait for the pull",
+  "ride.settings.waitForPullHelp": "Hold at the flag until someone else has pulled the mark, then join the fight. Off attacks the mark as soon as it is in sight, which makes you the one who pulls it.",
+  "ride.settings.pullWait": "Pull wait",
+  "ride.settings.pullWaitHelp": "How long to wait at a flag for the mark to show up and be pulled. When the time runs out, the ride gives the mark up and waits for the next flag.",
+  "ride.settings.endWhenAllCredited": "End when every mark is credited",
+  "ride.settings.endWhenAllCreditedHelp": "End the ride on its own once as many marks are credited as the expansion has A ranks: 17 in A Realm Reborn, 12 in every later expansion."
 }

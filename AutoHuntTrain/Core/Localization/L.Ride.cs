@@ -24,8 +24,10 @@ internal static partial class L
         public static readonly LocString PhaseWaiting = new("ride.phase.waiting", "Waiting for a flag");
         public static readonly LocString PhaseTravelling = new("ride.phase.travelling", "Riding to the flag");
         public static readonly LocString PhaseAtFlag = new("ride.phase.atFlag", "At the flag");
+        public static readonly LocString PhaseWaitingForMark = new("ride.phase.waitingForMark", "Waiting for the mark");
         public static readonly LocPlural FlagsFollowed = new("ride.flagsFollowed", "{0} flag followed", "{0} flags followed");
         public static readonly LocString ProgressLine = new("ride.progressLine", "{0}  ·  {1}");
+        public static readonly LocString CreditedOf = new("ride.creditedOf", "{0} of {1} credited");
 
         public static readonly LocString SettingsGroup = new("ride.settings.group", "Conductor");
         public static readonly LocString ListenShout = new("ride.settings.shout", "Listen to Shout");
@@ -38,5 +40,13 @@ internal static partial class L
         public static readonly LocString LateJoinHelp = new("ride.settings.lateJoinHelp", "When a ride starts, the conductor's last flag is still followed if it is at most this old. An older flag is skipped and the ride waits for the next one.");
         public static readonly LocString IdleLimit = new("ride.settings.idle", "Idle limit");
         public static readonly LocString IdleLimitHelp = new("ride.settings.idleHelp", "The ride ends on its own when no flag from the conductor arrives for this long.");
+
+        public static readonly LocString EngagementGroup = new("ride.settings.engagement", "Engagement");
+        public static readonly LocString WaitForPull = new("ride.settings.waitForPull", "Wait for the pull");
+        public static readonly LocString WaitForPullHelp = new("ride.settings.waitForPullHelp", "Hold at the flag until someone else has pulled the mark, then join the fight. Off attacks the mark as soon as it is in sight, which makes you the one who pulls it.");
+        public static readonly LocString PullWait = new("ride.settings.pullWait", "Pull wait");
+        public static readonly LocString PullWaitHelp = new("ride.settings.pullWaitHelp", "How long to wait at a flag for the mark to show up and be pulled. When the time runs out, the ride gives the mark up and waits for the next flag.");
+        public static readonly LocString EndWhenAllCredited = new("ride.settings.endWhenAllCredited", "End when every mark is credited");
+        public static readonly LocString EndWhenAllCreditedHelp = new("ride.settings.endWhenAllCreditedHelp", "End the ride on its own once as many marks are credited as the expansion has A ranks: 17 in A Realm Reborn, 12 in every later expansion.");
     }
 }

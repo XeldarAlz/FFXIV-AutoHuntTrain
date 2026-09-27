@@ -399,9 +399,11 @@
   "ride.phase.waiting": "En attente d'un drapeau",
   "ride.phase.travelling": "En route vers le drapeau",
   "ride.phase.atFlag": "Au drapeau",
+  "ride.phase.waitingForMark": "En attente de la cible",
   "ride.flagsFollowed.one": "{0} drapeau suivi",
   "ride.flagsFollowed.other": "{0} drapeaux suivis",
   "ride.progressLine": "{0}  ·  {1}",
+  "ride.creditedOf": "{0} sur {1} créditées",
   "ride.settings.group": "Conducteur",
   "ride.settings.shout": "Écouter Hurler",
   "ride.settings.shoutHelp": "Suivre les drapeaux que le conducteur poste en Hurler, le canal de la plupart des trains.",
@@ -412,5 +414,12 @@
   "ride.settings.lateJoin": "Limite de prise en route",
   "ride.settings.lateJoinHelp": "Au démarrage d'un trajet, le dernier drapeau du conducteur est encore suivi s'il n'est pas plus vieux que cela. Un drapeau plus ancien est ignoré et le trajet attend le suivant.",
   "ride.settings.idle": "Limite d'inactivité",
-  "ride.settings.idleHelp": "Le trajet se termine de lui-même quand aucun drapeau du conducteur n'arrive pendant cette durée."
+  "ride.settings.idleHelp": "Le trajet se termine de lui-même quand aucun drapeau du conducteur n'arrive pendant cette durée.",
+  "ride.settings.engagement": "Engagement",
+  "ride.settings.waitForPull": "Attendre le pull",
+  "ride.settings.waitForPullHelp": "Rester au drapeau jusqu'à ce que quelqu'un d'autre ait pull la cible, puis rejoindre le combat. Désactivé, la cible est attaquée dès qu'elle est en vue, ce qui fait de vous celui qui pull.",
+  "ride.settings.pullWait": "Attente du pull",
+  "ride.settings.pullWaitHelp": "Combien de temps attendre à un drapeau que la cible apparaisse et soit pull. Une fois le temps écoulé, le trajet abandonne la cible et attend le drapeau suivant.",
+  "ride.settings.endWhenAllCredited": "Terminer quand toutes les cibles sont créditées",
+  "ride.settings.endWhenAllCreditedHelp": "Terminer le trajet de lui-même dès que le nombre de cibles créditées atteint le nombre de rangs A de l'extension : 17 dans A Realm Reborn, 12 dans chaque extension suivante."
 }
