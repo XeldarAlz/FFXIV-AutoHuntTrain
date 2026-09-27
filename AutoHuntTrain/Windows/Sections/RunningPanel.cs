@@ -18,7 +18,21 @@ internal static class RunningPanel
     private const float InlineRankSize = 18f;
     private const float RankGap = 8f;
     private const float ConductorLineGap = 4f;
+    private const float CardPadY = 16f;
+    private const float RingInset = 18f;
+    private const float RingGap = 20f;
+    private const float ChipPadX = 9f;
+    private const float ChipPadY = 3f;
+    private const float ChipGap = 10f;
+    private const float SubLineGap = 3f;
+    private const float BodyGap = 10f;
+    private const float StatusGap = 12f;
+    private const float BarHeight = 8f;
+    private const float BarGap = 8f;
+    private const float HeaderFooterGap = 16f;
     private const int TileCount = 3;
+
+    private enum HeroBody : byte { Status, Flag, Mark }
 
     private static uint cachedTerritoryId = uint.MaxValue;
     private static string cachedZoneName = string.Empty;
@@ -52,21 +66,31 @@ internal static class RunningPanel
 
         var status = paused ? Loc.T(L.Shell.StatusPaused) : Loc.T(L.Shell.StatusRunning);
         var statusSize = TextDraw.SmallCapsSize(status);
-        TextDraw.SmallCaps(status, new Vector2(origin.X + radius * 2f + 12f * scale, midY - statusSize.Y * 0.5f), Styling.TextSecondary);
+        var statusX = origin.X + radius * 2f + 12f * scale;
+        TextDraw.SmallCaps(status, new Vector2(statusX, midY - statusSize.Y * 0.5f), Styling.TextSecondary);
 
         using (Fonts.PushCaption())
         {
-            var footerSize = TextDraw.Measure(footer);
-            TextDraw.At(footer, new Vector2(origin.X + available - footerSize.X, midY - footerSize.Y * 0.5f), Styling.TextMuted);
+            var footerLeft = statusX + statusSize.X + HeaderFooterGap * scale;
+            var footerText = TextDraw.Truncate(footer, origin.X + available - footerLeft);
+            var footerSize = TextDraw.Measure(footerText);
+            TextDraw.At(footerText, new Vector2(origin.X + available - footerSize.X, midY - footerSize.Y * 0.5f), Styling.TextMuted);
         }
 
         ImGui.Dummy(new Vector2(available, lineHeight));
     }
 
+    // The card is as tall as its lines at the current font sizes, and every line is cut to the column, so nothing
+    // spills past its border whatever size the fonts are set to.
     private static void DrawHeroCard(AutoHuntController controller, Vector4 accent, Vector4 accentSoft, string label)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        var size = new Vector2(ImGui.GetContentRegionAvail().X, Layout.HeroCardHeight * scale);
+        var progress = controller.Progress;
+        CurrentFlag.View flag = default;
+        var body = CurrentMark.TryGet(controller, out var mark) ? HeroBody.Mark
+            : CurrentFlag.TryGet(controller, out flag) ? HeroBody.Flag
+            : HeroBody.Status;
+        var size = new Vector2(ImGui.GetContentRegionAvail().X, HeroCardHeight(body));
         var origin = ImGui.GetCursorScreenPos();
         var end = origin + size;
         var drawList = ImGui.GetWindowDrawList();
@@ -80,31 +104,24 @@ internal static class RunningPanel
         }
 
         var padX = PadX * scale;
-        var ringRadius = size.Y * 0.5f - 18f * scale;
+        var ringRadius = size.Y * 0.5f - RingInset * scale;
         var ringCenter = new Vector2(origin.X + padX + ringRadius, origin.Y + size.Y * 0.5f);
-        var progress = controller.Progress;
         DrawRideRing(ringCenter, ringRadius, accent, active, progress);
 
-        var columnX = ringCenter.X + ringRadius + 20f * scale;
+        var columnX = ringCenter.X + ringRadius + RingGap * scale;
         var columnWidth = end.X - padX - columnX;
-        var y = origin.Y + 16f * scale;
+        var y = origin.Y + CardPadY * scale;
 
-        y += DrawPhaseChip(columnX, y, label, accent, accentSoft) + 10f * scale;
-        if (CurrentMark.TryGet(controller, out var mark))
+        y += DrawPhaseChip(columnX, y, columnWidth, label, accent, accentSoft) + ChipGap * scale;
+        y = body switch
         {
-            y = DrawMark(mark, controller.Status, columnX, columnWidth, y);
-        }
-        else if (CurrentFlag.TryGet(controller, out var flag))
-        {
-            y = DrawFlag(flag, controller.Status, columnX, columnWidth, y);
-        }
-        else
-        {
-            y = DrawStatus(progress.CatchingUp ? ReadyState.CatchUpLine(progress) : controller.Status, columnX, columnWidth, y);
-        }
+            HeroBody.Mark => DrawMark(mark, controller.Status, columnX, columnWidth, y),
+            HeroBody.Flag => DrawFlag(flag, controller.Status, columnX, columnWidth, y),
+            _ => DrawStatus(progress.CatchingUp ? ReadyState.CatchUpLine(progress) : controller.Status, columnX, columnWidth, y),
+        };
 
         // While a mark is fought the bar is its health.
-        var barHeight = 8f * scale;
+        var barHeight = BarHeight * scale;
         var barOrigin = new Vector2(columnX, y);
         if (active && progress.HasMarkHealth)
         {
@@ -119,10 +136,10 @@ internal static class RunningPanel
             Paint.Bar(drawList, barOrigin, columnWidth, barHeight, 0f, accent);
         }
 
-        y += barHeight + 8f * scale;
+        y += barHeight + BarGap * scale;
         using (Fonts.PushCaption())
         {
-            TextDraw.At(ProgressLine(progress), new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
+            TextDraw.At(TextDraw.Truncate(ProgressLine(progress), columnWidth), new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
             y += ImGui.GetTextLineHeight() + ConductorLineGap * scale;
             TextDraw.At(TextDraw.Truncate(ConductorLine.Get(progress), columnWidth), new Vector2(columnX, y), Styling.TextDim);
         }
@@ -130,11 +147,30 @@ internal static class RunningPanel
         ImGui.Dummy(size);
     }
 
+    // Adds up the same lines and gaps the card draws, so the two stay in step.
+    private static float HeroCardHeight(HeroBody body)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        var bodyLine = ImGui.GetTextLineHeight();
+        float captionLine;
+        using (Fonts.PushCaption())
+        {
+            captionLine = ImGui.GetTextLineHeight();
+        }
+
+        var chip = captionLine + ChipPadY * 2f * scale;
+        var bodyBlock = body == HeroBody.Status
+            ? bodyLine + StatusGap * scale
+            : bodyLine + SubLineGap * scale + captionLine + BodyGap * scale;
+        var gaps = (CardPadY * 2f + ChipGap + BarHeight + BarGap + ConductorLineGap) * scale;
+        return gaps + chip + bodyBlock + captionLine * 2f;
+    }
+
     private static float DrawStatus(string status, float x, float width, float y)
     {
         var text = TextDraw.Truncate(string.IsNullOrWhiteSpace(status) ? Loc.T(L.Common.Working) : status, width);
         TextDraw.At(text, new Vector2(x, y), Styling.TextSecondary);
-        return y + ImGui.GetTextLineHeight() + 12f * ImGuiHelpers.GlobalScale;
+        return y + ImGui.GetTextLineHeight() + StatusGap * ImGuiHelpers.GlobalScale;
     }
 
     private static float DrawMark(in CurrentMark.View mark, string status, float x, float width, float y)
@@ -143,7 +179,7 @@ internal static class RunningPanel
         var lineHeight = ImGui.GetTextLineHeight();
         var nameX = x + DrawRankBadge(mark.Rank, x, y + lineHeight * 0.5f);
         TextDraw.At(TextDraw.Truncate(mark.Name, x + width - nameX), new Vector2(nameX, y), Styling.TextStrong);
-        y += lineHeight + 3f * scale;
+        y += lineHeight + SubLineGap * scale;
 
         using (Fonts.PushCaption())
         {
@@ -153,14 +189,14 @@ internal static class RunningPanel
             y += ImGui.GetTextLineHeight();
         }
 
-        return y + 10f * scale;
+        return y + BodyGap * scale;
     }
 
     private static float DrawFlag(in CurrentFlag.View flag, string status, float x, float width, float y)
     {
         var scale = ImGuiHelpers.GlobalScale;
         TextDraw.At(TextDraw.Truncate(flag.Line, width), new Vector2(x, y), Styling.TextStrong);
-        y += ImGui.GetTextLineHeight() + 3f * scale;
+        y += ImGui.GetTextLineHeight() + SubLineGap * scale;
 
         using (Fonts.PushCaption())
         {
@@ -168,7 +204,7 @@ internal static class RunningPanel
             y += ImGui.GetTextLineHeight();
         }
 
-        return y + 10f * scale;
+        return y + BodyGap * scale;
     }
 
     private static float DrawRankBadge(HuntMarkRank? rank, float leftX, float midY)
@@ -213,17 +249,17 @@ internal static class RunningPanel
         return progressText.Set(key, Loc.T(L.Ride.ProgressLine, Loc.Plural(L.Ride.FlagsFollowed, flags), CreditedLine.Get(progress)));
     }
 
-    private static float DrawPhaseChip(float x, float y, string text, Vector4 accent, Vector4 accentSoft)
+    private static float DrawPhaseChip(float x, float y, float maxWidth, string text, Vector4 accent, Vector4 accentSoft)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
-        var padX = 9f * scale;
-        var padY = 3f * scale;
+        var padX = ChipPadX * scale;
+        var padY = ChipPadY * scale;
 
         using (Fonts.PushCaption())
         {
-            var label = TextDraw.Upper(text);
-            var textSize = TextDraw.Measure(label);
+            var label = TextDraw.Truncate(TextDraw.Upper(text), maxWidth - padX * 2f);
+            var textSize = new Vector2(TextDraw.Measure(label).X, ImGui.GetTextLineHeight());
             var chipMin = new Vector2(x, y);
             var chipMax = chipMin + new Vector2(padX * 2f + textSize.X, textSize.Y + padY * 2f);
             Paint.Pill(drawList, chipMin, chipMax, Styling.WithAlpha(accent, 0.28f), Styling.WithAlpha(accent, 0.65f));

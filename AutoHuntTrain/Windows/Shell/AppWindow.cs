@@ -211,7 +211,7 @@ public sealed class AppWindow : Window, IDisposable
         var dl = ImGui.GetWindowDrawList();
         var running = plugin.Controller.Running;
         var dockHeight = page == Page.Train ? Layout.DockHeight * scale
-            : running ? Layout.MiniPlayerHeight * scale
+            : running ? MiniPlayer.Height()
             : 0f;
         var railWidth = Layout.RailWidth * scale;
         var bodyTop = windowPos.Y + headerHeight;

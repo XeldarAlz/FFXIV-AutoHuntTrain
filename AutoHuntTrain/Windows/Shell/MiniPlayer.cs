@@ -12,11 +12,27 @@ namespace AutoHuntTrain.Windows.Shell;
 internal static class MiniPlayer
 {
     private const float PadX = 18f;
+    private const float PadY = 14f;
+    private const float LineGap = 2f;
     private const float ButtonSize = 34f;
     private const float ButtonGap = 8f;
     private const float BarWidth = 160f;
     private const float BarHeight = 8f;
     private const float CreditedGap = 12f;
+
+    // Tall enough for the buttons and for the phase and detail lines at the current font sizes.
+    public static float Height()
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        float captionLine;
+        using (Fonts.PushCaption())
+        {
+            captionLine = ImGui.GetTextLineHeight();
+        }
+
+        var lines = captionLine + LineGap * scale + ImGui.GetTextLineHeight();
+        return MathF.Max(ButtonSize * scale, lines) + PadY * 2f * scale;
+    }
 
     public static bool Draw(Plugin plugin, Vector2 size, float windowRounding)
     {
@@ -59,12 +75,19 @@ internal static class MiniPlayer
 
         var textX = origin.X + padX + 22f * scale;
         var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.ActivityLabel(controller);
-        var phaseSize = TextDraw.SmallCapsSize(phase);
-        var lineHeight = ImGui.GetTextLineHeight();
-        var gap = 2f * scale;
-        var top = midY - (phaseSize.Y + gap + lineHeight) * 0.5f;
-        TextDraw.SmallCaps(phase, new Vector2(textX, top), info.AccentSoft);
         var textRight = barX - 16f * scale;
+        var lineHeight = ImGui.GetTextLineHeight();
+        var gap = LineGap * scale;
+        Vector2 phaseSize;
+        float top;
+        using (Fonts.PushCaption())
+        {
+            var phaseText = TextDraw.Truncate(TextDraw.Upper(phase), textRight - textX);
+            phaseSize = new Vector2(TextDraw.Measure(phaseText).X, ImGui.GetTextLineHeight());
+            top = midY - (phaseSize.Y + gap + lineHeight) * 0.5f;
+            TextDraw.At(phaseText, new Vector2(textX, top), info.AccentSoft);
+        }
+
         DrawCredited(controller, textX + phaseSize.X + CreditedGap * scale, textRight, top, phaseSize.Y);
         var detail = ReadyState.ActivityDetail(controller);
         TextDraw.At(TextDraw.Truncate(detail, textRight - textX), new Vector2(textX, top + phaseSize.Y + gap), Styling.TextStrong);

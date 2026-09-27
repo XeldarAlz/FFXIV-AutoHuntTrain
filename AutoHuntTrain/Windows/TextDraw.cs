@@ -10,7 +10,8 @@ internal static class TextDraw
     public const string Separator = "  ·  ";
 
     private const string Ellipsis = "…";
-    private const int TruncateCacheSize = 16;
+    // Room for every line cut in one frame across the running panel, the dock and the header.
+    private const int TruncateCacheSize = 32;
 
     private static readonly TruncatedText[] truncateCache = new TruncatedText[TruncateCacheSize];
 
