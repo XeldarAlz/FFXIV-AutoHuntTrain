@@ -3,14 +3,14 @@ using System.Text;
 namespace AutoHuntTrain.Core.Feed;
 
 // What the relay's Discord text says beyond its fields: the start time in a timestamp tag, the conductor's name after
-// a "Conductor:" label, and the emoji codes that only clutter a log line.
+// a "Conductor" label, and the emoji codes that only clutter a log line.
 internal static class AnnouncementText
 {
     private const string TimestampOpen = "<t:";
     private const char TagOpen = '<';
     private const char TagClose = '>';
     private const char Colon = ':';
-    private const string ConductorLabel = "Conductor:";
+    private const string ConductorWord = "Conductor";
     private const char WorldOpen = '[';
     private const char WorldClose = ']';
     private const char AnimatedEmojiMarker = 'a';
@@ -173,18 +173,42 @@ internal static class AnnouncementText
         return best;
     }
 
-    // "Conductor: First Last" or "Conductor: [World] First Last"; the world is empty when the text named none.
+    // "Conductor: First Last" or "Conductor: [World] First Last", with Discord marks and spaces allowed around the
+    // label as in "**Conductor**: First Last"; the world is empty when the text named none.
     public static bool TryReadConductor(string text, out string name, out string worldName)
+    {
+        var label = text.IndexOf(ConductorWord, StringComparison.OrdinalIgnoreCase);
+        while (label >= 0)
+        {
+            if (TryReadConductorAt(text, label, out name, out worldName))
+            {
+                return true;
+            }
+
+            label = text.IndexOf(ConductorWord, label + ConductorWord.Length, StringComparison.OrdinalIgnoreCase);
+        }
+
+        name = string.Empty;
+        worldName = string.Empty;
+        return false;
+    }
+
+    private static bool TryReadConductorAt(string text, int label, out string name, out string worldName)
     {
         name = string.Empty;
         worldName = string.Empty;
-        var label = text.IndexOf(ConductorLabel, StringComparison.OrdinalIgnoreCase);
-        if (label < 0)
+        if (label > 0 && char.IsLetterOrDigit(text[label - 1]))
         {
             return false;
         }
 
-        var index = SkipFiller(text, label + ConductorLabel.Length);
+        var colon = SkipFiller(text, label + ConductorWord.Length);
+        if (colon >= text.Length || text[colon] != Colon)
+        {
+            return false;
+        }
+
+        var index = SkipFiller(text, colon + 1);
         if (index < text.Length && text[index] == WorldOpen)
         {
             var close = text.IndexOf(WorldClose, index);
@@ -204,6 +228,7 @@ internal static class AnnouncementText
         var secondLength = secondEnd - secondStart;
         if (firstLength == 0 || secondLength == 0 || firstLength > NameWordMaxLength || secondLength > NameWordMaxLength)
         {
+            worldName = string.Empty;
             return false;
         }
 
@@ -258,7 +283,7 @@ internal static class AnnouncementText
     private static int SkipFiller(string text, int start)
     {
         var index = start;
-        while (index < text.Length && (char.IsWhiteSpace(text[index]) || IsMarkdownMark(text[index])))
+        while (index < text.Length && (text[index] is ' ' or '	' || IsMarkdownMark(text[index])))
         {
             index++;
         }
@@ -279,7 +304,7 @@ internal static class AnnouncementText
 
     private static bool IsNameCharacter(char character) => char.IsLetter(character) || character == '\'' || character == '-';
 
-    private static bool IsMarkdownMark(char character) => character is '*' or '_' or '`' or '~';
+    private static bool IsMarkdownMark(char character) => character is '*' or '_' or '`' or '~' or '|';
 
     // <:name:id> or <a:name:id>, with the id all digits.
     private static bool IsCustomEmoji(string text, int open, int close)
