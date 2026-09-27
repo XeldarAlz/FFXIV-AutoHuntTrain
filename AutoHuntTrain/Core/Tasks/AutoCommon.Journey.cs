@@ -1,0 +1,535 @@
+using AutoHuntTrain.Core.Ipc;
+using AutoHuntTrain.Core.Travel;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
+using ECommons.DalamudServices;
+using System.Numerics;
+using System.Threading.Tasks;
+
+namespace AutoHuntTrain.Core.Tasks;
+
+public abstract partial class AutoCommon
+{
+    // HuntAlerts gives a same data center world change this long, congestion included.
+    private const int WorldChangeBudgetMs = 720_000;
+    // Lifestream retries a data center transfer through congestion for up to an hour before it gives up itself.
+    private const int DataCenterTransferBudgetMs = 65 * 60_000;
+    // A hop Lifestream accepted shows as busy within a frame; one it refused, such as a transfer with data center travel
+    // disabled in its settings, never does.
+    private const int HopStartWindowMs = 30_000;
+    // Lifestream idle on the wrong world this long after a hop started means it gave the hop up.
+    private const int HopAbandonedIdleMs = 5_000;
+    private const int HopPollMs = 500;
+    private const int HopProgressLogMs = 15_000;
+    private const int LifestreamBusyBeforeHopMs = 30_000;
+    private const int LifestreamIdleWindowMs = 3_000;
+    private const int LifestreamIdleBudgetMs = 60_000;
+    private const int JourneyTeleportWatchdogMs = 60_000;
+    private const float AtAetheryteMeters = 20f;
+    // Lifestream switches instances at an aetheryte within 11 metres; the walk stops well inside that.
+    private const float InstanceAetheryteReachMeters = 4f;
+    // Right after a zone load Lifestream still reads the character as occupied for a moment.
+    private const int InstanceSwitcherSettleMs = 8_000;
+    private const int InstanceSwitcherReadyMs = 10_000;
+    private const int InstanceChangeAttempts = 3;
+    private const int InstanceChangeTimeoutMs = 30_000;
+    private const int InstanceRetryBackoffMs = 5_000;
+    private const int InstancePollFrames = 10;
+    private const string JourneyLabel = "Journey";
+    private const string ReturnLabel = "Journey home";
+    private const string NoWorld = "none";
+
+    protected Task<JourneyOutcome> TravelHome()
+    {
+        if (Worlds.TryHome(out var home))
+        {
+            return TravelToWorld(JourneyPlan.Home(home.Name));
+        }
+
+        return Task.FromResult(Refuse(ReturnLabel, "the home world could not be read from the character"));
+    }
+
+    // Everything needed to stand at a named aetheryte on a named world and instance, from anywhere in the region. The
+    // plan stays in the configuration until the journey ends, so a login can pick it up when the task does not live
+    // through the relog a data center transfer brings; a resumed journey never asks for that transfer again.
+    protected async Task<JourneyOutcome> TravelToWorld(JourneyPlan plan, bool resumed = false)
+    {
+        var outcome = await RunJourney(plan, resumed, plan.ReturnTrip ? ReturnLabel : JourneyLabel);
+        if (outcome != JourneyOutcome.Cancelled)
+        {
+            Plugin.Instance.Configuration.ClearPendingJourney();
+        }
+
+        return outcome;
+    }
+
+    private async Task<JourneyOutcome> RunJourney(JourneyPlan plan, bool resumed, string label)
+    {
+        if (!LifestreamIPC.Instance.IsAvailable)
+        {
+            return Refuse(label, "Lifestream is not loaded; install or enable it from the Plugins page");
+        }
+
+        if (!Worlds.TryFind(plan.World, out var target))
+        {
+            return Refuse(label, $"'{plan.World}' is not a world this client knows");
+        }
+
+        if (!await WaitForPlayerReady())
+        {
+            return Unreached(JourneyOutcome.WorldUnreached);
+        }
+
+        if (!Worlds.TryCurrent(out var current))
+        {
+            return Refuse(label, "the current world could not be read from the character");
+        }
+
+        if (!Worlds.SameRegion(current, target))
+        {
+            return Refuse(label, $"{target.Name} is in {Worlds.RegionLabel(target.Region)} and the character is in {Worlds.RegionLabel(current.Region)}; travel stays within a region");
+        }
+
+        Diag($"{label}: {current.Name} ({current.DataCenterName}) to {target.Name} ({target.DataCenterName}), aetheryte {plan.AetheryteId}, instance {plan.Instance}{(resumed ? ", resumed after login" : string.Empty)}");
+        if (current.Id == target.Id)
+        {
+            Diag($"{label}: already on {target.Name}");
+        }
+        else
+        {
+            var hop = await HopToWorld(current, target, plan, resumed, label);
+            if (hop != JourneyOutcome.Arrived)
+            {
+                return hop;
+            }
+        }
+
+        if (plan.AetheryteId != 0 && !await TravelToPlannedAetheryte(plan.AetheryteId, label))
+        {
+            return Unreached(JourneyOutcome.AetheryteUnreached);
+        }
+
+        if (plan.Instance > 0 && !await SwitchToInstance(plan.Instance, label))
+        {
+            return Unreached(JourneyOutcome.InstanceUnreached);
+        }
+
+        Status = plan.ReturnTrip ? "Back home" : $"Arrived on {target.Name}";
+        Diag($"{label}: complete on {target.Name} in {TerritoryNames.Of(Svc.ClientState.TerritoryType)}, instance {LifestreamIPC.Instance.CurrentInstance()} ({ConditionTag()})");
+        return JourneyOutcome.Arrived;
+    }
+
+    private async Task<JourneyOutcome> HopToWorld(WorldInfo current, WorldInfo target, JourneyPlan plan, bool resumed, string label)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        var crossDataCenter = !Worlds.SameDataCenter(current, target);
+        var kind = crossDataCenter ? "data center transfer" : "world change";
+        var reachable = crossDataCenter ? lifestream.CanVisitCrossDataCenter(target.Name) : lifestream.CanVisitSameDataCenter(target.Name);
+        if (!reachable)
+        {
+            return Refuse(label, $"Lifestream cannot take the character from {current.Name} to {target.Name} by {kind}");
+        }
+
+        if (resumed)
+        {
+            if (!lifestream.IsBusy())
+            {
+                Warn($"{label}: resumed on {current.Name} with Lifestream idle, so the {kind} to {target.Name} did not go through; giving up");
+                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The trip to {target.Name} did not go through; the character is on {current.Name}.");
+                return JourneyOutcome.WorldUnreached;
+            }
+
+            Diag($"{label}: resumed on {current.Name} with Lifestream still busy; waiting for it to reach {target.Name}");
+        }
+        else if (!await StartHop(target, crossDataCenter, plan, kind, label))
+        {
+            return Unreached(JourneyOutcome.WorldUnreached);
+        }
+
+        var budgetMs = crossDataCenter ? DataCenterTransferBudgetMs : WorldChangeBudgetMs;
+        if (!await WaitForWorldArrival(target, budgetMs, kind, label))
+        {
+            return Unreached(JourneyOutcome.WorldUnreached);
+        }
+
+        await WaitForLifestreamIdle(label);
+        if (!await WaitForPlayerReady())
+        {
+            return Unreached(JourneyOutcome.WorldUnreached);
+        }
+
+        Diag($"{label}: on {target.Name} in {TerritoryNames.Of(Svc.ClientState.TerritoryType)} ({ConditionTag()})");
+        return JourneyOutcome.Arrived;
+    }
+
+    private async Task<bool> StartHop(WorldInfo target, bool crossDataCenter, JourneyPlan plan, string kind, string label)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        await PrepareForTeleport($"{label}-prepare");
+        if (CancelToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        if (lifestream.IsBusy())
+        {
+            Diag($"{label}: Lifestream is busy; waiting up to {LifestreamBusyBeforeHopMs / TimeUnits.MillisecondsPerSecond}s for it before the {kind}");
+            Status = "Waiting for Lifestream";
+            if (!await WaitUntilTimed(static () => !LifestreamIPC.Instance.IsBusy(), LifestreamBusyBeforeHopMs, $"{label}-lifestream-idle"))
+            {
+                if (!CancelToken.IsCancellationRequested)
+                {
+                    Warn($"{label}: Lifestream stayed busy, so the {kind} to {target.Name} was not requested");
+                    Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream is busy with something else; the trip to {target.Name} was not started.");
+                }
+
+                return false;
+            }
+        }
+
+        if (crossDataCenter)
+        {
+            // Written before the request, because Lifestream logs the character out to make the transfer.
+            Plugin.Instance.Configuration.SetPendingJourney(plan);
+        }
+
+        Status = crossDataCenter ? $"Travelling to {target.Name} on {target.DataCenterName}" : $"Changing world to {target.Name}";
+        Diag($"{label}: asking Lifestream for a {kind} to {target.Name} ({ConditionTag()})");
+        lifestream.TeleportAndChangeWorld(target.Name, crossDataCenter);
+        if (await WaitUntilTimed(() => HopStarted(target.Id), HopStartWindowMs, $"{label}-hop-start", InstancePollFrames))
+        {
+            return true;
+        }
+
+        if (CancelToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        if (crossDataCenter)
+        {
+            Warn($"{label}: Lifestream showed no sign of starting the data center transfer to {target.Name} within {HopStartWindowMs / TimeUnits.MillisecondsPerSecond}s; data center travel is most likely disabled in its settings");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream did not start the trip to {target.Name}. Enable data center travel in Lifestream's settings (/li) and try again.");
+        }
+        else
+        {
+            Warn($"{label}: Lifestream showed no sign of starting the world change to {target.Name} within {HopStartWindowMs / TimeUnits.MillisecondsPerSecond}s");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream did not start the world change to {target.Name}. The log has the details.");
+        }
+
+        return false;
+    }
+
+    private static bool HopStarted(uint targetWorldId)
+        => LifestreamIPC.Instance.IsBusy()
+        || !Svc.ClientState.IsLoggedIn
+        || OnWorld(Svc.Objects.LocalPlayer, targetWorldId);
+
+    private async Task<bool> WaitForWorldArrival(WorldInfo target, int budgetMs, string kind, string label)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        var startedAt = Environment.TickCount64;
+        var deadline = startedAt + budgetMs;
+        var nextLogAt = startedAt + HopProgressLogMs;
+        var idleSinceMs = startedAt;
+        var loggedOut = false;
+        while (!CancelToken.IsCancellationRequested)
+        {
+            var now = Environment.TickCount64;
+            var loggedIn = Svc.ClientState.IsLoggedIn;
+            var player = Svc.Objects.LocalPlayer;
+            if (!loggedIn && !loggedOut)
+            {
+                loggedOut = true;
+                Diag($"{label}: logged out for the {kind}");
+            }
+
+            if (loggedIn && OnWorld(player, target.Id) && !Svc.Condition[ConditionFlag.BetweenAreas] && !Svc.Condition[ConditionFlag.BetweenAreas51])
+            {
+                Diag($"{label}: arrived on {target.Name} after {(now - startedAt) / TimeUnits.MillisecondsPerSecond}s");
+                return true;
+            }
+
+            var busy = lifestream.IsBusy();
+            if (busy || !loggedIn)
+            {
+                idleSinceMs = now;
+            }
+            else if (now - idleSinceMs >= HopAbandonedIdleMs)
+            {
+                Warn($"{label}: Lifestream went idle on {WorldNameOf(player)} without reaching {target.Name}; the {kind} was abandoned ({ConditionTag()})");
+                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream gave up the trip to {target.Name}; the character is on {WorldNameOf(player)}. The log has the details.");
+                return false;
+            }
+
+            if (now >= deadline)
+            {
+                Warn($"{label}: {target.Name} not reached within {budgetMs / TimeUnits.MillisecondsPerMinute} minutes (logged in {loggedIn}, world {WorldNameOf(player)}, Lifestream busy {busy})");
+                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The trip to {target.Name} did not complete in time.");
+                return false;
+            }
+
+            if (now >= nextLogAt)
+            {
+                nextLogAt = now + HopProgressLogMs;
+                Status = loggedIn ? $"Waiting to arrive on {target.Name}" : $"Logging back in on {target.Name}";
+                Diag($"{label}: waiting for {target.Name}: logged in {loggedIn}, world {WorldNameOf(player)}, Lifestream busy {busy}, {ConditionTag()}");
+            }
+
+            await DelayMs(HopPollMs);
+        }
+
+        return false;
+    }
+
+    // Lifestream goes busy again briefly after an arrival, so the next step waits for a quiet spell.
+    private async Task WaitForLifestreamIdle(string label)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        var deadline = Environment.TickCount64 + LifestreamIdleBudgetMs;
+        var idleSinceMs = Environment.TickCount64;
+        Status = "Settling in after the world change";
+        while (!CancelToken.IsCancellationRequested && Environment.TickCount64 < deadline)
+        {
+            var now = Environment.TickCount64;
+            if (lifestream.IsBusy())
+            {
+                idleSinceMs = now;
+            }
+            else if (now - idleSinceMs >= LifestreamIdleWindowMs)
+            {
+                return;
+            }
+
+            await DelayMs(HopPollMs);
+        }
+
+        if (!CancelToken.IsCancellationRequested)
+        {
+            Diag($"{label}: Lifestream stayed busy for {LifestreamIdleBudgetMs / TimeUnits.MillisecondsPerSecond}s after the arrival; carrying on");
+        }
+    }
+
+    private async Task<bool> TravelToPlannedAetheryte(uint aetheryteId, string label)
+    {
+        if (!ZoneAetherytes.TryFindById(aetheryteId, out var territoryId, out var aetheryte))
+        {
+            Warn($"{label}: aetheryte {aetheryteId} is not a teleport target; giving up");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Aetheryte {aetheryteId} is not a teleport target.");
+            return false;
+        }
+
+        var zoneName = TerritoryNames.Of(territoryId);
+        if (!ZoneAetherytes.IsAttuned(aetheryteId))
+        {
+            Warn($"{label}: {aetheryte.Name} in {zoneName} is not attuned on this character; giving up");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} {aetheryte.Name} is not attuned on this character.");
+            return false;
+        }
+
+        if (Svc.ClientState.TerritoryType == territoryId && WithinReach(aetheryte.Position, AtAetheryteMeters))
+        {
+            Diag($"{label}: already at {aetheryte.Name} in {zoneName}");
+            return true;
+        }
+
+        if (!await WaitForPlayerReady())
+        {
+            return false;
+        }
+
+        Diag($"{label}: teleporting to {aetheryte.Name} in {zoneName} from territory {Svc.ClientState.TerritoryType} ({ConditionTag()})");
+        var reached = false;
+        if (Svc.ClientState.TerritoryType == territoryId)
+        {
+            reached = await TeleportToAetheryte(territoryId, aetheryte, $"{label}-aetheryte");
+        }
+        else
+        {
+            await RunWithStatusPinned(
+                $"Teleporting to {aetheryte.Name}",
+                async () => reached = await TeleportToTerritory(territoryId, aetheryte.Position, $"{label}-teleport", JourneyTeleportWatchdogMs));
+        }
+
+        if (!reached)
+        {
+            if (!CancelToken.IsCancellationRequested)
+            {
+                Warn($"{label}: could not reach {aetheryte.Name} in {zoneName} (still in territory {Svc.ClientState.TerritoryType})");
+                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Could not teleport to {aetheryte.Name}. The log has the details.");
+            }
+
+            return false;
+        }
+
+        Diag($"{label}: standing {DistanceTo(aetheryte.Position):F0}m from {aetheryte.Name} in {zoneName} ({ConditionTag()})");
+        return true;
+    }
+
+    private async Task<bool> SwitchToInstance(int instance, string label)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        var zoneName = TerritoryNames.Of(Svc.ClientState.TerritoryType);
+        var count = lifestream.NumberOfInstances();
+        if (count == 0)
+        {
+            Diag($"{label}: {zoneName} has no instances Lifestream knows of; staying where the teleport landed");
+            return true;
+        }
+
+        if (instance > count)
+        {
+            Warn($"{label}: instance {instance} requested, but {zoneName} has {count}; giving up");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} {zoneName} has {count} instances, not {instance}.");
+            return false;
+        }
+
+        if (lifestream.CurrentInstance() == instance)
+        {
+            Diag($"{label}: already in instance {instance} of {zoneName}");
+            return true;
+        }
+
+        for (var attempt = 1; attempt <= InstanceChangeAttempts; attempt++)
+        {
+            if (CancelToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            var scope = $"{label}-instance#{attempt}";
+            if (!await ReadyInstanceSwitcher(scope))
+            {
+                return false;
+            }
+
+            Status = $"Switching to instance {instance}";
+            Diag($"{scope}: asking Lifestream to switch from instance {lifestream.CurrentInstance()} to {instance} of {zoneName} ({ConditionTag()})");
+            lifestream.ChangeInstance(instance);
+            if (await WaitUntilTimed(() => InInstance(instance), InstanceChangeTimeoutMs, scope, InstancePollFrames))
+            {
+                Diag($"{label}: now in instance {instance} of {zoneName}");
+                return true;
+            }
+
+            if (CancelToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            Diag($"{scope}: still in instance {lifestream.CurrentInstance()}, the instance may be full; retrying after {InstanceRetryBackoffMs / TimeUnits.MillisecondsPerSecond}s");
+            if (lifestream.IsBusy())
+            {
+                lifestream.Abort();
+            }
+
+            await DelayMs(InstanceRetryBackoffMs);
+        }
+
+        Warn($"{label}: could not switch to instance {instance} of {zoneName} in {InstanceChangeAttempts} attempts");
+        Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Could not switch to instance {instance}; the character stays in instance {lifestream.CurrentInstance()}.");
+        return false;
+    }
+
+    // Lifestream switches instances through the aetheryte's own menu, so the character has to stand next to one.
+    private async Task<bool> ReadyInstanceSwitcher(string scope)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        if (lifestream.CanChangeInstance() || await WaitUntilTimed(lifestream.CanChangeInstance, InstanceSwitcherSettleMs, $"{scope}-settle"))
+        {
+            return true;
+        }
+
+        if (CancelToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        if (FindNearestAetheryteObject() is not { } aetheryte)
+        {
+            Warn($"{scope}: no aetheryte in sight to switch instances at ({ConditionTag()})");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} No aetheryte nearby to switch instances at.");
+            return false;
+        }
+
+        Status = "Walking to the aetheryte";
+        Diag($"{scope}: walking {DistanceTo(aetheryte.Position):F0}m to the aetheryte to switch instances");
+        if (!await TravelTo(Svc.ClientState.TerritoryType, aetheryte.Position, InstanceAetheryteReachMeters))
+        {
+            if (!CancelToken.IsCancellationRequested)
+            {
+                Warn($"{scope}: could not reach the aetheryte to switch instances");
+            }
+
+            return false;
+        }
+
+        if (await WaitUntilTimed(lifestream.CanChangeInstance, InstanceSwitcherReadyMs, $"{scope}-ready"))
+        {
+            return true;
+        }
+
+        if (!CancelToken.IsCancellationRequested)
+        {
+            Warn($"{scope}: Lifestream will not switch instances here ({DistanceTo(aetheryte.Position):F0}m from the aetheryte, {ConditionTag()}); its instance switcher may be disabled in its settings");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream will not switch instances here. Enable its instance switcher in Lifestream's settings (/li) and try again.");
+        }
+
+        return false;
+    }
+
+    private static bool InInstance(int instance)
+        => Svc.Objects.LocalPlayer is not null
+        && !Svc.Condition[ConditionFlag.BetweenAreas]
+        && !Svc.Condition[ConditionFlag.BetweenAreas51]
+        && LifestreamIPC.Instance.CurrentInstance() == instance
+        && !LifestreamIPC.Instance.IsBusy();
+
+    private static IGameObject? FindNearestAetheryteObject()
+    {
+        if (Svc.Objects.LocalPlayer is not { } player)
+        {
+            return null;
+        }
+
+        var objects = Svc.Objects;
+        IGameObject? nearest = null;
+        var bestDistance = float.MaxValue;
+        for (var index = 0; index < objects.Length; index++)
+        {
+            if (objects[index] is not { ObjectKind: ObjectKind.Aetheryte, IsTargetable: true } candidate)
+            {
+                continue;
+            }
+
+            var distance = Vector3.DistanceSquared(player.Position, candidate.Position);
+            if (distance >= bestDistance)
+            {
+                continue;
+            }
+
+            bestDistance = distance;
+            nearest = candidate;
+        }
+
+        return nearest;
+    }
+
+    private static bool OnWorld(IPlayerCharacter? player, uint worldId)
+        => player is not null && player.CurrentWorld.RowId == worldId;
+
+    private static string WorldNameOf(IPlayerCharacter? player)
+        => player?.CurrentWorld.ValueNullable?.Name.ExtractText() ?? NoWorld;
+
+    private JourneyOutcome Unreached(JourneyOutcome outcome)
+        => CancelToken.IsCancellationRequested ? JourneyOutcome.Cancelled : outcome;
+
+    private JourneyOutcome Refuse(string label, string reason)
+    {
+        Warn($"{label}: refused, {reason}");
+        Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Cannot travel: {reason}.");
+        return JourneyOutcome.Refused;
+    }
+}

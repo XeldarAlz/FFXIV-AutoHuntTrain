@@ -25,6 +25,8 @@ public sealed class Plugin : IDalamudPlugin
 {
     private const string GotoSubcommand = "goto";
     private const string NavmeshIpcProviderMarker = "Navmesh.IPCProvider";
+    // Lifestream's own budget for a data center transfer is up to an hour; a plan older than this is a leftover, not a journey in flight.
+    private static readonly TimeSpan PendingJourneyMaxAge = TimeSpan.FromMinutes(90);
 
     [PluginService]
     internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
@@ -248,11 +250,39 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnLogin()
     {
+        ResumePendingJourney();
         if (!Configuration.AutoShowOnLogin)
         {
             return;
         }
 
         appWindow.Show(AppWindow.Page.Train);
+    }
+
+    // A data center transfer logs the character out; when the journey task did not live through that, the plan it
+    // wrote first picks the journey up here. A task that did live through it keeps the journey for itself.
+    private void ResumePendingJourney()
+    {
+        if (Configuration.PendingJourney is not { } plan)
+        {
+            return;
+        }
+
+        if (Controller.Running)
+        {
+            RunLog.Info($"A journey to {plan.World} is pending and a task is already running; leaving the journey to it.");
+            return;
+        }
+
+        var age = DateTime.UtcNow - plan.StartedAtUtc;
+        if (age > PendingJourneyMaxAge)
+        {
+            RunLog.Info($"Dropping the pending journey to {plan.World}: it started {age.TotalMinutes:F0} minutes ago.");
+            Configuration.ClearPendingJourney();
+            return;
+        }
+
+        RunLog.Info($"Resuming the journey to {plan.World} after login.");
+        AutoJourney.Resume(plan);
     }
 }
