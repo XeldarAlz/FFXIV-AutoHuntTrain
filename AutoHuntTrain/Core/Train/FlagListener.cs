@@ -25,7 +25,19 @@ public readonly record struct FlagPost(
     int Instance,
     string Message)
 {
+    // Conductors post each flag twice within a moment, in Shout and in Yell for one; a copy lands within half a map
+    // unit of the first, and a train never flags the same spot again inside a minute and a half.
+    private const float RepeatMapTolerance = 0.5f;
+    private static readonly TimeSpan RepeatWindow = TimeSpan.FromSeconds(90);
+
     public bool NamesInstance => Instance > 0;
+
+    public bool Repeats(in FlagPost earlier)
+        => TerritoryId == earlier.TerritoryId
+        && Instance == earlier.Instance
+        && MathF.Abs(MapX - earlier.MapX) <= RepeatMapTolerance
+        && MathF.Abs(MapY - earlier.MapY) <= RepeatMapTolerance
+        && (PostedAtUtc - earlier.PostedAtUtc).Duration() <= RepeatWindow;
 }
 
 // Hears every map flag posted in the hunt channels on the current world and keeps the last few, so a conductor can

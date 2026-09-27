@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 
 namespace AutoHuntTrain.Core.Tasks;
 
-// Follows the conductor's flags: each one is a leg, the newest flag always wins, and at every flag the zone's mark is
-// fought for credit once someone has pulled it. A ride from an announcement first travels to the train's start and,
-// when the announcement named no conductor, takes the first player to post a flag there as one; a train already in
-// progress is caught up with along its route instead. The ride ends on Stop, once every mark of the expansion is
-// credited, or once the conductor has gone quiet for the idle limit.
+// Follows the conductor's flags: each one is a leg, the newest flag always wins unless it only repeats one already
+// known, and at every flag the zone's mark is fought for credit once someone has pulled it. A ride from an
+// announcement first travels to the train's start and, when the announcement named no conductor, takes the first
+// player to post a flag there as one; a train already in progress is caught up with along its route instead. The ride
+// ends on Stop, once every mark of the expansion is credited, or once the conductor has gone quiet for the idle limit.
 internal sealed partial class AutoRide : AutoCommon
 {
     private const string Scope = "ride";
@@ -52,6 +52,10 @@ internal sealed partial class AutoRide : AutoCommon
     private ConductorIdentity manualAtStart = ConductorIdentity.None;
     private FlagPost pending;
     private bool hasPending;
+    private FlagPost legFlag;
+    private bool hasLegFlag;
+    private FlagPost arrivedFlag;
+    private bool hasArrivedFlag;
     private bool travelling;
     private bool engaging;
     private long lastFlagAtMs;
@@ -475,11 +479,33 @@ internal sealed partial class AutoRide : AutoCommon
             return;
         }
 
+        if (RepeatedFlag(post) is { } repeated)
+        {
+            RunLog.Debug($"Ride: flag from {Conductor.Describe(conductor)} in {TerritoryNames.Of(post.TerritoryId)} at ({post.MapX:F1}, {post.MapY:F1}){InstanceText(post)} via {post.ChatType} repeats {repeated}; ignored");
+            return;
+        }
+
         pending = post;
         hasPending = true;
         quietSinceMs = Environment.TickCount64;
         var note = travelling ? "; it supersedes the leg in progress" : engaging ? "; it is taken once the fight ends" : string.Empty;
         Diag($"Ride: flag from {Conductor.Describe(conductor)} in {TerritoryNames.Of(post.TerritoryId)} at ({post.MapX:F1}, {post.MapY:F1}){InstanceText(post)} via {post.ChatType}{note}");
+    }
+
+    // A repeat of the flag being followed, the one last reached or the one waiting is the same stop posted again.
+    private string? RepeatedFlag(in FlagPost post)
+    {
+        if (hasPending && post.Repeats(pending))
+        {
+            return "the flag waiting to be followed";
+        }
+
+        if (hasLegFlag && post.Repeats(legFlag))
+        {
+            return "the flag being travelled to";
+        }
+
+        return hasArrivedFlag && post.Repeats(arrivedFlag) ? "the flag last arrived at" : null;
     }
 
     // Only an announced ride picks: from a flag in the start zone, when known, posted from shortly before the start, or
@@ -548,6 +574,8 @@ internal sealed partial class AutoRide : AutoCommon
 
         var leg = new RideLeg(flag, label);
         var completed = false;
+        legFlag = flag;
+        hasLegFlag = true;
         travelling = true;
         try
         {
@@ -556,6 +584,7 @@ internal sealed partial class AutoRide : AutoCommon
         finally
         {
             travelling = false;
+            hasLegFlag = false;
         }
 
         if (CancelToken.IsCancellationRequested)
@@ -576,6 +605,8 @@ internal sealed partial class AutoRide : AutoCommon
             return;
         }
 
+        arrivedFlag = flag;
+        hasArrivedFlag = true;
         progress.CountFlag();
         progress.SetRidePhase(RidePhase.AtFlag);
         Status = $"At the flag in {zoneName}";
