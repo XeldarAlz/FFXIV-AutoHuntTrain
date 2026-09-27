@@ -1,0 +1,126 @@
+name: Bug report
+description: Something's broken or behaving unexpectedly.
+title: "[Bug] "
+labels: ["bug"]
+assignees: ["XeldarAlz"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill out as much as you can; it makes a huge difference.
+
+        If you're not sure whether it's a bug or expected behavior, prefer the [Q&A discussions](https://github.com/XeldarAlz/FFXIV-AutoHuntTrain/discussions/new?category=q-a); triage is faster there.
+
+        For security issues, please use [private vulnerability reporting](https://github.com/XeldarAlz/FFXIV-AutoHuntTrain/security/advisories/new) instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see? What did you expect to see instead?
+      placeholder: "The plugin teleported to the start aetheryte but never followed the conductor's first flag..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to trigger the bug. If it's intermittent, say so.
+      placeholder: |
+        1. Open `/aht`
+        2. Press Ride on a Dawntrail train announced for another world
+        3. Wait for the first flag
+        4. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: Shown in `/xlplugins` next to "Auto Hunt Train".
+      options:
+        - 0.1.0.0
+        - Older / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: expansion
+    attributes:
+      label: Expansion of the train
+      description: Zones, instances, and mark spawns differ per expansion, so expansion is a frequent root cause.
+      options:
+        - ARR (A Realm Reborn)
+        - HW (Heavensward)
+        - StB (Stormblood)
+        - ShB (Shadowbringers)
+        - EW (Endwalker)
+        - DT (Dawntrail)
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feed
+    attributes:
+      label: Where did the train come from?
+      description: The plugin rides trains announced through the HuntAlerts feed, or follows a conductor you picked on your current world.
+      options:
+        - HuntAlerts feed
+        - Conductor picked by hand (no feed)
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Data center, world, and instance of the train
+      description: Where was the train, and were you on your home world, another world, or another data center?
+      placeholder: "Light, Raiden, instance 2; I was visiting from Chaos"
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where in the ride did it fail?
+      description: The plugin's flow runs announcement -> travel to the start aetheryte -> read the conductor's flag -> teleport or fly -> engage the mark -> next flag -> way home.
+      options:
+        - Feed (train not shown, wrong world, wrong start)
+        - Travel (world change, data center travel, teleport to the start)
+        - Flag (missed the conductor's flag, wrong aetheryte, wrong instance)
+        - Movement (stuck, can't reach the flag)
+        - Engage (no credit, pulled adds, attacked the wrong mark)
+        - Way home (didn't return, wrong world)
+        - Selection / UI (issue before pressing Start or Ride)
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Attachments
+      description: |
+        **If you can provide any of these, it turns guesswork into a fix.**
+
+        - **Plugin console**: open `/aht log`, press *Copy log* and paste the result into the console field below. It already includes the plugin version, Dalamud version and zone.
+        - **Dalamud log**: open `/xllog`, click the *Open log folder* button at the bottom-right, attach `dalamud.log`. Filter by `[AutoHuntTrain]` if you want to trim it down.
+        - **The conductor's flag message** as it appeared in chat, if the plugin misread it.
+        - **Screenshots / short clip** if the issue is visual (selection state, wrong tooltip, frozen card, etc.)
+        - **Other plugins active** that touch combat, movement, teleport, or input, which helps rule out conflicts.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output (optional)
+      description: |
+        Paste what *Copy log* on the plugin's Console page (`/aht log`) put on your clipboard. Short snippets (chat-log tail, Dalamud error text) also belong here; attach full `dalamud.log` files under **Attachments** above.
+      render: text
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Character class/job, whether Lifestream's data center travel is enabled, hunches, anything that helps the bug land.
