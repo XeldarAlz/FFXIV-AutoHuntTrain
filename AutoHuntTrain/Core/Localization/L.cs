@@ -213,9 +213,14 @@ internal static partial class L
         public static readonly LocString New = new("changelog.new", "New");
         public static readonly LocPlural Changes = new("changelog.changes", "{0} change", "{0} changes");
 
-        public static readonly LocString[] Release0100 =
+        public static readonly LocString[] Release1000 =
         [
-            new("changelog.r0100.1", "Scaffolded from Auto Hunt Grinder: the shell, console, travel and mark engine, and the release chain"),
+            new("changelog.r1000.1", "Rides hunt trains announced through HuntAlerts, with ride rules, auto-ride and snooze"),
+            new("changelog.r1000.2", "Travels to the train's world, data center and instance through Lifestream, and carries a ride across the data center relog"),
+            new("changelog.r1000.3", "Follows the conductor's map flags from Shout, Yell and Say, picking the conductor from the announcement, the first flag, or by hand"),
+            new("changelog.r1000.4", "Waits for the pull and lands a hit on each A rank for credit, never starting a pull itself"),
+            new("changelog.r1000.5", "Joins the train's party, returns home after the ride, and records every train in History"),
+            new("changelog.r1000.6", "Test commands for rides without a real train: /aht inject and /aht goto"),
         ];
     }
 

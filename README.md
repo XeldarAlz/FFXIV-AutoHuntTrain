@@ -22,17 +22,15 @@
 
 Hears a hunt train being called anywhere in your region, gets your character to the start aetheryte on that world, follows the conductor's flags from mark to mark, and lands a hit on every A rank before the crowd deletes it. With no feed installed it still follows a conductor you pick on your current world.
 
-> In development. The scaffold is in place and the ride logic lands phase by phase; the first release is 1.0.0.0.
-
 ## Features
 
 - **Rides announced trains**: subscribes to the HuntAlerts feed for train announcements across every data center in your region, with a countdown and a Ride button for each.
-- **Ride rules**: choose expansions, data centers and worlds, whether cross-data-center rides are allowed, and how much lead time a train needs before the plugin commits.
+- **Ride rules**: choose expansions and data centers, whether cross-data-center rides are allowed, and how much lead time a train on another data center needs before auto-ride commits.
 - **Gets you there**: world change, data center travel and instance switching through Lifestream, then the plugin's own teleport and flight to the start aetheryte.
 - **Follows the conductor**: reads the conductor's map flags from Shout, Yell and Say, picks the nearest aetheryte or flies when the flag is close, and understands instance numbers.
 - **Finds the conductor**: from the announcement when it names one, from the first flag posted in the start zone, or picked by hand.
 - **Hits, never leads**: dismounts at range, waits for the conductor's pull, lands a hit on the zone's A rank for credit, and never starts a pull or drags adds into the crowd.
-- **Knows when it's over**: ends the ride when the conductor calls it, the expected marks are credited, or the flags stop.
+- **Knows when it's over**: ends the ride once every A rank of the expansion is credited, or when the conductor has gone quiet.
 - **Way home**: return to your home world after the train, stay for the next one, or run the after-ride action.
 - **Recovery**: gets back up after a death and rejoins the train; re-paths, jumps, or teleports out when it gets stuck.
 - **Auto-repair**: Dark Matter during a lull between flags; the Grand Company mender only before a data center transfer.
