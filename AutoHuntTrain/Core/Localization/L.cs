@@ -77,13 +77,6 @@ internal static partial class L
         public static readonly LocString AfterCloseName = new("train.after.close.name", "Close the game");
         public static readonly LocString AfterCloseDetail = new("train.after.close.detail", "Close FFXIV entirely (via XIVLauncher's /xlkill).");
 
-        public static readonly LocString ExpansionArr = new("train.expansion.arr", "A Realm Reborn");
-        public static readonly LocString ExpansionHw = new("train.expansion.hw", "Heavensward");
-        public static readonly LocString ExpansionSb = new("train.expansion.sb", "Stormblood");
-        public static readonly LocString ExpansionShb = new("train.expansion.shb", "Shadowbringers");
-        public static readonly LocString ExpansionEw = new("train.expansion.ew", "Endwalker");
-        public static readonly LocString ExpansionDt = new("train.expansion.dt", "Dawntrail");
-
         public static readonly LocString Start = new("train.start", "START");
         public static readonly LocString Stop = new("train.stop", "STOP");
         public static readonly LocString PauseCaps = new("train.pause", "PAUSE");

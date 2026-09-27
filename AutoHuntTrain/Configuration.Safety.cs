@@ -1,6 +1,3 @@
-using AutoHuntTrain.Core.Travel;
-using Newtonsoft.Json;
-
 namespace AutoHuntTrain;
 
 public sealed partial class Configuration
@@ -15,19 +12,6 @@ public sealed partial class Configuration
     // 0 re-eats only once the buff has fully worn off.
     public int AutoConsumeMinMinutes { get; set; } = 3;
     public List<ConsumableEntry> AutoConsumeItems { get; set; } = [];
-
-    public bool HumanizerEnabled { get; set; } = false;
-    public int HumanizerMarksBeforeBreak { get; set; } = 30;
-    public int HumanizerBreakMinMinutes { get; set; } = 5;
-    public int HumanizerBreakMaxMinutes { get; set; } = 10;
-    public int HumanizerPauseMinSeconds { get; set; } = 3;
-    public int HumanizerPauseMaxSeconds { get; set; } = 8;
-    public int HumanizerWanderMinMeters { get; set; } = 25;
-    public int HumanizerWanderMaxMeters { get; set; } = 80;
-
-    // Replace, because by default the loader adds the saved cities into this pre-filled set and every unticked city would come back.
-    [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-    public HashSet<uint> HumanizerCities { get; set; } = BreakCities.NewDefaultSelection();
 
     public bool DeclinePartyInvites { get; set; } = false;
     public int DeclineInviteDelayMinSeconds { get; set; } = 2;

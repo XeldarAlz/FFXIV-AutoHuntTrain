@@ -37,7 +37,6 @@ Hears a hunt train being called anywhere in your region, gets your character to 
 - **Recovery**: gets back up after a death and rejoins the train; re-paths, jumps, or teleports out when it gets stuck.
 - **Auto-repair**: Dark Matter first, Grand Company mender as fallback.
 - **Auto-consume**: keeps food and medicine buffs up between trains, HQ first.
-- **Humanizer**: takes random breaks between trains so long sessions look less mechanical.
 - **Pause & resume**: park a ride without losing your progress, and auto-pause while you're in a duty.
 - **Party invites**: auto-declines incoming invites during a ride after a random delay, with an optional reply message.
 - **GM alert**: stops the bot when a GM is near, with optional toast, beeps, or custom commands.

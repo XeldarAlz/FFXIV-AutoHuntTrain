@@ -1,5 +1,4 @@
 using AutoHuntTrain.Core.Game.Ops;
-using AutoHuntTrain.Core.Travel;
 using Dalamud.Game.ClientState.Conditions;
 using ECommons.DalamudServices;
 using System.Threading.Tasks;
@@ -10,17 +9,10 @@ public abstract partial class AutoCommon
 {
     private const int UpkeepConsumeWaitMs = 6_000;
     private const int UpkeepConsumeCheckFrames = 100;
-    // A failed repair or break tends to fail the same way straight after (no Dark Matter, city not attuned), so it rests first.
+    // A failed repair tends to fail the same way straight after (no Dark Matter, no mender), so it rests first.
     private const int UpkeepRepairRetryMs = 600_000;
-    private const int UpkeepBreakRetryMs = 300_000;
 
-    private int marksSinceBreak;
     private long repairRetryAtMs;
-    private long breakRetryAtMs;
-
-    // One call per mark kill; the humanizer counts these toward its next city break. The count lives on this task, so it
-    // starts over whenever a run starts or resumes.
-    protected void NoteMarkKilled() => marksSinceBreak++;
 
     // True when any step ran, which can leave the character dismounted or in another zone, so the caller should travel
     // to its next spot afresh.
@@ -28,8 +20,7 @@ public abstract partial class AutoCommon
     {
         var configuration = Plugin.Instance.Configuration;
         var repairDue = UpkeepRepairDue(configuration);
-        var breakDue = UpkeepBreakDue(configuration);
-        if (!repairDue && !breakDue && !UpkeepConsumablesDue(configuration))
+        if (!repairDue && !UpkeepConsumablesDue(configuration))
         {
             return false;
         }
@@ -44,11 +35,6 @@ public abstract partial class AutoCommon
             await RunScheduledRepair();
         }
 
-        if (breakDue && !CancelToken.IsCancellationRequested)
-        {
-            await RunScheduledBreak(configuration);
-        }
-
         if (!CancelToken.IsCancellationRequested && UpkeepConsumablesDue(configuration))
         {
             await RefreshConsumables(configuration);
@@ -61,11 +47,6 @@ public abstract partial class AutoCommon
         => configuration.AutoRepair
         && Environment.TickCount64 >= repairRetryAtMs
         && RepairOps.NeedsRepair(configuration.AutoRepairThresholdPercent);
-
-    private bool UpkeepBreakDue(Configuration configuration)
-        => configuration.HumanizerEnabled
-        && Environment.TickCount64 >= breakRetryAtMs
-        && marksSinceBreak >= Math.Max(1, configuration.HumanizerMarksBeforeBreak);
 
     private static bool UpkeepConsumablesDue(Configuration configuration)
         => configuration.AutoConsume
@@ -111,33 +92,6 @@ public abstract partial class AutoCommon
         Warn($"Upkeep: the repair did not finish; the next try waits {UpkeepRepairRetryMs / TimeUnits.MillisecondsPerMinute} minutes");
     }
 
-    private async Task RunScheduledBreak(Configuration configuration)
-    {
-        var cityTerritoryId = PickBreakCity(configuration);
-        if (cityTerritoryId == 0)
-        {
-            Diag("Upkeep: a city break is due but no listed city is ticked; skipping it");
-            marksSinceBreak = 0;
-            return;
-        }
-
-        var minutes = RollBreakMinutes(configuration);
-        Diag($"Upkeep: {marksSinceBreak} marks since the last break (every {configuration.HumanizerMarksBeforeBreak}); taking a {minutes}m break");
-        if (await TakeCityBreak(cityTerritoryId, minutes * TimeUnits.MillisecondsPerMinute))
-        {
-            marksSinceBreak = 0;
-            return;
-        }
-
-        if (CancelToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        breakRetryAtMs = Environment.TickCount64 + UpkeepBreakRetryMs;
-        Warn($"Upkeep: could not reach {TerritoryNames.Of(cityTerritoryId)} for the break; the next try waits {UpkeepBreakRetryMs / TimeUnits.MillisecondsPerMinute} minutes");
-    }
-
     // Each item gets a wall-clock deadline, so a use the game never applies cannot park the run.
     private async Task RefreshConsumables(Configuration configuration)
     {
@@ -178,49 +132,5 @@ public abstract partial class AutoCommon
 
         FoodOps.UseConsumable(entry);
         return false;
-    }
-
-    private static uint PickBreakCity(Configuration configuration)
-    {
-        var cities = BreakCities.All;
-        var selected = configuration.HumanizerCities;
-        var eligible = 0;
-        for (var index = 0; index < cities.Length; index++)
-        {
-            if (selected.Contains(cities[index].TerritoryId))
-            {
-                eligible++;
-            }
-        }
-
-        if (eligible == 0)
-        {
-            return 0;
-        }
-
-        var pick = Random.Shared.Next(eligible);
-        for (var index = 0; index < cities.Length; index++)
-        {
-            if (!selected.Contains(cities[index].TerritoryId))
-            {
-                continue;
-            }
-
-            if (pick == 0)
-            {
-                return cities[index].TerritoryId;
-            }
-
-            pick--;
-        }
-
-        return 0;
-    }
-
-    private static int RollBreakMinutes(Configuration configuration)
-    {
-        var shortest = Math.Max(1, configuration.HumanizerBreakMinMinutes);
-        var longest = Math.Max(shortest, configuration.HumanizerBreakMaxMinutes);
-        return Random.Shared.Next(shortest, longest + 1);
     }
 }

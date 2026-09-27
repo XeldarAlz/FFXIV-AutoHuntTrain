@@ -13,8 +13,6 @@ internal static partial class L
         public static readonly LocString CatRepairSub = new("safety.cat.repairSub", "Auto-repair gear when equipped item condition drops below the threshold.");
         public static readonly LocString CatConsumables = new("safety.cat.consumables", "Consumables");
         public static readonly LocString CatConsumablesSub = new("safety.cat.consumablesSub", "Keep food and medicine buffs up while hunting: Well Fed is a free +3% EXP.");
-        public static readonly LocString CatHumanizer = new("safety.cat.humanizer", "Humanizer");
-        public static readonly LocString CatHumanizerSub = new("safety.cat.humanizerSub", "Take periodic city breaks between marks: teleport to a random hub and wander around for a few minutes before resuming.");
         public static readonly LocString CatPartyInvites = new("safety.cat.partyInvites", "Party invites");
         public static readonly LocString CatPartyInvitesSub = new("safety.cat.partyInvitesSub", "Auto-decline incoming party invites during a run, after a human-like delay, with an optional reply.");
         public static readonly LocString CatGmAlert = new("safety.cat.gmAlert", "GM alert");
@@ -67,27 +65,8 @@ internal static partial class L
         public static readonly LocString Medicated = new("safety.consumables.medicated", "Medicated");
         public static readonly LocString NoneInBagShort = new("safety.consumables.noneInBagShort", "{0}, none in bag");
 
-        public static readonly LocString HumanizerBreaks = new("safety.humanizer.breaks", "Breaks");
-        public static readonly LocString HumanizerEnable = new("safety.humanizer.enable", "Take periodic city breaks");
-        public static readonly LocString HumanizerEnableHelp = new("safety.humanizer.enableHelp", "Every N marks, teleport to a random selected city and wander around for a few minutes before resuming. Helps you avoid player reports by acting a little more human, useful when you leave the PC running for long sessions and don't want others noticing you hunting non-stop.");
-        public static readonly LocString HumanizerOff = new("safety.humanizer.off", "Humanizer is off. Enable it to configure breaks.");
-        public static readonly LocString MarksBetween = new("safety.humanizer.marksBetween", "Marks between breaks");
-        public static readonly LocString MarksBetweenHelp = new("safety.humanizer.marksBetweenHelp", "Take a break after this many mark kills. The count starts over after each break, and whenever a run starts or resumes.");
-        public static readonly LocString MarksFormat = new("safety.humanizer.marksFormat", "%d marks");
-        public static readonly LocString BreakLength = new("safety.humanizer.breakLength", "Break length");
-        public static readonly LocString BreakLengthHelp = new("safety.humanizer.breakLengthHelp", "A random duration between these two values is rolled for each break.");
-        public static readonly LocString MinutesFormat = new("safety.humanizer.minutesFormat", "%d min");
-        public static readonly LocString HumanizerWandering = new("safety.humanizer.wandering", "Wandering");
-        public static readonly LocString PauseBetween = new("safety.humanizer.pauseBetween", "Pause between walks");
-        public static readonly LocString PauseBetweenHelp = new("safety.humanizer.pauseBetweenHelp", "After arriving at each random point, stand still for a random duration in this range before walking somewhere else.");
-        public static readonly LocString SecondsFormat = new("safety.humanizer.secondsFormat", "%d s");
-        public static readonly LocString WalkDistance = new("safety.humanizer.walkDistance", "Walk distance");
-        public static readonly LocString WalkDistanceHelp = new("safety.humanizer.walkDistanceHelp", "Each random destination is rolled this many meters away from your current position. Larger ranges cover more of the city; smaller ranges keep you near the aetheryte.");
-        public static readonly LocString MetersFormat = new("safety.humanizer.metersFormat", "%d m");
-        public static readonly LocString HumanizerCities = new("safety.humanizer.cities", "Cities");
-        public static readonly LocString AllowedCities = new("safety.humanizer.allowedCities", "Allowed cities");
-        public static readonly LocString AllowedCitiesHelp = new("safety.humanizer.allowedCitiesHelp", "Tick the cities the plugin is allowed to teleport to. One is picked at random each break. Untick cities you haven't unlocked or don't want visited.");
-        public static readonly LocString NoCities = new("safety.humanizer.noCities", "No cities selected, so the Humanizer skips the break and keeps hunting.");
+        public static readonly LocString MinutesFormat = new("safety.minutesFormat", "%d min");
+        public static readonly LocString SecondsFormat = new("safety.secondsFormat", "%d s");
 
         public static readonly LocString InvitesDecline = new("safety.invites.decline", "Decline");
         public static readonly LocString AutoDecline = new("safety.invites.autoDecline", "Auto-decline party invites");
