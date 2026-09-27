@@ -172,6 +172,17 @@ internal sealed partial class AutoHuntController
         }
 
         Stop();
+        // A GM nearby is the player's call to make; auto-ride must not start the next train a second later.
+        var configuration = Plugin.Instance.Configuration;
+        if (!configuration.AutoRide)
+        {
+            return;
+        }
+
+        configuration.AutoRide = false;
+        configuration.SaveDebounced();
+        Diag("GM alert: auto-ride switched off until the player turns it back on.");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-ride is off after the GM alert; turn it back on in Settings when you are ready.");
     }
 
     public void Stop()
