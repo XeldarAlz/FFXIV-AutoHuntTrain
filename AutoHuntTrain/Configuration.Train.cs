@@ -14,7 +14,12 @@ public sealed partial class Configuration
 
     public int LateJoinLimitSeconds { get; set; } = 120;
 
+    // Counts only until the first flag is followed; QuietEndMinutes takes over once a mark is credited.
     public int IdleLimitMinutes { get; set; } = 15;
+
+    public int QuietEndMinutes { get; set; } = 5;
+
+    public bool EndOnConductorPhrase { get; set; } = true;
 
     public bool WaitForPull { get; set; } = true;
 

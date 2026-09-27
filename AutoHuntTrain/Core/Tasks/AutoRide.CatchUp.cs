@@ -53,6 +53,12 @@ internal sealed partial class AutoRide
                 return false;
             }
 
+            if (conductorEnded)
+            {
+                EndOnConductorPhrase();
+                return false;
+            }
+
             if (PastListing(plan))
             {
                 EndCatchUp($"the train is more than {Announcement.ListedAfterStart.TotalMinutes:F0} minutes past its start");
@@ -80,7 +86,11 @@ internal sealed partial class AutoRide
             }
         }
 
-        if (!CancelToken.IsCancellationRequested)
+        if (conductorEnded)
+        {
+            EndOnConductorPhrase();
+        }
+        else if (!CancelToken.IsCancellationRequested)
         {
             EndCatchUp($"no flag was heard in any zone up to the end of the {route.Expansion.ShortName()} route");
         }
@@ -154,7 +164,7 @@ internal sealed partial class AutoRide
         var deadline = Environment.TickCount64 + CatchUpListenMs;
         try
         {
-            while (!CancelToken.IsCancellationRequested)
+            while (!CancelToken.IsCancellationRequested && !conductorEnded)
             {
                 if (hasPending)
                 {

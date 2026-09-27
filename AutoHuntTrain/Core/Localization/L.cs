@@ -98,7 +98,6 @@ internal static partial class L
         public static readonly LocString PhasePaused = new("run.phase.paused", "Paused");
         public static readonly LocString PhasePausedInContent = new("run.phase.pausedInContent", "Paused (in content)");
         public static readonly LocString SomewhereElse = new("run.somewhereElse", "Somewhere else");
-        public static readonly LocPlural MarksCredited = new("run.marksCredited", "{0} mark credited", "{0} marks credited");
         public static readonly LocString TileMarks = new("run.tile.marks", "Marks");
         public static readonly LocString TileSeals = new("run.tile.seals", "Seals");
         public static readonly LocString TileElapsed = new("run.tile.elapsed", "Elapsed");

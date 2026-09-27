@@ -11,6 +11,9 @@ internal static class ConductorSettings
     private const int IdleMinutesMin = 1;
     private const int IdleMinutesMax = 120;
     private const int IdleMinutesStep = 1;
+    private const int QuietMinutesMin = 2;
+    private const int QuietMinutesMax = 30;
+    private const int QuietMinutesStep = 1;
 
     public static void Draw(Configuration configuration)
     {
@@ -43,6 +46,17 @@ internal static class ConductorSettings
             Loc.T(L.Ride.IdleLimitHelp),
             Stepper.DefaultWidth,
             () => DrawIdleStepper(configuration));
+
+        SettingsRow.Draw(Loc.T(L.Ride.QuietEnd),
+            Loc.T(L.Ride.QuietEndHelp),
+            Stepper.DefaultWidth,
+            () => DrawQuietStepper(configuration));
+
+        SettingsRow.Draw(Loc.T(L.Ride.EndOnPhrase),
+            Loc.T(L.Ride.EndOnPhraseHelp),
+            SettingsControls.ToggleWidth,
+            () => SettingsControls.DrawToggle(configuration, () => configuration.EndOnConductorPhrase, value => configuration.EndOnConductorPhrase = value, "##aht_conductor_endphrase"),
+            SettingsRow.ToggleHeight);
     }
 
     private static void DrawLateJoinStepper(Configuration configuration)
@@ -66,6 +80,18 @@ internal static class ConductorSettings
         }
 
         configuration.IdleLimitMinutes = minutes;
+        configuration.SaveDebounced();
+    }
+
+    private static void DrawQuietStepper(Configuration configuration)
+    {
+        var minutes = configuration.QuietEndMinutes;
+        if (!Stepper.Draw("##aht_conductor_quiet", ref minutes, QuietMinutesStep, QuietMinutesMin, QuietMinutesMax, Loc.T(L.Safety.MinutesFormat)))
+        {
+            return;
+        }
+
+        configuration.QuietEndMinutes = minutes;
         configuration.SaveDebounced();
     }
 }

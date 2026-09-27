@@ -40,6 +40,9 @@ public readonly record struct FlagPost(
         && (PostedAtUtc - earlier.PostedAtUtc).Duration() <= RepeatWindow;
 }
 
+// A chat line with no map link, heard only while someone listens for them.
+public readonly record struct SpokenLine(string SenderName, uint SenderWorldId, XivChatType ChatType, string Text);
+
 // Hears every map flag posted in the hunt channels on the current world and keeps the last few, so a conductor can
 // be picked from the players who post flags and a ride can pick up the flag posted just before it started. Chat
 // arrives on the framework thread, and so does every reader.
@@ -65,6 +68,9 @@ internal sealed class FlagListener : IDisposable
     private bool checkedTerritoryIsHunt;
 
     public event Action<FlagPost>? Posted;
+
+    // Lines without a map link in Shout, Yell, Say and party chat, from any zone.
+    public event Action<SpokenLine>? Spoken;
 
     public FlagListener()
     {
@@ -134,12 +140,24 @@ internal sealed class FlagListener : IDisposable
     private void OnChatMessage(IHandleableChatMessage message)
     {
         var chatType = (XivChatType)((ushort)message.LogKind & ChatKindMask);
-        if (!Listening(chatType) || !InHuntTerritory())
+        var listening = Listening(chatType) && InHuntTerritory();
+        var hearingSpoken = Spoken is not null && SpokenChannel(chatType);
+        if (!listening && !hearingSpoken)
         {
             return;
         }
 
-        if (FirstMapLink(message.Message) is not { } link || !TryReadSender(message.Sender, out var name, out var worldId))
+        if (FirstMapLink(message.Message) is not { } link)
+        {
+            if (hearingSpoken)
+            {
+                RelaySpoken(message, chatType);
+            }
+
+            return;
+        }
+
+        if (!listening || !TryReadSender(message.Sender, out var name, out var worldId))
         {
             return;
         }
@@ -156,6 +174,19 @@ internal sealed class FlagListener : IDisposable
         RunLog.Debug($"Flag heard: {name}@{worldId} in {TerritoryNames.Of(post.TerritoryId)} at ({post.MapX:F1}, {post.MapY:F1}), instance {instance}, via {chatType}");
         Posted?.Invoke(post);
     }
+
+    private void RelaySpoken(IHandleableChatMessage message, XivChatType chatType)
+    {
+        if (!TryReadSender(message.Sender, out var name, out var worldId))
+        {
+            return;
+        }
+
+        Spoken?.Invoke(new SpokenLine(name, worldId, chatType, message.Message.TextValue));
+    }
+
+    private static bool SpokenChannel(XivChatType chatType)
+        => chatType is XivChatType.Shout or XivChatType.Yell or XivChatType.Say or XivChatType.Party or XivChatType.CrossParty;
 
     private static bool Listening(XivChatType chatType)
     {

@@ -18,7 +18,8 @@ namespace AutoHuntTrain.Core.Tasks;
 // known, and at every flag the zone's mark is fought for credit once someone has pulled it. A ride from an
 // announcement first travels to the train's start and, when the announcement named no conductor, takes the first
 // player to post a flag there as one; a train already in progress is caught up with along its route instead. The ride
-// ends on Stop, once every mark of the expansion is credited, or once the conductor has gone quiet for the idle limit.
+// ends on Stop, once every mark of the expansion is credited, when the conductor says the train is over, or when no
+// flag comes: for the idle limit until the first flag is followed, for the quiet time once a mark is credited.
 internal sealed partial class AutoRide : AutoCommon
 {
     private const string Scope = "ride";
@@ -31,6 +32,7 @@ internal sealed partial class AutoRide : AutoCommon
     private const float FlagMarkRadiusMeters = 80f;
     private const int MarkHealthSampleMs = 250;
     private const float EngageAtOnceBelowHealth = 0.5f;
+    private const int QuietEndMinutesMin = 2;
     private const int ZoneTeleportWatchdogMs = 60_000;
     private const int TypingPollFrames = 10;
     // The upkeep conditions read the bag and the status list, so a quiet wait asks at most this often.
@@ -46,7 +48,9 @@ internal sealed partial class AutoRide : AutoCommon
     private readonly FlagListener listener;
     private readonly Announcement? announcement;
     private readonly Action<FlagPost> onPosted;
-    private readonly Func<bool> newerFlagArrived;
+    private readonly Action<SpokenLine> onSpoken;
+    // A newer flag, or the conductor ending the train, cuts short whatever the ride is doing besides a fight.
+    private readonly Func<bool> interrupted;
     private readonly IFramework.OnUpdateDelegate sampleMarkHealth;
 
     private ConductorIdentity conductor = ConductorIdentity.None;
@@ -59,6 +63,7 @@ internal sealed partial class AutoRide : AutoCommon
     private bool hasArrivedFlag;
     private bool travelling;
     private bool engaging;
+    private bool conductorEnded;
     private long lastFlagAtMs;
     private int legCount;
     private int rankACredited;
@@ -74,7 +79,8 @@ internal sealed partial class AutoRide : AutoCommon
         this.listener = listener;
         this.announcement = announcement;
         onPosted = OnPosted;
-        newerFlagArrived = () => hasPending;
+        onSpoken = OnSpoken;
+        interrupted = () => hasPending || conductorEnded;
         sampleMarkHealth = SampleMarkHealth;
     }
 
@@ -87,6 +93,7 @@ internal sealed partial class AutoRide : AutoCommon
     protected override async Task Execute()
     {
         listener.Posted += onPosted;
+        listener.Spoken += onSpoken;
         lastFlagAtMs = Environment.TickCount64;
         await HoldCombatMovementAndSettle(Scope);
         try
@@ -119,6 +126,7 @@ internal sealed partial class AutoRide : AutoCommon
         finally
         {
             listener.Posted -= onPosted;
+            listener.Spoken -= onSpoken;
             ReleaseCombatMovement(Scope);
         }
     }
@@ -387,7 +395,7 @@ internal sealed partial class AutoRide : AutoCommon
             return;
         }
 
-        await HumanDelay(HumanAction.LookingForGroup, "Ride", newerFlagArrived);
+        await HumanDelay(HumanAction.LookingForGroup, "Ride", interrupted);
         if (CancelToken.IsCancellationRequested || PartyOps.InParty())
         {
             return;
@@ -418,11 +426,23 @@ internal sealed partial class AutoRide : AutoCommon
     {
         while (!CancelToken.IsCancellationRequested)
         {
+            if (conductorEnded)
+            {
+                EndOnConductorPhrase();
+                return;
+            }
+
             if (!hasPending)
             {
                 if (IdleLimitReached())
                 {
-                    EndOnIdle();
+                    EndOnSilence(IdleLimitMs());
+                    return;
+                }
+
+                if (QuietEndReached())
+                {
+                    EndOnSilence(QuietEndMs());
                     return;
                 }
 
@@ -528,6 +548,30 @@ internal sealed partial class AutoRide : AutoCommon
         return hasArrivedFlag && post.Repeats(arrivedFlag) ? "the flag last arrived at" : null;
     }
 
+    // Only the conductor followed can end the train. A thank-you before any flag was followed greets the riders rather
+    // than dismissing them.
+    private void OnSpoken(SpokenLine line)
+    {
+        if (conductorEnded || !Plugin.Instance.Configuration.EndOnConductorPhrase || !conductor.IsSet || !conductor.Matches(line))
+        {
+            return;
+        }
+
+        if (TrainEndPhrases.Find(line.Text) is not { } phrase)
+        {
+            return;
+        }
+
+        if (progress.FlagsFollowed == 0 && session.MarksCredited == 0)
+        {
+            Diag($"Ride: {Conductor.Describe(conductor)} said \"{line.Text}\" via {line.ChatType}, matching \"{phrase}\", before any flag was followed; not taken as the end of the train");
+            return;
+        }
+
+        conductorEnded = true;
+        Diag($"Ride: {Conductor.Describe(conductor)} said \"{line.Text}\" via {line.ChatType}, matching \"{phrase}\"; the ride ends {(engaging ? "once the fight in progress finishes" : "now")}");
+    }
+
     // Only an announced ride picks: from a flag in the start zone, when known, posted from shortly before the start, or
     // while catching up, from a flag heard in the zone listened in.
     private bool TryPickConductor(in FlagPost post)
@@ -600,9 +644,9 @@ internal sealed partial class AutoRide : AutoCommon
         try
         {
             Status = $"Moving off to the flag in {zoneName}";
-            if (await HumanDelay(HumanAction.MoveOff, label, newerFlagArrived))
+            if (await HumanDelay(HumanAction.MoveOff, label, interrupted))
             {
-                await RunWithStatusFrom(leg, async () => completed = await RunCancellable(leg, LegBudgetMs, label, newerFlagArrived));
+                await RunWithStatusFrom(leg, async () => completed = await RunCancellable(leg, LegBudgetMs, label, interrupted));
             }
         }
         finally
@@ -616,9 +660,11 @@ internal sealed partial class AutoRide : AutoCommon
             return;
         }
 
-        if (!completed && hasPending)
+        if (!completed && (hasPending || conductorEnded))
         {
-            Diag($"{label}: a newer flag arrived; the leg to {zoneName} is dropped");
+            Diag(conductorEnded
+                ? $"{label}: the conductor ended the train; the leg to {zoneName} is dropped"
+                : $"{label}: a newer flag arrived; the leg to {zoneName} is dropped");
             return;
         }
 
@@ -705,7 +751,7 @@ internal sealed partial class AutoRide : AutoCommon
         }
 
         PublishCredits();
-        Diag($"{label}: {name} credited {seconds}s after arriving at the flag; {CreditTally()} credited so far");
+        Diag($"{label}: {name} credited {seconds}s after arriving at the flag; {session.MarksCredited} credited so far");
     }
 
     // A mark already under half health goes down in seconds, so it is joined at once.
@@ -739,6 +785,12 @@ internal sealed partial class AutoRide : AutoCommon
             if (hasPending)
             {
                 Diag($"{label}: a newer flag arrived while waiting at the flag in {zoneName}; the train has moved on");
+                return null;
+            }
+
+            if (conductorEnded)
+            {
+                Diag($"{label}: the conductor ended the train while waiting at the flag in {zoneName}");
                 return null;
             }
 
@@ -897,7 +949,7 @@ internal sealed partial class AutoRide : AutoCommon
         }
 
         Diag($"Ride: no new flag for {(now - quietSinceMs) / TimeUnits.MillisecondsPerSecond}s; running the upkeep while waiting ({ConditionTag()})");
-        await RunUpkeep(travelAllowed: false, newerFlagArrived);
+        await RunUpkeep(travelAllowed: false, interrupted);
         if (hasPending)
         {
             Diag("Ride: a flag arrived during the upkeep; the rest of it waits for the next lull");
@@ -933,20 +985,37 @@ internal sealed partial class AutoRide : AutoCommon
     }
 
     private bool IdleLimitReached()
-        => Environment.TickCount64 - lastFlagAtMs >= IdleLimitMs();
+        => progress.FlagsFollowed == 0 && Environment.TickCount64 - lastFlagAtMs >= IdleLimitMs();
 
     private static long IdleLimitMs()
         => Math.Max(1, Plugin.Instance.Configuration.IdleLimitMinutes) * (long)TimeUnits.MillisecondsPerMinute;
 
-    private void EndOnIdle()
+    // The loop asks only between legs, so no fight is in progress, and the quiet counts from the last new flag or
+    // from the end of the last leg, whichever came later.
+    private bool QuietEndReached()
+        => session.MarksCredited > 0 && Environment.TickCount64 - quietSinceMs >= QuietEndMs();
+
+    private static long QuietEndMs()
+        => Math.Max(QuietEndMinutesMin, Plugin.Instance.Configuration.QuietEndMinutes) * (long)TimeUnits.MillisecondsPerMinute;
+
+    private void EndOnSilence(long limitMs)
     {
-        var minutes = IdleLimitMs() / TimeUnits.MillisecondsPerMinute;
+        var minutes = limitMs / TimeUnits.MillisecondsPerMinute;
         var silence = conductor.IsSet ? $"no flag from {Conductor.Describe(conductor)}" : $"no flag in {StartZoneName()}";
         session.CompletedByStopCondition = true;
         session.Outcome = RideOutcome.ConductorQuiet;
         Status = "Ride ended";
         Diag($"Ride: {silence} for {minutes} minutes after {progress.FlagsFollowed} flag(s); the ride ends");
         Svc.Chat.Print($"{AhtConstants.LogPrefix} {char.ToUpperInvariant(silence[0])}{silence[1..]} for {minutes} minutes; the ride ends.");
+    }
+
+    private void EndOnConductorPhrase()
+    {
+        session.CompletedByStopCondition = true;
+        session.Outcome = session.MarksCredited > 0 ? RideOutcome.AllCredited : RideOutcome.ConductorQuiet;
+        Status = "Ride ended";
+        Diag($"Ride: the conductor ended the train after {progress.FlagsFollowed} flag(s) and {session.MarksCredited} mark(s) credited; the ride ends ({session.Outcome})");
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} The conductor ended the train; the ride ends.");
     }
 
     // The world is known from the announcement on an announced ride, and the expansion from the first flag's zone
@@ -971,12 +1040,6 @@ internal sealed partial class AutoRide : AutoCommon
 
     private string StartZoneName()
         => announcement is { NamesTerritory: true } plan ? TerritoryNames.Of(plan.TerritoryId) : UnknownStartZone;
-
-    private string CreditTally()
-    {
-        var expected = ExpectedMarks.For(session.Expansion);
-        return expected > 0 ? $"{session.MarksCredited} of {expected}" : session.MarksCredited.ToString();
-    }
 
     private static long SecondsSince(long startedAtMs) => (Environment.TickCount64 - startedAtMs) / TimeUnits.MillisecondsPerSecond;
 

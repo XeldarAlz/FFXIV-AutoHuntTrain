@@ -27,7 +27,7 @@ internal static partial class L
         public static readonly LocString CatchUpListening = new("ride.catchUp.listening", "Catching up: listening in {0} ({1} of {2})");
         public static readonly LocPlural FlagsFollowed = new("ride.flagsFollowed", "{0} flag followed", "{0} flags followed");
         public static readonly LocString ProgressLine = new("ride.progressLine", "{0}  ·  {1}");
-        public static readonly LocString CreditedOf = new("ride.creditedOf", "{0} of {1} credited");
+        public static readonly LocPlural Credited = new("ride.credited", "{0} credited", "{0} credited");
 
         public static readonly LocString SettingsGroup = new("ride.settings.group", "Conductor");
         public static readonly LocString ListenShout = new("ride.settings.shout", "Listen to Shout");
@@ -38,8 +38,12 @@ internal static partial class L
         public static readonly LocString ListenSayHelp = new("ride.settings.sayHelp", "Follow flags the conductor posts in Say. Handy when you stand next to the conductor, or when you test the ride with your own flags.");
         public static readonly LocString LateJoin = new("ride.settings.lateJoin", "Late-join limit");
         public static readonly LocString LateJoinHelp = new("ride.settings.lateJoinHelp", "When a ride starts, the conductor's last flag is still followed if it is at most this old. An older flag is skipped and the ride waits for the next one.");
-        public static readonly LocString IdleLimit = new("ride.settings.idle", "Idle limit");
-        public static readonly LocString IdleLimitHelp = new("ride.settings.idleHelp", "The ride ends on its own when no flag from the conductor arrives for this long.");
+        public static readonly LocString IdleLimit = new("ride.settings.idle", "Wait for the first flag");
+        public static readonly LocString IdleLimitHelp = new("ride.settings.idleHelp", "How long the ride waits for the conductor's first flag. When none arrives in this time, the ride ends on its own.");
+        public static readonly LocString QuietEnd = new("ride.settings.quietEnd", "End after the conductor goes quiet");
+        public static readonly LocString QuietEndHelp = new("ride.settings.quietEndHelp", "Once at least one mark is credited, the ride ends on its own when no new flag from the conductor arrives for this long and no fight is going on.");
+        public static readonly LocString EndOnPhrase = new("ride.settings.endOnPhrase", "End when the conductor says so");
+        public static readonly LocString EndOnPhraseHelp = new("ride.settings.endOnPhraseHelp", "End the ride when the conductor says in Shout, Yell, Say or party chat that the train is over, with words such as \"thanks for coming\" or \"that's all\". A fight in progress is finished first. Only English phrases are recognized for now.");
 
         public static readonly LocString EngagementGroup = new("ride.settings.engagement", "Engagement");
         public static readonly LocString WaitForPull = new("ride.settings.waitForPull", "Wait for the pull");

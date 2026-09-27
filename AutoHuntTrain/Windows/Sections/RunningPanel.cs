@@ -240,7 +240,7 @@ internal static class RunningPanel
     private static string ProgressLine(RideProgress progress)
     {
         var flags = progress.FlagsFollowed;
-        var key = ((long)flags << 40) | ((long)progress.ExpectedMarks << 20) | (uint)progress.MarksCredited;
+        var key = ((long)flags << 32) | (uint)progress.MarksCredited;
         if (progressText.TryGet(key, out var line))
         {
             return line;

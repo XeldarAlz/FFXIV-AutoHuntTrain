@@ -13,6 +13,9 @@ internal readonly record struct ConductorIdentity(string Name, uint WorldId)
     public bool Matches(in FlagPost post)
         => post.SenderWorldId == WorldId && string.Equals(post.SenderName, Name, StringComparison.OrdinalIgnoreCase);
 
+    public bool Matches(in SpokenLine line)
+        => line.SenderWorldId == WorldId && string.Equals(line.SenderName, Name, StringComparison.OrdinalIgnoreCase);
+
     public bool SameAs(in ConductorIdentity other)
         => other.WorldId == WorldId && string.Equals(other.Name, Name, StringComparison.OrdinalIgnoreCase);
 }
