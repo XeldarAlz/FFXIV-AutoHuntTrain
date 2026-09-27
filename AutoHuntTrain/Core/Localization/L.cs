@@ -64,7 +64,7 @@ internal static partial class L
         public static readonly LocString ReturnHome = new("train.returnHome", "Return home after the ride");
         public static readonly LocString ReturnHomeHelp = new("train.returnHomeHelp", "Travel back to your home world once the ride ends, crossing data centers when the train ran on another one. Off leaves you on the train's world, ready for the next one.");
         public static readonly LocString StayForNext = new("train.stayForNext", "Stay for the next train");
-        public static readonly LocString StayForNextHelp = new("train.stayForNextHelp", "With auto-ride on, when a train on this data center that passes every rule starts within 20 minutes, skip the way home and the after-ride action and let auto-ride take it.");
+        public static readonly LocString StayForNextHelp = new("train.stayForNextHelp", "With auto-join on, when a train on this data center that auto-join would take starts within 20 minutes, skip the way home and the after-ride action and let auto-join take it.");
         public static readonly LocString AfterStayName = new("train.after.stay.name", "Stay where you are");
         public static readonly LocString AfterStayDetail = new("train.after.stay.detail", "Just stop. You're left standing wherever the last mark fell.");
         public static readonly LocString AfterInnName = new("train.after.inn.name", "Return to the inn");
@@ -212,7 +212,7 @@ internal static partial class L
 
         public static readonly LocString[] Release1000 =
         [
-            new("changelog.r1000.1", "Rides hunt trains announced through HuntAlerts, with ride rules, auto-ride and snooze"),
+            new("changelog.r1000.1", "Rides hunt trains announced through HuntAlerts, with a Ride button on every train, auto-join per expansion and snooze"),
             new("changelog.r1000.2", "Travels to the train's world, data center and instance through Lifestream, and carries a ride across the data center relog"),
             new("changelog.r1000.3", "Follows the conductor's map flags from Shout, Yell and Say, picking the conductor from the announcement, the first flag, or by hand"),
             new("changelog.r1000.4", "Waits for the pull and lands a hit on each A rank for credit, never starting a pull itself"),
@@ -310,7 +310,7 @@ internal static partial class L
 
         public static readonly LocString CatGeneral = new("settings.cat.general", "General");
         public static readonly LocString CatGeneralSub = new("settings.cat.generalSub", "Window and behavior preferences.");
-        public static readonly LocString CatFeedSub = new("settings.cat.feedSub", "Which announced trains to ride, and how to hear about them.");
+        public static readonly LocString CatFeedSub = new("settings.cat.feedSub", "Which trains to auto-join, and how to hear about them.");
         public static readonly LocString CatRideSub = new("settings.cat.rideSub", "Following the conductor, fighting the marks, and what happens after.");
 
         public static readonly LocString GeneralWindow = new("settings.general.window", "Window");
@@ -325,7 +325,7 @@ internal static partial class L
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | snooze [minutes] or snooze off (suspend auto-ride) | inject <World> <DT|EW|SHB|Centurio> [aetheryte] [i<n>] [+minutes] [conductor:First Last] [body:text] (a made-up announcement for testing) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).");
+        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | snooze [minutes] or snooze off (suspend auto-join) | inject <World> <DT|EW|SHB|Centurio> [aetheryte] [i<n>] [+minutes] [conductor:First Last] [body:text] (a made-up announcement for testing) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /aht.");
     }
 }

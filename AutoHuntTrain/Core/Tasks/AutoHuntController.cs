@@ -72,8 +72,9 @@ internal sealed partial class AutoHuntController
         RideChat.PrintStart($"{AhtConstants.LogPrefix} Following {name}'s flags.");
     }
 
-    // A ride from the feed: the journey to the train's start, then the follow loop. The rules are checked once more
-    // here, because the list a button was clicked on can be seconds old.
+    // A ride from the feed: the journey to the train's start, then the follow loop. Only what makes a ride impossible
+    // refuses it here, whether the player clicked or auto-join chose; the list a button was clicked on can be seconds
+    // old, so it is checked once more.
     public bool StartRide(Announcement announcement)
     {
         var group = ExpansionGroups.Name(announcement.Group);
@@ -89,7 +90,7 @@ internal sealed partial class AutoHuntController
             return false;
         }
 
-        var verdict = RideRules.Evaluate(announcement);
+        var verdict = RideRules.EvaluateManual(announcement, out _);
         if (verdict != RideVerdict.Rideable)
         {
             Diag($"Ride of the {group} train on {world.Name} refused: {RideRules.Explain(verdict)}.");
@@ -173,17 +174,17 @@ internal sealed partial class AutoHuntController
         }
 
         Stop();
-        // A GM nearby is the player's call to make; auto-ride must not start the next train a second later.
+        // A GM nearby is the player's call to make; auto-join must not start the next train a second later.
         var configuration = Plugin.Instance.Configuration;
-        if (!configuration.AutoRide)
+        if (!configuration.IsAutoJoinActive())
         {
             return;
         }
 
-        configuration.AutoRide = false;
+        configuration.DisableAutoJoin();
         configuration.SaveDebounced();
-        Diag("GM alert: auto-ride switched off until the player turns it back on.");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-ride is off after the GM alert; turn it back on in Settings when you are ready.");
+        Diag("GM alert: auto-join switched off for every expansion until the player turns it back on.");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-join is off after the GM alert; turn it back on in Settings when you are ready.");
     }
 
     public void Stop()

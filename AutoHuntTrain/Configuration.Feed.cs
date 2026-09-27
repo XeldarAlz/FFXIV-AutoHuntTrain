@@ -4,13 +4,14 @@ namespace AutoHuntTrain;
 
 public sealed partial class Configuration
 {
-    public bool RideCenturio { get; set; } = true;
+    // Whether trains of each expansion group are auto-joined; every train can be ridden with its Ride button anyway.
+    public bool RideCenturio { get; set; } = false;
 
-    public bool RideShadowbringers { get; set; } = true;
+    public bool RideShadowbringers { get; set; } = false;
 
-    public bool RideEndwalker { get; set; } = true;
+    public bool RideEndwalker { get; set; } = false;
 
-    public bool RideDawntrail { get; set; } = true;
+    public bool RideDawntrail { get; set; } = false;
 
     // Data center names; empty means the home data center only.
     public string[] AllowedDataCenters { get; set; } = [];
@@ -19,18 +20,32 @@ public sealed partial class Configuration
 
     public int MinimumLeadSeconds { get; set; } = 180;
 
+    // The old master switch, read only by the version 1 migration and never written back.
     public bool AutoRide { get; set; } = false;
 
     public DateTime? SnoozeUntilUtc { get; set; }
 
     public int SnoozeMinutes { get; set; } = 30;
 
-    // Only what the Upcoming list and the chat line show; the ride rules above decide what is ridden.
+    // Only what the Upcoming list and the chat line show. A config saved before the view picker existed keeps the old
+    // My data centers default; only a fresh config starts on Everywhere.
     public TrainListView TrainListView { get; set; } = TrainListView.MyDataCenters;
 
     public RelayChannel RelayChannel { get; set; } = RelayChannel.Party;
 
     public bool RelayWithFlag { get; set; } = true;
+
+    public bool ShouldSerializeAutoRide() => false;
+
+    public bool IsAutoJoinActive() => RideCenturio || RideShadowbringers || RideEndwalker || RideDawntrail;
+
+    public void DisableAutoJoin()
+    {
+        RideCenturio = false;
+        RideShadowbringers = false;
+        RideEndwalker = false;
+        RideDawntrail = false;
+    }
 
     public bool IsGroupEnabled(ExpansionGroup group) => group switch
     {

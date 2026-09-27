@@ -79,7 +79,12 @@ public sealed class Plugin : IDalamudPlugin
         CLibMain.Init(PluginInterface, this, CLibModule.Automation);
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-        Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Configuration = PluginInterface.GetPluginConfig() as Configuration ?? Configuration.CreateFresh();
+        if (Configuration.Migrate())
+        {
+            Configuration.Save();
+        }
+
         OpenTrainLink = Svc.Chat.AddChatLinkHandler(OpenTrainLinkCommandId, OnOpenTrainLink);
         History = new RunHistory();
         Controller = new AutoHuntController();

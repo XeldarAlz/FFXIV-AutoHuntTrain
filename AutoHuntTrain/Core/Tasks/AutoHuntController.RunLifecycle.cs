@@ -214,12 +214,12 @@ internal sealed partial class AutoHuntController
         return true;
     }
 
-    // With auto-ride on, a train on this data center that auto-ride would take soon is worth staying for: the way home
+    // With auto-join on, a train on this data center that auto-join would take soon is worth staying for: the way home
     // would carry the character off, and the after-run action would log it out or park it at the inn.
     private bool StaysForNextTrain()
     {
         var configuration = Plugin.Instance.Configuration;
-        if (!configuration.StayForNextTrain || !configuration.AutoRide)
+        if (!configuration.StayForNextTrain || !configuration.IsAutoJoinActive())
         {
             return false;
         }
@@ -241,7 +241,7 @@ internal sealed partial class AutoHuntController
             }
 
             var group = ExpansionGroups.Name(announcement.Group);
-            Diag($"Staying for the {group} train on {announcement.World.Name}, starting in {announcement.LeadAt(nowUtc).TotalMinutes:F0} min; no way home and no after-run action, auto-ride takes it.");
+            Diag($"Staying for the {group} train on {announcement.World.Name}, starting in {announcement.LeadAt(nowUtc).TotalMinutes:F0} min; no way home and no after-run action, auto-join takes it.");
             ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Staying for the {group} train on {announcement.World.Name}.");
             return true;
         }

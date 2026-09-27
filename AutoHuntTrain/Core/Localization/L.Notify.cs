@@ -6,11 +6,11 @@ internal static partial class L
     {
         public static readonly LocString SettingsGroup = new("notify.settings.group", "Notifications");
         public static readonly LocString OpenWindow = new("notify.settings.openWindow", "Open the Train page");
-        public static readonly LocString OpenWindowHelp = new("notify.settings.openWindowHelp", "When a train you could ride is announced, open this window on the Train page. While you type in a text box it waits for you to finish, for up to 30 seconds. Nothing happens during a ride, a duty or a cutscene, or while auto-ride is snoozed.");
+        public static readonly LocString OpenWindowHelp = new("notify.settings.openWindowHelp", "When a train on your allowed data centers that you could ride is announced, open this window on the Train page. While you type in a text box it waits for you to finish, for up to 30 seconds. Nothing happens during a ride, a duty or a cutscene, or while auto-join is snoozed.");
         public static readonly LocString FlashTaskbar = new("notify.settings.flashTaskbar", "Flash the taskbar in the background");
-        public static readonly LocString FlashTaskbarHelp = new("notify.settings.flashTaskbarHelp", "When a train you could ride is announced while the game is in the background, flash its taskbar button until you switch back to it.");
+        public static readonly LocString FlashTaskbarHelp = new("notify.settings.flashTaskbarHelp", "When a train on your allowed data centers that you could ride is announced while the game is in the background, flash its taskbar button until you switch back to it.");
         public static readonly LocString ChatAlert = new("notify.settings.chatAlert", "Post a chat line");
-        public static readonly LocString ChatAlertHelp = new("notify.settings.chatAlertHelp", "When a train the Upcoming trains list shows is announced, post one line in chat with a link to its details. It follows the list's view, and stays quiet during a ride, a duty or a cutscene, or while auto-ride is snoozed.");
+        public static readonly LocString ChatAlertHelp = new("notify.settings.chatAlertHelp", "When a train the Upcoming trains list shows is announced, post one line in chat with a link to its details. It follows the list's view, and stays quiet during a ride, a duty or a cutscene, or while auto-join is snoozed.");
         public static readonly LocString ChatSound = new("notify.settings.chatSound", "Chat line sound");
         public static readonly LocString ChatSoundHelp = new("notify.settings.chatSoundHelp", "Play one of the game's chat sounds with the chat line.");
         public static readonly LocString ChatSoundEffect = new("notify.settings.chatSoundEffect", "Sound effect");

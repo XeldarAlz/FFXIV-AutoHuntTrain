@@ -10,7 +10,7 @@ internal static class NotifyGates
     {
         if (configuration.IsSnoozed(DateTime.UtcNow))
         {
-            reason = "auto-ride is snoozed";
+            reason = "auto-join is snoozed";
             return true;
         }
 

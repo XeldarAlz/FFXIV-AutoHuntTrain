@@ -2,8 +2,8 @@ using AutoHuntTrain.Core.Travel;
 
 namespace AutoHuntTrain.Core.Feed;
 
-// Which announced trains the player looks at, from the view picked on the Train page. The list and the chat line
-// follow it; notifications and auto-ride go by the ride rules alone.
+// Which announced trains the player looks at, from the view picked on the Train page: geography only, never the
+// auto-join switches. The list and the chat line follow it; the other notifications and auto-join do not.
 internal static class TrainListFilter
 {
     public static bool Shows(in Announcement announcement, TrainListView view)
@@ -16,8 +16,8 @@ internal static class TrainListFilter
         return view switch
         {
             TrainListView.Everywhere => true,
-            TrainListView.MyRegion => Plugin.Instance.Configuration.IsGroupEnabled(announcement.Group) && InHomeRegion(announcement.World),
-            _ => RideRules.IsListed(announcement),
+            TrainListView.MyRegion => InHomeRegion(announcement.World),
+            _ => RideRules.IsAllowedDataCenter(announcement.World),
         };
     }
 

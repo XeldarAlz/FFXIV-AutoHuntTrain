@@ -6,7 +6,7 @@ internal sealed partial class AutoHuntController
 {
     private const int FeedEvaluationIntervalMs = 1_000;
 
-    // Every train auto-ride or the player has already taken, as many as the feed can hold, so auto-ride never swaps
+    // Every train auto-join or the player has already taken, as many as the feed can hold, so auto-join never swaps
     // back and forth between two trains when the player stops each one.
     private readonly int[] takenAnnouncementIds = new int[FeedListener.Capacity];
 
@@ -16,20 +16,20 @@ internal sealed partial class AutoHuntController
     private int nextTakenSlot;
     private int autoRideHoldBelowId;
 
-    // The player stopping a ride is a decision about auto-ride too: it waits for a train announced after the stop
+    // The player stopping a ride is a decision about auto-join too: it waits for a train announced after the stop
     // instead of taking the next one in the list a second later.
     public void StopByPlayer()
     {
         var riding = Running;
         Stop();
-        if (!riding || !Plugin.Instance.Configuration.AutoRide)
+        if (!riding || !Plugin.Instance.Configuration.IsAutoJoinActive())
         {
             return;
         }
 
         autoRideHoldBelowId = Plugin.Instance.Feed.NextId;
-        Diag("Auto-ride: the player stopped the ride; waiting for a train announced from now on.");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-ride will wait for the next train announced from now on.");
+        Diag("Auto-join: the player stopped the ride; waiting for a train announced from now on.");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-join will wait for the next train announced from now on.");
     }
 
     private void RememberTaken(int announcementId)
@@ -37,6 +37,11 @@ internal sealed partial class AutoHuntController
         takenAnnouncementIds[nextTakenSlot] = announcementId;
         nextTakenSlot = (nextTakenSlot + 1) % takenAnnouncementIds.Length;
     }
+
+    // Whether auto-join leaves this train alone whatever the rules say: taken already, refused at its start, or
+    // announced before the player's last Stop.
+    public bool AutoJoinSkips(int announcementId)
+        => announcementId < autoRideHoldBelowId || announcementId == autoRideRefusedId || WasTaken(announcementId);
 
     private bool WasTaken(int announcementId)
     {
@@ -51,9 +56,9 @@ internal sealed partial class AutoHuntController
         return false;
     }
 
-    // Once a second while auto-ride is on and nothing runs: the soonest announced train that passes every rule is
-    // ridden. A train already taken, one whose start was refused, and anything announced before the player's last
-    // Stop are left alone. Nothing here allocates unless a ride starts.
+    // Once a second while any expansion's auto-join is on and nothing runs: the soonest announced train that passes
+    // every rule is ridden. A train already taken, one whose start was refused, and anything announced before the
+    // player's last Stop are left alone. Nothing here allocates unless a ride starts.
     private void TickAutoRide(long now)
     {
         if (now < nextFeedEvaluationAtMs)
@@ -63,7 +68,7 @@ internal sealed partial class AutoHuntController
 
         nextFeedEvaluationAtMs = now + FeedEvaluationIntervalMs;
         var configuration = Plugin.Instance.Configuration;
-        if (!configuration.AutoRide || Running || !ECommons.DalamudServices.Svc.ClientState.IsLoggedIn)
+        if (!configuration.IsAutoJoinActive() || Running || !ECommons.DalamudServices.Svc.ClientState.IsLoggedIn)
         {
             return;
         }
@@ -78,17 +83,17 @@ internal sealed partial class AutoHuntController
         for (var index = 0; index < feed.Count; index++)
         {
             var announcement = feed[index];
-            if (announcement.Id < autoRideHoldBelowId || announcement.Id == autoRideRefusedId || WasTaken(announcement.Id))
+            if (AutoJoinSkips(announcement.Id))
             {
                 continue;
             }
 
-            if (RideRules.Evaluate(announcement, nowUtc, forAutoRide: true, out _) != RideVerdict.Rideable)
+            if (RideRules.EvaluateAuto(announcement, nowUtc, out _) != RideVerdict.Rideable)
             {
                 continue;
             }
 
-            Diag($"Auto-ride: the {ExpansionGroups.Name(announcement.Group)} train on {announcement.World.Name} starts in {announcement.LeadAt(nowUtc).TotalMinutes:F0} min and passes every rule; riding it.");
+            Diag($"Auto-join: the {ExpansionGroups.Name(announcement.Group)} train on {announcement.World.Name} starts in {announcement.LeadAt(nowUtc).TotalMinutes:F0} min and passes every rule; riding it.");
             if (!StartRide(announcement))
             {
                 autoRideRefusedId = announcement.Id;

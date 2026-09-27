@@ -51,7 +51,7 @@ internal sealed partial class TrainDetails
         }
         else if (!rideable && Hit.HoveringRect(rideOrigin, rideOrigin + new Vector2(PillButton.Width(rideLabel, FontAwesomeIcon.Train), height)))
         {
-            Tooltip.Show(TrainTexts.Verdict(verdict, announcement));
+            Tooltip.Show(TrainTexts.Verdict(verdict));
         }
 
         if (hasFlagPoint)
@@ -168,7 +168,7 @@ internal sealed partial class TrainDetails
 
         verdictForId = announcement.Id;
         verdictAtMs = now;
-        verdict = RideRules.Evaluate(announcement);
+        verdict = RideRules.EvaluateManual(announcement, out _);
     }
 
     private string RelayHint(RelayChannel channel)

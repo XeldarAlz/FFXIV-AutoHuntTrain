@@ -19,21 +19,21 @@ internal static class FeedSettings
 
     private static readonly GroupRow[] groupRows =
     [
-        new(ExpansionGroup.Centurio, L.Feed.RideCenturio, "##aht_feed_centurio"),
-        new(ExpansionGroup.Shadowbringers, L.Feed.RideShadowbringers, "##aht_feed_shb"),
-        new(ExpansionGroup.Endwalker, L.Feed.RideEndwalker, "##aht_feed_ew"),
-        new(ExpansionGroup.Dawntrail, L.Feed.RideDawntrail, "##aht_feed_dt"),
+        new(ExpansionGroup.Centurio, L.Feed.AutoJoinCenturio, "##aht_feed_centurio"),
+        new(ExpansionGroup.Shadowbringers, L.Feed.AutoJoinShadowbringers, "##aht_feed_shb"),
+        new(ExpansionGroup.Endwalker, L.Feed.AutoJoinEndwalker, "##aht_feed_ew"),
+        new(ExpansionGroup.Dawntrail, L.Feed.AutoJoinDawntrail, "##aht_feed_dt"),
     ];
 
     public static void Draw(Configuration configuration)
     {
-        using var group = SettingsGroup.Begin(Loc.T(L.Feed.SettingsGroup));
+        using var group = SettingsGroup.Begin(Loc.T(L.Feed.AutoJoinGroup));
 
         for (var index = 0; index < groupRows.Length; index++)
         {
             var row = groupRows[index];
             SettingsRow.Draw(Loc.T(row.Label),
-                Loc.T(L.Feed.RideGroupHelp),
+                Loc.T(L.Feed.AutoJoinHelp),
                 SettingsControls.ToggleWidth,
                 () => DrawGroupToggle(configuration, row),
                 SettingsRow.ToggleHeight);
@@ -53,12 +53,6 @@ internal static class FeedSettings
             Loc.T(L.Feed.MinimumLeadHelp),
             Stepper.DefaultWidth,
             () => DrawLeadStepper(configuration));
-
-        SettingsRow.Draw(Loc.T(L.Feed.AutoRide),
-            Loc.T(L.Feed.AutoRideHelp),
-            SettingsControls.ToggleWidth,
-            () => SettingsControls.DrawToggle(configuration, () => configuration.AutoRide, value => configuration.AutoRide = value, "##aht_feed_autoride"),
-            SettingsRow.ToggleHeight);
 
         SettingsRow.Draw(Loc.T(L.Feed.SnoozeLength),
             Loc.T(L.Feed.SnoozeLengthHelp),

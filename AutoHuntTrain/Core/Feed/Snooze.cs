@@ -3,7 +3,8 @@ using System.Globalization;
 
 namespace AutoHuntTrain.Core.Feed;
 
-// Suspends auto-ride for a while: the configured snooze length, or the minutes given with the command.
+// Suspends auto-join and the train notifications for a while: the configured snooze length, or the minutes given
+// with the command.
 internal static class Snooze
 {
     private const string OffArgument = "off";
@@ -35,9 +36,9 @@ internal static class Snooze
         var until = DateTime.UtcNow.AddMinutes(minutes);
         configuration.SnoozeUntilUtc = until;
         configuration.SaveDebounced();
-        RunLog.Info($"Auto-ride snoozed for {minutes} minutes, until {until:HH:mm}Z.");
-        var note = configuration.AutoRide ? string.Empty : " Auto-ride is off, so the snooze only matters once it is on.";
-        Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-ride snoozed for {minutes} minutes, until {until.ToLocalTime().ToString(ClockFormat, CultureInfo.InvariantCulture)}.{note}");
+        RunLog.Info($"Auto-join snoozed for {minutes} minutes, until {until:HH:mm}Z.");
+        var note = configuration.IsAutoJoinActive() ? string.Empty : " Auto-join is off for every expansion, so the snooze only quiets the notifications.";
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-join snoozed for {minutes} minutes, until {until.ToLocalTime().ToString(ClockFormat, CultureInfo.InvariantCulture)}.{note}");
     }
 
     public static void Lift()
@@ -52,11 +53,11 @@ internal static class Snooze
 
         if (!wasSnoozed)
         {
-            Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-ride is not snoozed.");
+            Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-join is not snoozed.");
             return;
         }
 
-        RunLog.Info("Auto-ride snooze lifted.");
-        Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-ride snooze lifted.");
+        RunLog.Info("Auto-join snooze lifted.");
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Auto-join snooze lifted.");
     }
 }

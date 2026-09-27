@@ -8,6 +8,9 @@ namespace AutoHuntTrain;
 [Serializable]
 public sealed partial class Configuration : IPluginConfiguration
 {
+    // 1: the expansion toggles became the auto-join switches and the AutoRide master switch was retired.
+    public const int CurrentVersion = 1;
+
     [JsonIgnore]
     private bool savePending;
 
@@ -29,6 +32,42 @@ public sealed partial class Configuration : IPluginConfiguration
 
     [JsonIgnore]
     public bool HasUnseenChangelog => !string.Equals(LastSeenChangelogVersion, ChangelogData.LatestVersion, StringComparison.Ordinal);
+
+    public static Configuration CreateFresh() => new()
+    {
+        Version = CurrentVersion,
+        TrainListView = TrainListView.Everywhere,
+    };
+
+    // True when the loaded config was older and changed, so the caller saves it once.
+    public bool Migrate()
+    {
+        if (Version >= CurrentVersion)
+        {
+            return false;
+        }
+
+        if (Version < 1)
+        {
+            MigrateToAutoJoin();
+        }
+
+        Version = CurrentVersion;
+        return true;
+    }
+
+    // The expansion toggles used to filter what auto-ride took behind a master switch; now each one auto-joins on its
+    // own, so a player who had auto-ride off must not start getting auto-joins.
+    private void MigrateToAutoJoin()
+    {
+        if (!AutoRide)
+        {
+            DisableAutoJoin();
+        }
+
+        AutoRide = false;
+        Core.RunLog.Info($"Configuration migrated to version 1: auto-join is {(IsAutoJoinActive() ? "on for the expansions that were ridden" : "off")}.");
+    }
 
     public void MarkChangelogSeen()
     {

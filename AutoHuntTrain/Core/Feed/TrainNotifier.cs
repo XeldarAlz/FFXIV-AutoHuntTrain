@@ -98,8 +98,8 @@ internal sealed class TrainNotifier : IDisposable
         }
     }
 
-    // A refusal the player can lift on the spot, by allowing other data centers or waiting out Lifestream, still
-    // notifies; every other refusal means the train is not one for them.
+    // A train on an allowed data center that a Ride click would take, whatever the auto-join switches say. Lifestream
+    // being busy is a refusal the player can lift on the spot, so it still notifies.
     private static bool ShouldNotify(Configuration configuration, in Announcement announcement, out string reason)
     {
         if (NotifyGates.TryBlock(configuration, out reason))
@@ -107,15 +107,21 @@ internal sealed class TrainNotifier : IDisposable
             return false;
         }
 
-        var verdict = RideRules.Evaluate(announcement, DateTime.UtcNow, forAutoRide: false, out _);
-        if (verdict is RideVerdict.Rideable or RideVerdict.CrossDataCenterOff or RideVerdict.LifestreamBusy)
+        if (!RideRules.IsAllowedDataCenter(announcement.World))
         {
-            reason = string.Empty;
-            return true;
+            reason = RideRules.Explain(RideVerdict.NotAllowedDataCenter);
+            return false;
         }
 
-        reason = RideRules.Explain(verdict);
-        return false;
+        var verdict = RideRules.EvaluateManual(announcement, out _);
+        if (verdict is not (RideVerdict.Rideable or RideVerdict.LifestreamBusy))
+        {
+            reason = RideRules.Explain(verdict);
+            return false;
+        }
+
+        reason = string.Empty;
+        return true;
     }
 
     private void RequestOpenWindow()

@@ -11,8 +11,8 @@ using System.Numerics;
 namespace AutoHuntTrain.Windows.Sections;
 
 // The announced trains the picked view shows, soonest first: group, region when it is not the player's, world,
-// countdown, how far away the world is, the conductor when the announcement named one, and a Ride button that says
-// why it is off. A click anywhere else on a row opens the train's details. Verdicts are refreshed a few times a second
+// countdown, how far away the world is, an Auto mark when auto-join would take the train, the conductor when the
+// announcement named one, and a Ride button that says why it is off. A click anywhere else on a row opens the train's details. Verdicts are refreshed a few times a second
 // rather than every frame, because each one asks Lifestream whether it is busy.
 internal static class FeedCard
 {
@@ -38,6 +38,7 @@ internal static class FeedCard
     private static readonly RideVerdict[] verdicts = new RideVerdict[FeedListener.Capacity];
     private static readonly Reachability[] reachabilities = new Reachability[FeedListener.Capacity];
     private static readonly bool[] listed = new bool[FeedListener.Capacity];
+    private static readonly bool[] autoJoined = new bool[FeedListener.Capacity];
     private static readonly bool[] homeRegion = new bool[FeedListener.Capacity];
 
     private static int listedCount;
@@ -126,9 +127,13 @@ internal static class FeedCard
         verdictsView = view;
         verdictsRefreshedAtMs = now;
         listedCount = 0;
+        var controller = Plugin.Instance.Controller;
         for (var index = 0; index < feed.Count; index++)
         {
-            verdicts[index] = RideRules.Evaluate(feed[index], nowUtc, forAutoRide: false, out reachabilities[index]);
+            verdicts[index] = RideRules.EvaluateManual(feed[index], out reachabilities[index]);
+            autoJoined[index] = verdicts[index] == RideVerdict.Rideable
+                && !controller.AutoJoinSkips(feed[index].Id)
+                && RideRules.EvaluateAutoRules(feed[index], nowUtc, reachabilities[index]) == RideVerdict.Rideable;
             listed[index] = TrainListFilter.Shows(feed[index], view);
             homeRegion[index] = TrainListFilter.InHomeRegion(feed[index].World);
             if (listed[index])
@@ -174,7 +179,7 @@ internal static class FeedCard
         }
         else if (!rideable && Hit.HoveringRect(buttonOrigin, buttonOrigin + new Vector2(buttonWidth, buttonHeight)))
         {
-            Tooltip.Show(TrainTexts.Verdict(verdict, announcement));
+            Tooltip.Show(TrainTexts.Verdict(verdict));
         }
 
         var badgeMidY = top + lineHeight * 0.5f;
@@ -196,6 +201,11 @@ internal static class FeedCard
 
             var reachability = reachabilities[index];
             cursorX += Badge.DrawLeft(drawList, ReachLabel(reachability), ReachColor(reachability), cursorX, captionY + captionHeight * 0.5f) + ChipGap * scale;
+            if (autoJoined[index])
+            {
+                cursorX += Badge.DrawLeft(drawList, Loc.T(L.Feed.AutoMarker), Styling.AccentMint, cursorX, captionY + captionHeight * 0.5f) + ChipGap * scale;
+            }
+
             if (announcement.NamesConductor && cursorX < textRight)
             {
                 TextDraw.At(TextDraw.Truncate(ConductorText(index, announcement), textRight - cursorX), new Vector2(cursorX, captionY), Styling.TextDim);

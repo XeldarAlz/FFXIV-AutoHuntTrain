@@ -24,10 +24,10 @@ Hears a hunt train being called anywhere in your region, gets your character to 
 
 ## Features
 
-- **Rides announced trains**: HuntAlerts detects the trains; this plugin lists them from every region under a view you pick (My data centers, My region or Everywhere), each with a countdown, a region tag when it runs outside yours, and a Ride button that says why it is off.
+- **Rides announced trains**: HuntAlerts detects the trains; this plugin lists them from every region under a view you pick (My data centers, My region or Everywhere), each with a countdown, a region tag when it runs outside yours, and a Ride button that takes any train in your region, on any data center, and says why it is off when it cannot.
 - **Train details**: click a train for its start time and countdown, start zone, aetheryte, conductor, post time and the full announcement cleaned for reading, with buttons to ride it, flag its start on the map, open the Party Finder on Hunts, point an on-screen arrow at the start, or relay a one-line summary (with `<flag>`) to any chat channel.
-- **Train notifications**: a chat line with a link to the train's details and an optional game sound, and, for a train you could ride, the Train page opening by itself and the taskbar flashing while the game is in the background. Switch HuntAlerts' own chat alert and banner off to avoid doubles.
-- **Ride rules**: choose expansions and data centers, whether cross-data-center rides are allowed, and how much lead time a train on another data center needs before auto-ride commits.
+- **Train notifications**: a chat line with a link to the train's details and an optional game sound, and, for a train you could ride on your allowed data centers, the Train page opening by itself and the taskbar flashing while the game is in the background. Switch HuntAlerts' own chat alert and banner off to avoid doubles.
+- **Auto-join**: off by default; switch it on per expansion to have trains joined without a click, limited to your allowed data centers, with or without data center transfers, and with the lead time a train on another data center needs before auto-join commits. A GM alert switches it off.
 - **Gets you there**: world change, data center travel and instance switching through Lifestream, then the plugin's own teleport and flight to the start aetheryte.
 - **Follows the conductor**: reads the conductor's map flags from Shout, Yell and Say, picks the nearest aetheryte or flies when the flag is close, and understands instance numbers.
 - **Finds the conductor**: from the announcement when it names one, from the first flag posted in the start zone, or picked by hand.
@@ -69,7 +69,7 @@ The plugin needs a few helpers to be installed and loaded: movement, combat, tra
 | `/aht pause` | Pause or resume the current ride |
 | `/aht conductor <First Last>[@World]` | Follow this player's flags; the world defaults to yours. Alone, shows the current conductor |
 | `/aht conductor clear` | Stop following anyone |
-| `/aht snooze [<minutes>]` | Suspend auto-ride for the snooze length set in Settings, or for the minutes given |
+| `/aht snooze [<minutes>]` | Suspend auto-join and the train notifications for the snooze length set in Settings, or for the minutes given |
 | `/aht snooze off` | Lift the snooze |
 | `/aht inject <World> <DT\|EW\|SHB\|Centurio> [<aetheryte>] [i<n>] [+<minutes>] [conductor:<First Last>] [body:<text>]` | Push a made-up train announcement through the same intake as HuntAlerts, on a world in any region, so the rules, the details and the whole ride can be tried with no real train, e.g. `/aht inject Raiden DT Wachunpelo +5 conductor:Pandora Rainfall`. Everything after `body:` is the Discord post, with `\n` for a line break (debug helper) |
 | `/aht target` | Log targeted NPC's BaseId (debug helper) |
