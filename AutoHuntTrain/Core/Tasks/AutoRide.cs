@@ -31,6 +31,8 @@ internal sealed class AutoRide : AutoCommon
     private const string UnknownStartZone = "the start zone";
     // A conductor flags the first mark a little before the announced start.
     private static readonly TimeSpan PickWindowBeforeStart = TimeSpan.FromMinutes(2);
+    // A train is over this long after its announced start, so a data center transfer still underway by then is abandoned.
+    private static readonly TimeSpan TrainDuration = TimeSpan.FromMinutes(45);
 
     private readonly AutoHuntSession session;
     private readonly RideProgress progress;
@@ -183,7 +185,8 @@ internal sealed class AutoRide : AutoCommon
         session.ResumeJourney = false;
         progress.SetRidePhase(RidePhase.Journey);
         Diag($"Ride: {(resumed ? "resuming the journey" : "travelling")} to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}), {LeadText(plan)}");
-        var outcome = await TravelToWorld(JourneyPlan.ToWorld(plan.World.Name, plan.AetheryteId, plan.TerritoryId, plan.NamesAetheryte ? plan.Instance : 0), resumed);
+        var journey = JourneyPlan.ToWorld(plan.World.Name, plan.AetheryteId, plan.TerritoryId, plan.NamesAetheryte ? plan.Instance : 0);
+        var outcome = await TravelToWorld(journey, resumed, plan.StartAtUtc + TrainDuration);
         if (CancelToken.IsCancellationRequested)
         {
             NoteJourneyCut(plan, group);
@@ -231,12 +234,12 @@ internal sealed class AutoRide : AutoCommon
         return !plan.NamesInstance || await SwitchToInstance(plan.Instance, JourneyLabel);
     }
 
-    // A journey the character never left for was refused before anything moved, and it said why in chat already.
+    // A refused journey and an overdue transfer have said why in chat already.
     private void EndOnJourney(in Announcement plan, string group, JourneyOutcome outcome)
     {
         session.Outcome = RideOutcome.Abandoned;
         Warn($"Ride: the journey to the {group} train on {plan.World.Name} ended with {outcome}; the ride ends");
-        if (outcome == JourneyOutcome.Refused)
+        if (outcome is JourneyOutcome.Refused or JourneyOutcome.Overdue)
         {
             return;
         }
@@ -253,6 +256,22 @@ internal sealed class AutoRide : AutoCommon
         }
 
         Warn($"Ride: the journey to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}) was cut while logged out for the data center transfer; the ride is picked up again at login");
+    }
+
+    // A visited data center has no Grand Company mender for the character and its food may run out there, so the
+    // upkeep runs once before leaving, and only when nothing the character is doing would be torn down by the relog.
+    private protected override async Task<bool> PrepareDataCenterTransfer(WorldInfo target, string label)
+    {
+        if (TransferGuard.Blocker() is { } reason)
+        {
+            Warn($"{label}: the data center transfer to {target.Name} was not started: {reason}; the ride ends");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The trip to {target.Name} on {target.DataCenterName} was not started: {reason}. The ride ends.");
+            return false;
+        }
+
+        Diag($"{label}: running the upkeep before the data center transfer to {target.Name}");
+        await RunUpkeep();
+        return !CancelToken.IsCancellationRequested;
     }
 
     private protected override void OnDataCenterTransferRequested()

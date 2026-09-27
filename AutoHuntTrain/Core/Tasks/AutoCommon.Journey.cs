@@ -54,9 +54,10 @@ public abstract partial class AutoCommon
     // Everything needed to stand at a named aetheryte on a named world and instance, from anywhere in the region. The
     // plan stays in the configuration until the journey ends, so a login can pick it up when the task does not live
     // through the relog a data center transfer brings; a resumed journey never asks for that transfer again.
-    protected async Task<JourneyOutcome> TravelToWorld(JourneyPlan plan, bool resumed = false)
+    // A data center transfer gives up at the earlier of its own budget and giveUpAtUtc, when one is given.
+    protected async Task<JourneyOutcome> TravelToWorld(JourneyPlan plan, bool resumed = false, DateTime? giveUpAtUtc = null)
     {
-        var outcome = await RunJourney(plan, resumed, plan.ReturnTrip ? ReturnLabel : JourneyLabel);
+        var outcome = await RunJourney(plan, resumed, plan.ReturnTrip ? ReturnLabel : JourneyLabel, giveUpAtUtc);
         if (outcome != JourneyOutcome.Cancelled)
         {
             Plugin.Instance.Configuration.ClearPendingJourney();
@@ -65,7 +66,7 @@ public abstract partial class AutoCommon
         return outcome;
     }
 
-    private async Task<JourneyOutcome> RunJourney(JourneyPlan plan, bool resumed, string label)
+    private async Task<JourneyOutcome> RunJourney(JourneyPlan plan, bool resumed, string label, DateTime? giveUpAtUtc)
     {
         if (!LifestreamIPC.Instance.IsAvailable)
         {
@@ -99,7 +100,7 @@ public abstract partial class AutoCommon
         }
         else
         {
-            var hop = await HopToWorld(current, target, plan, resumed, label);
+            var hop = await HopToWorld(current, target, plan, resumed, label, giveUpAtUtc);
             if (hop != JourneyOutcome.Arrived)
             {
                 return hop;
@@ -121,11 +122,17 @@ public abstract partial class AutoCommon
         return JourneyOutcome.Arrived;
     }
 
-    private async Task<JourneyOutcome> HopToWorld(WorldInfo current, WorldInfo target, JourneyPlan plan, bool resumed, string label)
+    private async Task<JourneyOutcome> HopToWorld(WorldInfo current, WorldInfo target, JourneyPlan plan, bool resumed, string label, DateTime? giveUpAtUtc)
     {
         var lifestream = LifestreamIPC.Instance;
         var crossDataCenter = !Worlds.SameDataCenter(current, target);
         var kind = crossDataCenter ? "data center transfer" : "world change";
+        var trainOverAtUtc = crossDataCenter ? giveUpAtUtc : null;
+        if (trainOverAtUtc is { } overAtUtc && DateTime.UtcNow >= overAtUtc)
+        {
+            return AbandonTransfer(target, label);
+        }
+
         var reachable = crossDataCenter ? lifestream.CanVisitCrossDataCenter(target.Name) : lifestream.CanVisitSameDataCenter(target.Name);
         if (!reachable)
         {
@@ -143,15 +150,24 @@ public abstract partial class AutoCommon
 
             Diag($"{label}: resumed on {current.Name} with Lifestream still busy; waiting for it to reach {target.Name}");
         }
-        else if (!await StartHop(target, crossDataCenter, plan, kind, label))
+        else
         {
-            return Unreached(JourneyOutcome.WorldUnreached);
+            if (crossDataCenter && !await PrepareDataCenterTransfer(target, label))
+            {
+                return Unreached(JourneyOutcome.Refused);
+            }
+
+            if (!await StartHop(target, crossDataCenter, plan, kind, label))
+            {
+                return Unreached(JourneyOutcome.WorldUnreached);
+            }
         }
 
         var budgetMs = crossDataCenter ? DataCenterTransferBudgetMs : WorldChangeBudgetMs;
-        if (!await WaitForWorldArrival(target, budgetMs, kind, label))
+        var arrival = await WaitForWorldArrival(target, budgetMs, trainOverAtUtc, kind, label);
+        if (arrival != JourneyOutcome.Arrived)
         {
-            return Unreached(JourneyOutcome.WorldUnreached);
+            return Unreached(arrival);
         }
 
         await WaitForLifestreamIdle(label);
@@ -223,6 +239,9 @@ public abstract partial class AutoCommon
         return false;
     }
 
+    // A ride checks the character and runs its upkeep here; false refuses the transfer, and the ride has said why.
+    private protected virtual Task<bool> PrepareDataCenterTransfer(WorldInfo target, string label) => Task.FromResult(true);
+
     // A ride persists itself here, next to the journey's plan, so a login can rebuild the ride and not just the trip.
     private protected virtual void OnDataCenterTransferRequested()
     {
@@ -233,11 +252,12 @@ public abstract partial class AutoCommon
         || !Svc.ClientState.IsLoggedIn
         || OnWorld(Svc.Objects.LocalPlayer, targetWorldId);
 
-    private async Task<bool> WaitForWorldArrival(WorldInfo target, int budgetMs, string kind, string label)
+    private async Task<JourneyOutcome> WaitForWorldArrival(WorldInfo target, int budgetMs, DateTime? trainOverAtUtc, string kind, string label)
     {
         var lifestream = LifestreamIPC.Instance;
         var startedAt = Environment.TickCount64;
         var deadline = startedAt + budgetMs;
+        var trainOverAt = trainOverAtUtc is { } overAtUtc ? startedAt + Math.Max(0L, (long)(overAtUtc - DateTime.UtcNow).TotalMilliseconds) : long.MaxValue;
         var nextLogAt = startedAt + HopProgressLogMs;
         var idleSinceMs = startedAt;
         var loggedOut = false;
@@ -255,7 +275,7 @@ public abstract partial class AutoCommon
             if (loggedIn && OnWorld(player, target.Id) && !Svc.Condition[ConditionFlag.BetweenAreas] && !Svc.Condition[ConditionFlag.BetweenAreas51])
             {
                 Diag($"{label}: arrived on {target.Name} after {(now - startedAt) / TimeUnits.MillisecondsPerSecond}s");
-                return true;
+                return JourneyOutcome.Arrived;
             }
 
             var busy = lifestream.IsBusy();
@@ -267,14 +287,19 @@ public abstract partial class AutoCommon
             {
                 Warn($"{label}: Lifestream went idle on {WorldNameOf(player)} without reaching {target.Name}; the {kind} was abandoned ({ConditionTag()})");
                 Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream gave up the trip to {target.Name}; the character is on {WorldNameOf(player)}. The log has the details.");
-                return false;
+                return JourneyOutcome.WorldUnreached;
+            }
+
+            if (now >= trainOverAt)
+            {
+                return AbandonTransfer(target, label);
             }
 
             if (now >= deadline)
             {
                 Warn($"{label}: {target.Name} not reached within {budgetMs / TimeUnits.MillisecondsPerMinute} minutes (logged in {loggedIn}, world {WorldNameOf(player)}, Lifestream busy {busy})");
                 Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The trip to {target.Name} did not complete in time.");
-                return false;
+                return JourneyOutcome.WorldUnreached;
             }
 
             if (now >= nextLogAt)
@@ -287,7 +312,22 @@ public abstract partial class AutoCommon
             await DelayMs(HopPollMs);
         }
 
-        return false;
+        return JourneyOutcome.Cancelled;
+    }
+
+    // Lifestream is told to stop, so a transfer still in its queue does not carry the character off after the ride.
+    private JourneyOutcome AbandonTransfer(WorldInfo target, string label)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        var busy = lifestream.IsBusy();
+        Warn($"{label}: the train on {target.Name} is over by now and the data center transfer is still underway; abandoning it (logged in {Svc.ClientState.IsLoggedIn}, Lifestream busy {busy})");
+        Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The train on {target.Name} is over before the trip there finished; the trip is abandoned.");
+        if (busy)
+        {
+            lifestream.Abort();
+        }
+
+        return JourneyOutcome.Overdue;
     }
 
     // Lifestream goes busy again briefly after an arrival, so the next step waits for a quiet spell.

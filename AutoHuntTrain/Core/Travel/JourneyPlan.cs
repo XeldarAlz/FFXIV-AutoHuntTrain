@@ -19,4 +19,6 @@ public enum JourneyOutcome : byte
     WorldUnreached,
     AetheryteUnreached,
     InstanceUnreached,
+    // The train the journey was for is over before the data center transfer got there.
+    Overdue,
 }
