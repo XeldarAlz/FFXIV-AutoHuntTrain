@@ -239,9 +239,11 @@ internal sealed partial class AutoHuntController
                 ending.Sample();
             }
 
-            if (ending.DidNothing)
+            var outcome = ending.Outcome ?? (ending.EndedWithFault ? RideOutcome.Faulted : RideOutcome.Stopped);
+            // A ride stopped before it did anything is a misclick more often than a ride; any other end is worth a row.
+            if (ending.DidNothing && outcome == RideOutcome.Stopped)
             {
-                Diag("Run did no work; nothing recorded to history.");
+                Diag("Run was stopped before doing any work; nothing recorded to history.");
                 return;
             }
 
@@ -253,6 +255,9 @@ internal sealed partial class AutoHuntController
                 WorldName = ending.WorldName,
                 DataCenterName = ending.DataCenterName,
                 Expansion = ending.Expansion,
+                Group = ending.Group ?? (ending.Expansion is { } kind ? ExpansionGroups.FromExpansionKind(kind) : null),
+                CrossedDataCenter = ending.CrossedDataCenter,
+                Outcome = outcome,
                 MarksCredited = ending.MarksCredited,
                 AlliedSeals = ending.AlliedSeals,
                 CenturioSeals = ending.CenturioSeals,
@@ -260,7 +265,7 @@ internal sealed partial class AutoHuntController
                 JobAbbreviation = ending.JobAbbreviation,
             };
             Plugin.Instance.History.Append(record);
-            Diag($"Run recorded to history: {record.MarksCredited} marks credited, {record.AlliedSeals} allied seals, {record.CenturioSeals} centurio seals, {record.Nuts} nuts over {record.Duration} as {record.JobAbbreviation} on {record.WorldName} ({record.DataCenterName}).");
+            Diag($"Run recorded to history ({outcome}): {record.MarksCredited} marks credited, {record.AlliedSeals} allied seals, {record.CenturioSeals} centurio seals, {record.Nuts} nuts over {record.Duration} as {record.JobAbbreviation} on {record.WorldName} ({record.DataCenterName}), {record.Group?.ToString() ?? "unknown group"}{(record.CrossedDataCenter ? ", across data centers" : string.Empty)}.");
         }
         catch (Exception exception)
         {

@@ -140,6 +140,17 @@ internal static partial class L
         public static readonly LocString ClearHistory = new("history.clear", "Clear history");
         public static readonly LocString ClearQuestion = new("history.clearQuestion", "Delete all recorded rides?");
         public static readonly LocString ClearYes = new("history.clearYes", "Yes, clear");
+        public static readonly LocString WorldAndDataCenter = new("history.worldDataCenter", "{0} Â· {1}");
+        public static readonly LocString TileFinished = new("history.tile.finished", "{0} finished");
+        public static readonly LocString TilePerRide = new("history.tile.perRide", "{0} per ride");
+        public static readonly LocPlural TileNutsCount = new("history.tile.nutsCount", "{0} nut", "{0} nuts");
+        public static readonly LocString TileTopWorld = new("history.tile.topWorld", "Top world");
+        public static readonly LocString TooltipCrossed = new("history.tooltip.crossed", "Crossed data centers");
+        public static readonly LocString OutcomeAllCredited = new("history.outcome.allCredited", "All credited");
+        public static readonly LocString OutcomeConductorQuiet = new("history.outcome.conductorQuiet", "Conductor quiet");
+        public static readonly LocString OutcomeStopped = new("history.outcome.stopped", "Stopped");
+        public static readonly LocString OutcomeAbandoned = new("history.outcome.abandoned", "Abandoned");
+        public static readonly LocString OutcomeFaulted = new("history.outcome.faulted", "Error");
     }
 
     internal static class Plugins

@@ -102,7 +102,7 @@ internal static class FeedCard
         var verdict = verdicts[index];
         var rideable = verdict == RideVerdict.Rideable;
 
-        var badgeWidth = Badge.DrawLeft(drawList, GroupLabel(announcement.Group), GroupColor(announcement.Group), x, top + lineHeight * 0.5f);
+        var badgeWidth = Badge.DrawLeft(drawList, GroupLabels.Name(announcement.Group), GroupLabels.Color(announcement.Group), x, top + lineHeight * 0.5f);
         var textX = x + badgeWidth + BadgeGap * scale;
 
         var label = Loc.T(L.Feed.Ride);
@@ -214,22 +214,6 @@ internal static class FeedCard
         RideVerdict.RideRunning => L.Feed.VerdictRideRunning,
         RideVerdict.Snoozed => L.Feed.VerdictSnoozed,
         _ => L.Feed.VerdictFeedWorldUnknown,
-    };
-
-    private static string GroupLabel(ExpansionGroup group) => group switch
-    {
-        ExpansionGroup.Centurio => Loc.T(L.Feed.BadgeCenturio),
-        ExpansionGroup.Shadowbringers => Loc.T(L.Feed.BadgeShadowbringers),
-        ExpansionGroup.Endwalker => Loc.T(L.Feed.BadgeEndwalker),
-        _ => Loc.T(L.Feed.BadgeDawntrail),
-    };
-
-    private static Vector4 GroupColor(ExpansionGroup group) => group switch
-    {
-        ExpansionGroup.Centurio => Styling.AccentAmber,
-        ExpansionGroup.Shadowbringers => Styling.AccentNebula,
-        ExpansionGroup.Endwalker => Styling.AccentBlue,
-        _ => Styling.AccentMint,
     };
 
     private static string ReachLabel(Reachability reachability) => reachability switch
