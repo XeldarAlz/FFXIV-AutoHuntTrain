@@ -9,6 +9,7 @@ namespace AutoHuntTrain.Core.Feed;
 internal readonly record struct Announcement(
     int Id,
     DateTime ReceivedAtUtc,
+    DateTime PostedAtUtc,
     WorldInfo World,
     ExpansionGroup Group,
     DateTime StartAtUtc,

@@ -28,6 +28,10 @@ public sealed partial class Configuration
     // Only what the Upcoming list and the chat line show; the ride rules above decide what is ridden.
     public TrainListView TrainListView { get; set; } = TrainListView.MyDataCenters;
 
+    public RelayChannel RelayChannel { get; set; } = RelayChannel.Party;
+
+    public bool RelayWithFlag { get; set; } = true;
+
     public bool IsGroupEnabled(ExpansionGroup group) => group switch
     {
         ExpansionGroup.Centurio => RideCenturio,

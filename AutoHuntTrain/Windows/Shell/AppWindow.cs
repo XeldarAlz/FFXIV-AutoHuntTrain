@@ -84,6 +84,12 @@ public sealed class AppWindow : Window, IDisposable
         IsOpen = true;
     }
 
+    public void ShowTrainDetails(int announcementId)
+    {
+        trainPage.ShowDetails(announcementId);
+        Show(Page.Train);
+    }
+
     public void TogglePage(Page target)
     {
         if (IsOpen && page == target && !compact) IsOpen = false;

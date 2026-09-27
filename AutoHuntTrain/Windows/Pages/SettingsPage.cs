@@ -113,6 +113,7 @@ internal sealed class SettingsPage
             case Tab.Feed:
                 FeedSettings.Draw(configuration);
                 NotificationSettings.Draw(configuration);
+                RelaySettings.Draw(configuration);
                 break;
             case Tab.Ride:
                 ConductorSettings.Draw(configuration);

@@ -57,7 +57,7 @@ public readonly record struct PendingRide(
 
         Vector2? coordinates = MapX is { } x && MapY is { } y ? new Vector2(x, y) : null;
         var conductor = new ConductorIdentity(ConductorName ?? string.Empty, ConductorWorldId);
-        announcement = new Announcement(0, SavedAtUtc, world, Group, StartAtUtc, AetheryteId, TerritoryId, Instance, coordinates, conductor, string.Empty);
+        announcement = new Announcement(0, SavedAtUtc, SavedAtUtc, world, Group, StartAtUtc, AetheryteId, TerritoryId, Instance, coordinates, conductor, string.Empty);
         return true;
     }
 }

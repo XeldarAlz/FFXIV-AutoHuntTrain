@@ -30,3 +30,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## HuntAlerts
+
+- Source: HuntAlerts by Asuna, https://projects.gamba.pro/Asuna/huntalerts at commit `69ec1140add0e5ce97553785c8ad04d04ac68224`, licensed AGPL-3.0-or-later like this plugin.
+- HuntAlerts is also the plugin that relays the train announcements this plugin reads over IPC; the code below was ported from it and rewritten into this codebase's style, not copied verbatim.
+- Ported:
+  - `HuntAlerts/Helpers/Utilities.cs`, `OpenPartyFinder`: opening the Party Finder and switching it to the Hunts category, in `AutoHuntTrain/Core/Game/PartyFinderOpener.cs`.
+  - `HuntAlerts/Helpers/MapManager.cs`, `OpenMapWithMarker`: opening a zone's map with a flag through a map link payload, in `AutoHuntTrain/Core/Game/MapFlag.cs`.
+  - `HuntAlerts/Helpers/ArrowWaypoint.cs`: the navigation waypoint and its 30 minute lifetime, in `AutoHuntTrain/Core/Travel/NavWaypoint.cs`.
+  - `HuntAlerts/Windows/WorldArrowWindow.cs`: the on-screen arrow overlay, its camera yaw calibration, the arrow and arrival shapes and right-click to clear, in `AutoHuntTrain/Windows/NavArrowWindow.cs`.
+  - `HuntAlerts/Helpers/RelayChannels.cs`: the relay channel list and the one-line relay text with `<flag>` in place of coordinates, in `AutoHuntTrain/Core/Feed/TrainRelay.cs`.

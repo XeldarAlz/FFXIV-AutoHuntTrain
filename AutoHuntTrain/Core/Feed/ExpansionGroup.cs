@@ -1,3 +1,4 @@
+using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Core.Marks;
 
 namespace AutoHuntTrain.Core.Feed;
@@ -63,6 +64,15 @@ internal static class ExpansionGroups
 
     public static string Name(ExpansionGroup group)
         => (uint)group < (uint)names.Length ? names[(int)group] : names[0];
+
+    // The group's name in the plugin language, for text a player reads.
+    public static string LocalName(ExpansionGroup group) => group switch
+    {
+        ExpansionGroup.Centurio => Loc.T(L.Details.GroupCenturio),
+        ExpansionGroup.Shadowbringers => Loc.T(L.Details.GroupShadowbringers),
+        ExpansionGroup.Endwalker => Loc.T(L.Details.GroupEndwalker),
+        _ => Loc.T(L.Details.GroupDawntrail),
+    };
 
     // Centurio spans three expansions, so its kind is only known once a flag names a zone.
     public static ExpansionKind? ToExpansionKind(ExpansionGroup group) => group switch

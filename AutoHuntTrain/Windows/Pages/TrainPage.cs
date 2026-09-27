@@ -1,3 +1,4 @@
+using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Windows.Components;
 using AutoHuntTrain.Windows.Sections;
@@ -20,8 +21,36 @@ internal sealed class TrainPage
 
     private static readonly Segmented.Item[] viewItems = new Segmented.Item[3];
 
+    private readonly TrainDetails details = new();
+    private int selectedTrainId = FeedCard.NoTrain;
+    private bool scrollResetPending;
+
+    public void ShowDetails(int announcementId) => Select(announcementId);
+
+    // A train's details take the page over, from the list or from a chat link, even while a ride runs; they close
+    // on their back button or once the train leaves the feed.
     public void Draw(Plugin plugin, AppWindow window)
     {
+        if (scrollResetPending)
+        {
+            ImGui.SetScrollY(0f);
+            scrollResetPending = false;
+        }
+
+        Announcement announcement = default;
+        var showDetails = selectedTrainId != FeedCard.NoTrain && plugin.Feed.TryFind(selectedTrainId, out announcement);
+        using var detailsReveal = Motion.PushSwitch("##aht_train_details", showDetails, SwitchRevealMs);
+        if (showDetails)
+        {
+            if (details.Draw(plugin, announcement))
+            {
+                Select(FeedCard.NoTrain);
+            }
+
+            return;
+        }
+
+        selectedTrainId = FeedCard.NoTrain;
         var controller = plugin.Controller;
         var running = controller.Running;
 
@@ -35,7 +64,18 @@ internal sealed class TrainPage
         DrawIdle(plugin, window);
     }
 
-    private static void DrawIdle(Plugin plugin, AppWindow window)
+    private void Select(int announcementId)
+    {
+        if (selectedTrainId == announcementId)
+        {
+            return;
+        }
+
+        selectedTrainId = announcementId;
+        scrollResetPending = true;
+    }
+
+    private void DrawIdle(Plugin plugin, AppWindow window)
     {
         if (Headline.Draw(plugin.Controller, plugin.History))
         {
@@ -55,7 +95,11 @@ internal sealed class TrainPage
         }
         else
         {
-            FeedCard.Draw(plugin);
+            var opened = FeedCard.Draw(plugin);
+            if (opened != FeedCard.NoTrain)
+            {
+                Select(opened);
+            }
         }
 
         Styling.VSpace(16f);

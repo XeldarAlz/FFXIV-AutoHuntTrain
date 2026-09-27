@@ -1,6 +1,7 @@
 using AutoHuntTrain.Core;
 using AutoHuntTrain.Core.Debug;
 using AutoHuntTrain.Core.Feed;
+using AutoHuntTrain.Core.Game;
 using AutoHuntTrain.Core.Game.Watchers;
 using AutoHuntTrain.Core.Kills;
 using AutoHuntTrain.Core.Localization;
@@ -54,12 +55,14 @@ public sealed class Plugin : IDalamudPlugin
     internal FlagListener Flags { get; }
     internal FeedListener Feed { get; }
     internal TrainNotifier Notifier { get; }
+    internal PartyFinderOpener PartyFinder { get; } = new();
     internal DalamudLinkPayload OpenTrainLink { get; }
 
     private readonly DutyWatcher dutyWatcher;
     private readonly GmAlertWatcher gmAlertWatcher;
     private readonly PartyInviteWatcher partyInviteWatcher;
     private readonly AppWindow appWindow;
+    private readonly NavArrowWindow navArrowWindow = new();
     private readonly CommandInfo primaryCommand;
     private readonly CommandInfo aliasCommand;
 
@@ -87,6 +90,7 @@ public sealed class Plugin : IDalamudPlugin
         Fonts.Initialize(PluginInterface.UiBuilder, PluginDirectory);
         appWindow = new AppWindow(this);
         WindowSystem.AddWindow(appWindow);
+        WindowSystem.AddWindow(navArrowWindow);
 
         primaryCommand = new CommandInfo(OnCommand) { HelpMessage = Loc.T(L.Plugin.CommandHelp) };
         aliasCommand = new CommandInfo(OnCommand) { HelpMessage = Loc.T(L.Plugin.CommandHelpAlias) };
@@ -161,6 +165,8 @@ public sealed class Plugin : IDalamudPlugin
 
     public void ShowTrainPage() => appWindow.Show(AppWindow.Page.Train);
 
+    public void ShowTrainDetails(int announcementId) => appWindow.ShowTrainDetails(announcementId);
+
     private void OnCommand(string command, string args)
     {
         var trimmed = args.Trim();
@@ -234,6 +240,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         Feed.Tick();
         Notifier.Tick();
+        PartyFinder.Tick();
         Controller.Tick();
     }
 

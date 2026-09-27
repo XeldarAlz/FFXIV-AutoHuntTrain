@@ -161,7 +161,7 @@ internal sealed class FeedListener : IDisposable
         ResolvePlace(message, out var aetheryteId, out var territoryId);
         var instance = message.Instance is > 0 and <= MaxInstance ? message.Instance : 0;
         Vector2? coordinates = message.MapLocationCoords is { } point && float.IsFinite(point.X) && float.IsFinite(point.Y) ? point : null;
-        announcement = new Announcement(nextId++, now, world, group, startAt, aetheryteId, territoryId, instance, coordinates, ReadConductor(text, world), text);
+        announcement = new Announcement(nextId++, now, postedAt, world, group, startAt, aetheryteId, territoryId, instance, coordinates, ReadConductor(text, world), text);
         return true;
     }
 
