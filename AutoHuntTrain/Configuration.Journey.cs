@@ -6,6 +6,8 @@ public sealed partial class Configuration
 {
     public bool ReturnHomeAfterRide { get; set; } = true;
 
+    public bool StayForNextTrain { get; set; } = false;
+
     // Written before a data center transfer and cleared when the journey ends, so a login can pick the journey up when
     // the task that started it did not live through the relog.
     public JourneyPlan? PendingJourney { get; set; }

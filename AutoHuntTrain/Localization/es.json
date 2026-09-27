@@ -51,6 +51,8 @@
   "train.whenDoneHelp": "Qué hacer cuando un viaje termina por sí solo. Una parada manual o un fallo nunca lo activan.",
   "train.returnHome": "Volver a casa tras el viaje",
   "train.returnHomeHelp": "Regresa a tu mundo de origen cuando termine el viaje, cambiando de centro de datos si el tren iba en otro. Desactivado, te quedas en el mundo del tren, listo para el siguiente.",
+  "train.stayForNext": "Quedarse para el próximo tren",
+  "train.stayForNextHelp": "Con el viaje automático activado, cuando un tren de este centro de datos que cumple todas las reglas sale en menos de 20 minutos, se omiten la vuelta a casa y la acción de fin de viaje, y el viaje automático lo toma.",
   "train.after.stay.name": "Quedarte donde estés",
   "train.after.stay.detail": "Solo parar. Te quedas donde cayó el último objetivo.",
   "train.after.inn.name": "Volver a la posada",

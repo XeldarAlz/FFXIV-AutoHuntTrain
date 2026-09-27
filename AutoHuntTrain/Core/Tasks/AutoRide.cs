@@ -202,6 +202,7 @@ internal sealed class AutoRide : AutoCommon
         if (!plan.NamesAetheryte && plan.NamesTerritory && !await TravelToStartZone(plan))
         {
             session.Outcome = RideOutcome.Abandoned;
+            session.CompletedByStopCondition = !CancelToken.IsCancellationRequested;
             return false;
         }
 
@@ -234,10 +235,12 @@ internal sealed class AutoRide : AutoCommon
         return !plan.NamesInstance || await SwitchToInstance(plan.Instance, JourneyLabel);
     }
 
+    // A refused journey never moved the character, so only a journey that did go somewhere hands on to the way home.
     // A refused journey and an overdue transfer have said why in chat already.
     private void EndOnJourney(in Announcement plan, string group, JourneyOutcome outcome)
     {
         session.Outcome = RideOutcome.Abandoned;
+        session.CompletedByStopCondition = outcome != JourneyOutcome.Refused;
         Warn($"Ride: the journey to the {group} train on {plan.World.Name} ended with {outcome}; the ride ends");
         if (outcome is JourneyOutcome.Refused or JourneyOutcome.Overdue)
         {

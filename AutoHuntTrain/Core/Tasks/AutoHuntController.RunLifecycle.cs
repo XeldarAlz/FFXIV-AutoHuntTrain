@@ -1,4 +1,6 @@
+using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Stats;
+using AutoHuntTrain.Core.Travel;
 
 namespace AutoHuntTrain.Core.Tasks;
 
@@ -7,6 +9,8 @@ internal sealed partial class AutoHuntController
     private const int MaxFaultResumes = 3;
     private const int MaxFaultResumesPerRun = 6;
     private const long FaultResumeWindowMs = 5 * TimeUnits.MillisecondsPerMinute;
+    // Long enough to cover the next train announced on the data center, short enough not to idle for long.
+    private static readonly TimeSpan NextTrainWindow = TimeSpan.FromMinutes(20);
 
     private int faultResumeCount;
     private int runFaultResumeCount;
@@ -76,7 +80,8 @@ internal sealed partial class AutoHuntController
         }
     }
 
-    // The finished run stays on screen while its after-run action runs, and is cleared once that ends.
+    // One ordered chain once a ride ends on its own: the way home, then the after-run action. A Stop or a fault runs
+    // neither. The finished run stays on screen while the chain runs, and is cleared once it ends.
     private bool TryRunAfterAction(AutoHuntSession ending)
     {
         if (ending.AfterActionDispatched)
@@ -86,33 +91,135 @@ internal sealed partial class AutoHuntController
 
         if (!ending.CompletedByStopCondition || ending.EndedWithFault)
         {
-            Diag($"Run ended without meeting its stop condition (fault {ending.EndedWithFault}); no after-run action.");
+            Diag($"Run ended without meeting its stop condition (fault {ending.EndedWithFault}); no way home and no after-run action.");
             return false;
         }
 
         ending.AfterActionDispatched = true;
+        if (!ECommons.DalamudServices.Svc.ClientState.IsLoggedIn)
+        {
+            Diag("Run ended while logged out; no way home and no after-run action.");
+            return false;
+        }
+
+        if (StaysForNextTrain())
+        {
+            return false;
+        }
+
+        var action = AfterActionFor(ending);
+        var wayHome = WayHomeDue();
+        if (!wayHome && action is null)
+        {
+            return false;
+        }
+
+        progress.SetPhase(HuntPhase.Finishing);
+        if (!wayHome)
+        {
+            RunAfterAction(action!.Value);
+            return true;
+        }
+
+        Diag(action is { } then ? $"Run completed; taking the way home, then after-run action {then}." : "Run completed; taking the way home.");
+        RunTask(new AutoWayHome(), () =>
+        {
+            Diag("The way home finished.");
+            if (action is { } next)
+            {
+                RunAfterAction(next);
+                return;
+            }
+
+            ClearRun();
+        });
+        return true;
+    }
+
+    private static AfterRunAction? AfterActionFor(AutoHuntSession ending)
+    {
         var action = Plugin.Instance.Configuration.AfterRun;
         if (action == AfterRunAction.StayLoggedIn)
         {
             Diag("Run completed by its stop condition; the after-run action is StayLoggedIn, nothing to do.");
-            return false;
+            return null;
         }
 
         if (ending.DidNothing)
         {
             Diag($"Run ended by its stop condition without doing any work; skipping after-run action {action}.");
-            return false;
+            return null;
         }
 
-        Diag($"Run completed by its stop condition; starting after-run action {action}.");
-        progress.SetPhase(HuntPhase.Finishing);
+        return action;
+    }
+
+    private void RunAfterAction(AfterRunAction action)
+    {
+        Diag($"Starting after-run action {action}.");
         AutoCommon task = action == AfterRunAction.ReturnToInn ? new AutoReturnToInn() : new AutoAfterRun(action);
         RunTask(task, () =>
         {
             Diag($"After-run action {action} finished.");
             ClearRun();
         });
+    }
+
+    private static bool WayHomeDue()
+    {
+        if (!Plugin.Instance.Configuration.ReturnHomeAfterRide)
+        {
+            return false;
+        }
+
+        if (!Worlds.TryHome(out var home) || !Worlds.TryCurrent(out var current))
+        {
+            Diag("The way home is on, but the home or current world could not be read; staying.");
+            return false;
+        }
+
+        if (home.Id == current.Id)
+        {
+            Diag($"Already on the home world {home.Name}; no way home needed.");
+            return false;
+        }
+
         return true;
+    }
+
+    // With auto-ride on, a train on this data center that auto-ride would take soon is worth staying for: the way home
+    // would carry the character off, and the after-run action would log it out or park it at the inn.
+    private bool StaysForNextTrain()
+    {
+        var configuration = Plugin.Instance.Configuration;
+        if (!configuration.StayForNextTrain || !configuration.AutoRide)
+        {
+            return false;
+        }
+
+        var nowUtc = DateTime.UtcNow;
+        var feed = Plugin.Instance.Feed;
+        for (var index = 0; index < feed.Count; index++)
+        {
+            var announcement = feed[index];
+            if (announcement.Id == lastRiddenAnnouncementId || announcement.LeadAt(nowUtc) > NextTrainWindow)
+            {
+                continue;
+            }
+
+            if (RideRules.EvaluateNextTrain(announcement, nowUtc, out var reachability) != RideVerdict.Rideable
+                || reachability is not (Reachability.SameWorld or Reachability.SameDataCenter))
+            {
+                continue;
+            }
+
+            var group = ExpansionGroups.Name(announcement.Group);
+            Diag($"Staying for the {group} train on {announcement.World.Name}, starting in {announcement.LeadAt(nowUtc).TotalMinutes:F0} min; no way home and no after-run action, auto-ride takes it.");
+            ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Staying for the {group} train on {announcement.World.Name}.");
+            return true;
+        }
+
+        return false;
     }
 
     // Idempotent through Recorded, so an explicit Stop and a finished task can both call it.

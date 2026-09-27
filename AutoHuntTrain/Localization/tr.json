@@ -51,6 +51,8 @@
   "train.whenDoneHelp": "Bir yolculuk kendiliğinden bittiğinde ne yapılacağı. Elle durdurma ya da bir hata bunu asla tetiklemez.",
   "train.returnHome": "Yolculuktan sonra eve dön",
   "train.returnHomeHelp": "Yolculuk bitince ana dünyanıza geri döner; tren başka bir veri merkezindeyse veri merkezleri arasında da geçer. Kapalıyken trenin dünyasında kalır, bir sonrakine hazır olursunuz.",
+  "train.stayForNext": "Sonraki tren için kal",
+  "train.stayForNextHelp": "Otomatik yolculuk açıkken bu veri merkezinde tüm kurallara uyan bir tren 20 dakika içinde kalkıyorsa eve dönüş ve yolculuk sonrası eylem atlanır, treni otomatik yolculuk alır.",
   "train.after.stay.name": "Olduğun yerde kal",
   "train.after.stay.detail": "Sadece dur. Son hedefin düştüğü yerde kalırsınız.",
   "train.after.inn.name": "Hana dön",

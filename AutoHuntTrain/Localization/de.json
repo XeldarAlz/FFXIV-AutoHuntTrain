@@ -51,6 +51,8 @@
   "train.whenDoneHelp": "Was passiert, wenn eine Fahrt von selbst endet. Ein manueller Stopp oder ein Fehler löst es nie aus.",
   "train.returnHome": "Nach der Fahrt nach Hause zurückkehren",
   "train.returnHomeHelp": "Reist nach dem Ende der Fahrt zurück in deine Heimatwelt, auch über Datenzentren hinweg, wenn der Zug auf einem anderen lief. Aus lässt dich auf der Welt des Zuges, bereit für den nächsten.",
+  "train.stayForNext": "Für den nächsten Zug bleiben",
+  "train.stayForNextHelp": "Wenn automatisches Mitfahren an ist und ein Zug auf diesem Datenzentrum, der alle Regeln erfüllt, innerhalb von 20 Minuten startet, entfallen der Heimweg und die Aktion nach der Fahrt, und das automatische Mitfahren nimmt ihn.",
   "train.after.stay.name": "Stehen bleiben",
   "train.after.stay.detail": "Einfach aufhören. Du bleibst dort stehen, wo das letzte Ziel gefallen ist.",
   "train.after.inn.name": "Ins Gasthaus zurückkehren",

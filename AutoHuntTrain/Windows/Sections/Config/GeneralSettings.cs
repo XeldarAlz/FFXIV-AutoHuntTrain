@@ -76,6 +76,12 @@ internal static class GeneralSettings
             () => SettingsControls.DrawToggle(configuration, () => configuration.ReturnHomeAfterRide, value => configuration.ReturnHomeAfterRide = value, "##aht_general_returnhome"),
             SettingsRow.ToggleHeight);
 
+        SettingsRow.Draw(Loc.T(L.Train.StayForNext),
+            Loc.T(L.Train.StayForNextHelp),
+            SettingsControls.ToggleWidth,
+            () => SettingsControls.DrawToggle(configuration, () => configuration.StayForNextTrain, value => configuration.StayForNextTrain = value, "##aht_general_stayfornext"),
+            SettingsRow.ToggleHeight);
+
         var selected = Math.Max(0, Array.IndexOf(afterRunOrder, configuration.AfterRun));
         SettingsRow.Draw(Loc.T(L.Train.WhenDone),
             Loc.T(L.Train.WhenDoneHelp),

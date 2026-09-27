@@ -51,6 +51,8 @@
   "train.whenDoneHelp": "O que fazer quando uma viagem termina sozinha. Uma parada manual ou uma falha nunca o acionam.",
   "train.returnHome": "Voltar para casa após a viagem",
   "train.returnHomeHelp": "Volta ao seu mundo de origem quando a viagem termina, trocando de data center se o trem corria em outro. Desligado, você fica no mundo do trem, pronto para o próximo.",
+  "train.stayForNext": "Ficar para o próximo trem",
+  "train.stayForNextHelp": "Com a viagem automática ligada, quando um trem deste data center que cumpre todas as regras parte em até 20 minutos, a volta para casa e a ação de fim de viagem são puladas e a viagem automática o pega.",
   "train.after.stay.name": "Ficar onde está",
   "train.after.stay.detail": "Apenas parar. Você fica onde o último alvo caiu.",
   "train.after.inn.name": "Voltar para a estalagem",

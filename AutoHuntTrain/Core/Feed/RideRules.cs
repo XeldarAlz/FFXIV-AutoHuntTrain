@@ -40,6 +40,14 @@ internal static class RideRules
         => Evaluate(announcement, DateTime.UtcNow, forAutoRide: false, out _);
 
     public static RideVerdict Evaluate(in Announcement announcement, DateTime nowUtc, bool forAutoRide, out Reachability reachability)
+        => Evaluate(announcement, nowUtc, forAutoRide, ignoreRunningRide: false, out reachability);
+
+    // Asked by a ride that has just ended, while it may still hold the controller, about the train auto-ride would
+    // take next; that ride is not a reason to refuse.
+    public static RideVerdict EvaluateNextTrain(in Announcement announcement, DateTime nowUtc, out Reachability reachability)
+        => Evaluate(announcement, nowUtc, forAutoRide: true, ignoreRunningRide: true, out reachability);
+
+    private static RideVerdict Evaluate(in Announcement announcement, DateTime nowUtc, bool forAutoRide, bool ignoreRunningRide, out Reachability reachability)
     {
         var configuration = Plugin.Instance.Configuration;
         reachability = Reachability.OutOfRegion;
@@ -48,7 +56,7 @@ internal static class RideRules
             return RideVerdict.FeedWorldUnknown;
         }
 
-        if (Plugin.Instance.Controller.Running)
+        if (!ignoreRunningRide && Plugin.Instance.Controller.Running)
         {
             return RideVerdict.RideRunning;
         }
