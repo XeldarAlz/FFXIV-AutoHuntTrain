@@ -34,6 +34,8 @@ public sealed class Plugin : IDalamudPlugin
     private const string InjectSubcommand = "inject";
     private const string NavmeshIpcProviderMarker = "Navmesh.IPCProvider";
     private const uint OpenTrainLinkCommandId = 1;
+    // A train's details link carries its announcement id as this plus the id, since a link hands its handler nothing else.
+    private const uint TrainDetailsLinkBase = 1_000;
     // Lifestream's own budget for a data center transfer is up to an hour; a plan older than this is a leftover, not a journey in flight.
     private static readonly TimeSpan PendingJourneyMaxAge = TimeSpan.FromMinutes(90);
     private static readonly TimeSpan PendingRideMaxAge = TimeSpan.FromMinutes(90);
@@ -55,6 +57,7 @@ public sealed class Plugin : IDalamudPlugin
     internal FlagListener Flags { get; }
     internal FeedListener Feed { get; }
     internal TrainNotifier Notifier { get; }
+    internal TrainChatAlert ChatAlert { get; }
     internal PartyFinderOpener PartyFinder { get; } = new();
     internal DalamudLinkPayload OpenTrainLink { get; }
 
@@ -65,6 +68,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly NavArrowWindow navArrowWindow = new();
     private readonly CommandInfo primaryCommand;
     private readonly CommandInfo aliasCommand;
+    private readonly Action<uint, SeString> onTrainDetailsLink;
+    private int lastLinkedTrainId;
 
     public Plugin()
     {
@@ -81,6 +86,8 @@ public sealed class Plugin : IDalamudPlugin
         Flags = new FlagListener();
         Feed = new FeedListener();
         Notifier = new TrainNotifier(Feed);
+        ChatAlert = new TrainChatAlert(Feed);
+        onTrainDetailsLink = OnTrainDetailsLink;
         dutyWatcher = new DutyWatcher();
         gmAlertWatcher = new GmAlertWatcher();
         partyInviteWatcher = new PartyInviteWatcher();
@@ -130,11 +137,12 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(AhtConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AhtConstants.AliasCommand);
 
-        Svc.Chat.RemoveChatLinkHandler(OpenTrainLinkCommandId);
+        Svc.Chat.RemoveChatLinkHandler();
         dutyWatcher.Dispose();
         gmAlertWatcher.Dispose();
         partyInviteWatcher.Dispose();
         Notifier.Dispose();
+        ChatAlert.Dispose();
         Feed.Dispose();
         Flags.Dispose();
         Kills.Dispose();
@@ -228,7 +236,33 @@ public sealed class Plugin : IDalamudPlugin
         }
     }
 
+    // A train's link is registered with its chat line. Ids only grow, so a train is linked once; asked again, the
+    // Train page link stands in rather than registering the same id twice.
+    internal DalamudLinkPayload TrainDetailsLink(int announcementId)
+    {
+        if (announcementId <= lastLinkedTrainId)
+        {
+            return OpenTrainLink;
+        }
+
+        lastLinkedTrainId = announcementId;
+        return Svc.Chat.AddChatLinkHandler(TrainDetailsLinkBase + (uint)announcementId, onTrainDetailsLink);
+    }
+
     private void OnOpenTrainLink(uint commandId, SeString message) => ShowTrainPage();
+
+    // A train that has left the feed since its line was written opens the Train page instead.
+    private void OnTrainDetailsLink(uint commandId, SeString message)
+    {
+        var announcementId = (int)(commandId - TrainDetailsLinkBase);
+        if (Feed.TryFind(announcementId, out _))
+        {
+            ShowTrainDetails(announcementId);
+            return;
+        }
+
+        ShowTrainPage();
+    }
 
     private void OnDraw()
     {

@@ -1,3 +1,4 @@
+using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Core.Travel;
 using System.Numerics;
 
@@ -16,6 +17,15 @@ internal static class TrainFacts
         => announcement.NamesAetheryte && ZoneAetherytes.TryFindById(announcement.AetheryteId, out _, out var aetheryte)
             ? aetheryte.Name
             : AnnouncementBody.ReadHeaderField(announcement.Message, AnnouncementBody.AetheryteLabel);
+
+    // Whole minutes toward zero, so a countdown changes once a minute and "starting now" covers the minute around the start.
+    public static int WholeMinutesToStart(in Announcement announcement, DateTime nowUtc)
+        => (int)((long)announcement.LeadAt(nowUtc).TotalSeconds / TimeUnits.SecondsPerMinute);
+
+    public static string CountdownText(int minutes)
+        => minutes > 0 ? Loc.Plural(L.Feed.InMinutes, minutes)
+        : minutes < 0 ? Loc.Plural(L.Feed.StartedAgo, -minutes)
+        : Loc.T(L.Feed.StartingNow);
 
     // The relay's own coordinates first, else the first pair the post gives; a spot needs a known zone to be flagged in.
     public static bool TryFlagPoint(in Announcement announcement, out Vector2 coordinates)

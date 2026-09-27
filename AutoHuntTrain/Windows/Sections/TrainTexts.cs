@@ -1,4 +1,3 @@
-using AutoHuntTrain.Core;
 using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Localization;
 using System.Numerics;
@@ -10,11 +9,9 @@ internal static class TrainTexts
 {
     private static CachedText verdictTooltip;
 
-    // Whole minutes toward zero, so the text changes once a minute and "starting now" covers the minute around the start.
     public static string Countdown(ref CachedText cache, in Announcement announcement, DateTime nowUtc, out Vector4 color)
     {
-        var seconds = (long)announcement.LeadAt(nowUtc).TotalSeconds;
-        var minutes = (int)(seconds / TimeUnits.SecondsPerMinute);
+        var minutes = TrainFacts.WholeMinutesToStart(announcement, nowUtc);
         color = minutes < 0 ? Styling.AccentAmber : minutes == 0 ? Styling.AccentMintSoft : Styling.TextSecondary;
         var key = HashCode.Combine(announcement.Id, minutes);
         if (cache.TryGet(key, out var text))
@@ -22,10 +19,7 @@ internal static class TrainTexts
             return text;
         }
 
-        text = minutes > 0
-            ? Loc.Plural(L.Feed.InMinutes, minutes)
-            : minutes < 0 ? Loc.Plural(L.Feed.StartedAgo, -minutes) : Loc.T(L.Feed.StartingNow);
-        return cache.Set(key, text);
+        return cache.Set(key, TrainFacts.CountdownText(minutes));
     }
 
     public static string Verdict(RideVerdict verdict, in Announcement announcement)

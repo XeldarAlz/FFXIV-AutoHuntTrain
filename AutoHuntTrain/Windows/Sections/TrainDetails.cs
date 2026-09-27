@@ -1,6 +1,7 @@
 using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Core.Train;
+using AutoHuntTrain.Core.Travel;
 using AutoHuntTrain.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;

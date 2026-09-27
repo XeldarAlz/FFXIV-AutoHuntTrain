@@ -1,8 +1,8 @@
 using AutoHuntTrain.Core.Localization;
-using AutoHuntTrain.Core.Travel;
 
-namespace AutoHuntTrain.Windows;
+namespace AutoHuntTrain.Core.Travel;
 
+// A region's short name in the plugin language, for text a player reads; Worlds.RegionLabel is the log's.
 internal static class RegionLabels
 {
     public static string Name(WorldRegion region) => region switch
