@@ -33,7 +33,9 @@ internal sealed class FeedListener : IDisposable
     private readonly Announcement[] items = new Announcement[Capacity];
     private int count;
     private int version;
-    private int nextId = 1;
+    // Chat links carry the id, and a reload restarts the count; seeding from the clock keeps a link printed before the
+    // reload from opening another train after it. A thousand ids per second of seed leaves room for any burst.
+    private int nextId = (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() % 1_000_000) * 1_000 + 1;
     private bool feedLoaded;
     private long nextTickAtMs;
 
