@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "Automatisch mitfahren",
   "feed.settings.autoRideHelp": "Den nächsten angekündigten Zug, der alle Regeln erfüllt, sofort fahren, ohne Klick von dir. Aus überlässt dir die Mitfahren-Knöpfe.",
   "feed.settings.snoozeLength": "Pausendauer",
-  "feed.settings.snoozeLengthHelp": "Wie lange /aht snooze das automatische Mitfahren aussetzt. /aht snooze off hebt es vorzeitig auf."
+  "feed.settings.snoozeLengthHelp": "Wie lange /aht snooze das automatische Mitfahren aussetzt. /aht snooze off hebt es vorzeitig auf.",
+  "notify.settings.group": "Benachrichtigungen",
+  "notify.settings.openWindow": "Zug-Seite öffnen",
+  "notify.settings.openWindowHelp": "Wird ein Zug angekündigt, bei dem du mitfahren könntest, öffnet sich dieses Fenster auf der Zug-Seite. Tippst du gerade in ein Textfeld, wartet es bis zu 30 Sekunden, bis du fertig bist. Während einer Fahrt, in Inhalten, in einer Zwischensequenz oder solange das automatische Mitfahren pausiert ist, passiert nichts.",
+  "notify.settings.flashTaskbar": "Taskleiste im Hintergrund blinken lassen",
+  "notify.settings.flashTaskbarHelp": "Wird ein Zug angekündigt, bei dem du mitfahren könntest, während das Spiel im Hintergrund läuft, blinkt seine Schaltfläche in der Taskleiste, bis du zurückwechselst.",
+  "notify.settings.test": "Ausprobieren",
+  "notify.settings.testHelp": "Öffnet die Zug-Seite und lässt die Taskleiste ein paar Mal blinken, je nachdem, was von beidem eingeschaltet ist.",
+  "notify.settings.testButton": "Test",
+  "notify.settings.huntAlertsNote": "Chat-Hinweis, Ton und Banner kommen von HuntAlerts und werden in dessen eigenen Einstellungen festgelegt. Diese beiden ergänzen, was HuntAlerts nicht kann."
 }

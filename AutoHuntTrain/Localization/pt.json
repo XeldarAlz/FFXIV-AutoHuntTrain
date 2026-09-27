@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "Viagem automática",
   "feed.settings.autoRideHelp": "Embarcar no próximo trem anunciado que passe em todas as regras assim que houver um, sem clique seu. Desligado, os botões Embarcar ficam com você.",
   "feed.settings.snoozeLength": "Duração da pausa",
-  "feed.settings.snoozeLengthHelp": "Por quanto tempo /aht snooze suspende a viagem automática. /aht snooze off encerra antes."
+  "feed.settings.snoozeLengthHelp": "Por quanto tempo /aht snooze suspende a viagem automática. /aht snooze off encerra antes.",
+  "notify.settings.group": "Notificações",
+  "notify.settings.openWindow": "Abrir a página Trem",
+  "notify.settings.openWindowHelp": "Quando um trem que você poderia pegar é anunciado, esta janela abre na página Trem. Se você estiver digitando numa caixa de texto, ela espera você terminar, por até 30 segundos. Nada acontece durante uma viagem, um conteúdo ou uma cutscene, nem enquanto a viagem automática está em pausa.",
+  "notify.settings.flashTaskbar": "Piscar a barra de tarefas em segundo plano",
+  "notify.settings.flashTaskbarHelp": "Quando um trem que você poderia pegar é anunciado com o jogo em segundo plano, o botão dele pisca na barra de tarefas até você voltar para ele.",
+  "notify.settings.test": "Experimentar",
+  "notify.settings.testHelp": "Abre a página Trem e pisca a barra de tarefas algumas vezes, conforme qual das duas opções estiver ligada.",
+  "notify.settings.testButton": "Teste",
+  "notify.settings.huntAlertsNote": "O aviso no chat, o som e o banner vêm do HuntAlerts e são ajustados nas configurações dele. Estas duas opções somam o que ele não consegue fazer."
 }

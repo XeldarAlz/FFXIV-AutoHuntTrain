@@ -53,6 +53,7 @@ public sealed class Plugin : IDalamudPlugin
     internal AutoHuntController Controller { get; }
     internal FlagListener Flags { get; }
     internal FeedListener Feed { get; }
+    internal TrainNotifier Notifier { get; }
     internal DalamudLinkPayload OpenTrainLink { get; }
 
     private readonly DutyWatcher dutyWatcher;
@@ -76,6 +77,7 @@ public sealed class Plugin : IDalamudPlugin
         Controller = new AutoHuntController();
         Flags = new FlagListener();
         Feed = new FeedListener();
+        Notifier = new TrainNotifier(Feed);
         dutyWatcher = new DutyWatcher();
         gmAlertWatcher = new GmAlertWatcher();
         partyInviteWatcher = new PartyInviteWatcher();
@@ -128,6 +130,7 @@ public sealed class Plugin : IDalamudPlugin
         dutyWatcher.Dispose();
         gmAlertWatcher.Dispose();
         partyInviteWatcher.Dispose();
+        Notifier.Dispose();
         Feed.Dispose();
         Flags.Dispose();
         Kills.Dispose();
@@ -155,6 +158,8 @@ public sealed class Plugin : IDalamudPlugin
     public void ToggleLogUi() => appWindow.TogglePage(AppWindow.Page.Log);
 
     public void ToggleChangelogUi() => appWindow.TogglePage(AppWindow.Page.Changelog);
+
+    public void ShowTrainPage() => appWindow.Show(AppWindow.Page.Train);
 
     private void OnCommand(string command, string args)
     {
@@ -217,7 +222,7 @@ public sealed class Plugin : IDalamudPlugin
         }
     }
 
-    private void OnOpenTrainLink(uint commandId, SeString message) => appWindow.Show(AppWindow.Page.Train);
+    private void OnOpenTrainLink(uint commandId, SeString message) => ShowTrainPage();
 
     private void OnDraw()
     {
@@ -228,6 +233,7 @@ public sealed class Plugin : IDalamudPlugin
     private void OnFrameworkUpdate(IFramework framework)
     {
         Feed.Tick();
+        Notifier.Tick();
         Controller.Tick();
     }
 

@@ -25,6 +25,7 @@ Hears a hunt train being called anywhere in your region, gets your character to 
 ## Features
 
 - **Rides announced trains**: subscribes to the HuntAlerts feed for train announcements across every data center in your region, with a countdown and a Ride button for each.
+- **Train notifications**: when a train you could ride is announced, the Train page opens by itself and the taskbar flashes while the game is in the background.
 - **Ride rules**: choose expansions and data centers, whether cross-data-center rides are allowed, and how much lead time a train on another data center needs before auto-ride commits.
 - **Gets you there**: world change, data center travel and instance switching through Lifestream, then the plugin's own teleport and flight to the start aetheryte.
 - **Follows the conductor**: reads the conductor's map flags from Shout, Yell and Say, picks the nearest aetheryte or flies when the flag is close, and understands instance numbers.

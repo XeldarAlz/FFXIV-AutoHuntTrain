@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "自动乘车",
   "feed.settings.autoRideHelp": "一旦有通过所有规则的最近公告列车就立即乘坐，无需你点击。关闭后乘车按钮由你自己操作。",
   "feed.settings.snoozeLength": "暂停时长",
-  "feed.settings.snoozeLengthHelp": "/aht snooze 暂停自动乘车的时长。/aht snooze off 可提前解除。"
+  "feed.settings.snoozeLengthHelp": "/aht snooze 暂停自动乘车的时长。/aht snooze off 可提前解除。",
+  "notify.settings.group": "通知",
+  "notify.settings.openWindow": "打开车队页面",
+  "notify.settings.openWindowHelp": "当公告了你可以乘坐的车队时，在车队页面打开此窗口。如果你正在文本框中输入，会等你输入完毕，最多等待 30 秒。乘车中、副本中、过场动画中，以及自动乘车暂停期间不会有任何动作。",
+  "notify.settings.flashTaskbar": "后台时闪烁任务栏",
+  "notify.settings.flashTaskbarHelp": "游戏在后台时如果公告了你可以乘坐的车队，任务栏按钮会一直闪烁，直到你切回游戏。",
+  "notify.settings.test": "试一试",
+  "notify.settings.testHelp": "根据已开启的选项，打开车队页面并让任务栏闪烁几次。",
+  "notify.settings.testButton": "测试",
+  "notify.settings.huntAlertsNote": "聊天提醒、音效和横幅来自 HuntAlerts，在它自己的设置中调整。这两项补充了它做不到的事。"
 }

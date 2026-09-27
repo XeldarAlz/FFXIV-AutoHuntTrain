@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "Auto-ride",
   "feed.settings.autoRideHelp": "Ride the soonest announced train that passes every rule as soon as one does, with no click from you. Off leaves the Ride buttons to you.",
   "feed.settings.snoozeLength": "Snooze length",
-  "feed.settings.snoozeLengthHelp": "How long /aht snooze suspends auto-ride. /aht snooze off lifts it early."
+  "feed.settings.snoozeLengthHelp": "How long /aht snooze suspends auto-ride. /aht snooze off lifts it early.",
+  "notify.settings.group": "Notifications",
+  "notify.settings.openWindow": "Open the Train page",
+  "notify.settings.openWindowHelp": "When a train you could ride is announced, open this window on the Train page. While you type in a text box it waits for you to finish, for up to 30 seconds. Nothing happens during a ride, a duty or a cutscene, or while auto-ride is snoozed.",
+  "notify.settings.flashTaskbar": "Flash the taskbar in the background",
+  "notify.settings.flashTaskbarHelp": "When a train you could ride is announced while the game is in the background, flash its taskbar button until you switch back to it.",
+  "notify.settings.test": "Try it out",
+  "notify.settings.testHelp": "Opens the Train page and flashes the taskbar a few times, for whichever of the two is on.",
+  "notify.settings.testButton": "Test",
+  "notify.settings.huntAlertsNote": "The chat alert, the sound and the banner come from HuntAlerts and are set in its own settings. These two add what it cannot do."
 }

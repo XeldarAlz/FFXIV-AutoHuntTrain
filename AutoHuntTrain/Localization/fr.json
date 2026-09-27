@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "Trajet automatique",
   "feed.settings.autoRideHelp": "Prendre le prochain train annoncé qui passe toutes les règles dès qu'il y en a un, sans clic de votre part. Désactivé, les boutons Embarquer restent à vous.",
   "feed.settings.snoozeLength": "Durée de la pause",
-  "feed.settings.snoozeLengthHelp": "Combien de temps /aht snooze suspend le trajet automatique. /aht snooze off la lève plus tôt."
+  "feed.settings.snoozeLengthHelp": "Combien de temps /aht snooze suspend le trajet automatique. /aht snooze off la lève plus tôt.",
+  "notify.settings.group": "Notifications",
+  "notify.settings.openWindow": "Ouvrir la page Train",
+  "notify.settings.openWindowHelp": "Quand un train que vous pourriez prendre est annoncé, cette fenêtre s'ouvre sur la page Train. Si vous tapez dans une zone de texte, elle attend que vous ayez fini, jusqu'à 30 secondes. Rien ne se passe pendant un trajet, un contenu instancié ou une cinématique, ni tant que le trajet automatique est en pause.",
+  "notify.settings.flashTaskbar": "Faire clignoter la barre des tâches en arrière-plan",
+  "notify.settings.flashTaskbarHelp": "Quand un train que vous pourriez prendre est annoncé alors que le jeu est en arrière-plan, son bouton clignote dans la barre des tâches jusqu'à ce que vous y reveniez.",
+  "notify.settings.test": "Essayer",
+  "notify.settings.testHelp": "Ouvre la page Train et fait clignoter la barre des tâches quelques fois, selon ce qui est activé.",
+  "notify.settings.testButton": "Tester",
+  "notify.settings.huntAlertsNote": "L'alerte dans le chat, le son et la bannière viennent de HuntAlerts et se règlent dans ses propres paramètres. Ces deux options ajoutent ce qu'il ne sait pas faire."
 }

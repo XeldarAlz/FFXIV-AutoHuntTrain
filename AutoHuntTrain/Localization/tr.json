@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "Otomatik yolculuk",
   "feed.settings.autoRideHelp": "Tüm kuralları geçen en yakın duyurulmuş trene, siz tıklamadan hemen binin. Kapalıyken Bin düğmeleri size kalır.",
   "feed.settings.snoozeLength": "Erteleme süresi",
-  "feed.settings.snoozeLengthHelp": "/aht snooze otomatik yolculuğu ne kadar süre askıya alır. /aht snooze off erken kaldırır."
+  "feed.settings.snoozeLengthHelp": "/aht snooze otomatik yolculuğu ne kadar süre askıya alır. /aht snooze off erken kaldırır.",
+  "notify.settings.group": "Bildirimler",
+  "notify.settings.openWindow": "Tren sayfasını aç",
+  "notify.settings.openWindowHelp": "Binebileceğiniz bir tren duyurulduğunda bu pencere Tren sayfasında açılır. Bir metin kutusuna yazıyorsanız bitirmenizi en fazla 30 saniye bekler. Yolculuk, içerik ya da ara sahne sırasında ve otomatik yolculuk ertelenmişken hiçbir şey olmaz.",
+  "notify.settings.flashTaskbar": "Arka plandayken görev çubuğunu yak söndür",
+  "notify.settings.flashTaskbarHelp": "Oyun arka plandayken binebileceğiniz bir tren duyurulursa, oyuna dönene kadar görev çubuğundaki düğmesi yanıp söner.",
+  "notify.settings.test": "Dene",
+  "notify.settings.testHelp": "Hangisi açıksa, Tren sayfasını açar ve görev çubuğunu birkaç kez yakıp söndürür.",
+  "notify.settings.testButton": "Test",
+  "notify.settings.huntAlertsNote": "Sohbet uyarısı, ses ve afiş HuntAlerts'ten gelir ve onun kendi ayarlarından belirlenir. Bu ikisi onun yapamadığını ekler."
 }

@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "自動乗車",
   "feed.settings.autoRideHelp": "すべてのルールを満たす最も近い告知列車に、クリックなしですぐ乗車します。オフにすると乗車ボタンはあなたに任されます。",
   "feed.settings.snoozeLength": "休止時間",
-  "feed.settings.snoozeLengthHelp": "/aht snooze で自動乗車を休止する長さです。/aht snooze off で早めに解除します。"
+  "feed.settings.snoozeLengthHelp": "/aht snooze で自動乗車を休止する長さです。/aht snooze off で早めに解除します。",
+  "notify.settings.group": "通知",
+  "notify.settings.openWindow": "トレイン画面を開く",
+  "notify.settings.openWindowHelp": "乗車できるトレインが告知されると、このウィンドウをトレイン画面で開きます。テキスト入力中は、入力が終わるまで最大30秒待ちます。乗車中、コンテンツ中、カットシーン中、自動乗車の休止中は何もしません。",
+  "notify.settings.flashTaskbar": "バックグラウンド時にタスクバーを点滅",
+  "notify.settings.flashTaskbarHelp": "ゲームがバックグラウンドにあるときに乗車できるトレインが告知されると、ゲームに戻るまでタスクバーのボタンを点滅させます。",
+  "notify.settings.test": "試してみる",
+  "notify.settings.testHelp": "オンになっている方に応じて、トレイン画面を開き、タスクバーを数回点滅させます。",
+  "notify.settings.testButton": "テスト",
+  "notify.settings.huntAlertsNote": "チャットの通知、サウンド、バナーは HuntAlerts によるもので、その設定で変更できます。この二つは HuntAlerts にできないことを補います。"
 }

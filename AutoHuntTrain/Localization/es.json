@@ -463,5 +463,14 @@
   "feed.settings.autoRide": "Viaje automático",
   "feed.settings.autoRideHelp": "Subir al próximo tren anunciado que cumpla todas las reglas en cuanto lo haga, sin que hagas clic. Desactivado, los botones Subir quedan en tus manos.",
   "feed.settings.snoozeLength": "Duración de la pausa",
-  "feed.settings.snoozeLengthHelp": "Cuánto tiempo suspende /aht snooze el viaje automático. /aht snooze off la levanta antes."
+  "feed.settings.snoozeLengthHelp": "Cuánto tiempo suspende /aht snooze el viaje automático. /aht snooze off la levanta antes.",
+  "notify.settings.group": "Notificaciones",
+  "notify.settings.openWindow": "Abrir la página Tren",
+  "notify.settings.openWindowHelp": "Cuando se anuncia un tren que podrías tomar, esta ventana se abre en la página Tren. Si estás escribiendo en un cuadro de texto, espera a que termines, hasta 30 segundos. No pasa nada durante un viaje, un contenido o una cinemática, ni mientras el viaje automático está en pausa.",
+  "notify.settings.flashTaskbar": "Hacer parpadear la barra de tareas en segundo plano",
+  "notify.settings.flashTaskbarHelp": "Cuando se anuncia un tren que podrías tomar mientras el juego está en segundo plano, su botón parpadea en la barra de tareas hasta que vuelvas a él.",
+  "notify.settings.test": "Probar",
+  "notify.settings.testHelp": "Abre la página Tren y hace parpadear la barra de tareas unas cuantas veces, según cuál de las dos opciones esté activada.",
+  "notify.settings.testButton": "Prueba",
+  "notify.settings.huntAlertsNote": "El aviso en el chat, el sonido y el banner vienen de HuntAlerts y se ajustan en su propia configuración. Estas dos opciones añaden lo que él no puede hacer."
 }
