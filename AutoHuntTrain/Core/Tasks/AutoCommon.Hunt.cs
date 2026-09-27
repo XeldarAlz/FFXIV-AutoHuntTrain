@@ -86,6 +86,20 @@ public abstract partial class AutoCommon
         return await RunHunt(hunt);
     }
 
+    // The call a ride makes for a mark it already sees at the conductor's flag: the fight starts on that copy and no
+    // spawn point is ever searched, because a mark that leaves a flag has fallen to the train.
+    private protected async Task<MarkOutcome> HuntSightedMark(uint nameId, uint territoryId, MarkSighting sighting)
+    {
+        var name = HuntMarkRegistry.NameOf(nameId);
+        Diag($"Hunt: {name} (name {nameId}, territory {territoryId}) in sight {sighting.DistanceToHitbox:F0}m away at {FormatPosition(sighting.Position)}, {sighting.CurrentHp} hp ({ConditionTag()})");
+        if (!CombatAnswering())
+        {
+            return MarkOutcome.CombatUnavailable;
+        }
+
+        return await RunHunt(MarkHuntContext.ForSightedMark(nameId, name, territoryId));
+    }
+
     private bool CombatAnswering()
     {
         if (BossModIPC.Instance.IsAvailable)
@@ -140,13 +154,21 @@ public abstract partial class AutoCommon
                 return MarkOutcome.Cancelled;
             }
 
-            var outcome = IsMarkKnockedOut() ? MarkOutcome.Died : await SearchForMark(hunt);
+            var outcome = IsMarkKnockedOut() ? MarkOutcome.Died : await FindAndFightMark(hunt);
             if (outcome != MarkOutcome.Died)
             {
                 return outcome;
             }
 
             hunt.Knockouts++;
+            if (hunt.FightsSightedOnly)
+            {
+                // By the time the character stands again the train has moved on, so the mark is not returned to.
+                Diag($"Hunt: knocked out fighting {hunt.Name} at the flag; recovering and leaving it");
+                await RecoverFromMarkKnockout();
+                return MarkOutcome.Died;
+            }
+
             if (hunt.Knockouts >= MaxMarkKnockouts)
             {
                 Warn($"Hunt: knocked out {hunt.Knockouts} times hunting {hunt.Name}; giving it up");
@@ -159,6 +181,22 @@ public abstract partial class AutoCommon
                 return CancelToken.IsCancellationRequested ? MarkOutcome.Cancelled : MarkOutcome.Died;
             }
         }
+    }
+
+    private Task<MarkOutcome> FindAndFightMark(MarkHuntContext hunt)
+        => hunt.FightsSightedOnly ? EngageSightedMark(hunt) : SearchForMark(hunt);
+
+    // Fights the copy in view until the kill counts, the mark is gone, or the fight budget runs out; nothing is searched.
+    private async Task<MarkOutcome> EngageSightedMark(MarkHuntContext hunt)
+    {
+        hunt.StartClock(hunt.FightBudgetMs, MarkOutcome.Unreachable);
+        if (await FightVisibleMarks(hunt) is { } outcome)
+        {
+            return outcome;
+        }
+
+        Diag($"Hunt: {hunt.Name} is no longer in view at the flag");
+        return CheckMarkStanding(hunt) ?? MarkOutcome.NotFound;
     }
 
     // The flag comes first, then every spawn point of the mark's rank in its zone that the flag does not already stand on.
@@ -586,13 +624,14 @@ public abstract partial class AutoCommon
         private int ignoredCount;
         private int ignoredNext;
 
-        private MarkHuntContext(uint nameId, string name, uint territoryId, Vector3[] spawnPoints, HuntMarkRank? rank)
+        private MarkHuntContext(uint nameId, string name, uint territoryId, Vector3[] spawnPoints, HuntMarkRank? rank, bool fightsSightedOnly)
         {
             NameId = nameId;
             Name = name;
             TerritoryId = territoryId;
             SpawnPoints = spawnPoints;
             MarkRank = rank;
+            FightsSightedOnly = fightsSightedOnly;
             AppearsOnTrigger = rank.HasValue && HuntMarkRegistry.AppearsOnTrigger(nameId);
             ZoneName = TerritoryNames.Of(territoryId);
             SearchLabel = $"Searching for {name} in {ZoneName}";
@@ -601,7 +640,12 @@ public abstract partial class AutoCommon
         }
 
         public static MarkHuntContext ForTrainMark(uint nameId, string name, uint territoryId, Vector3[] spawnPoints)
-            => new(nameId, name, territoryId, spawnPoints, HuntMarkRegistry.TryGet(nameId, out var mark) ? mark.Rank : null);
+            => new(nameId, name, territoryId, spawnPoints, RankOf(nameId), fightsSightedOnly: false);
+
+        public static MarkHuntContext ForSightedMark(uint nameId, string name, uint territoryId)
+            => new(nameId, name, territoryId, [], RankOf(nameId), fightsSightedOnly: true);
+
+        private static HuntMarkRank? RankOf(uint nameId) => HuntMarkRegistry.TryGet(nameId, out var mark) ? mark.Rank : null;
 
         public string Name { get; }
 
@@ -616,6 +660,9 @@ public abstract partial class AutoCommon
         public HuntMarkRank? MarkRank { get; }
 
         public bool IsHuntMark => MarkRank.HasValue;
+
+        // A mark sighted at a flag is fought where it stands; a knockout or a mark gone from view ends it with no search.
+        public bool FightsSightedOnly { get; }
 
         public bool AppearsOnTrigger { get; }
 

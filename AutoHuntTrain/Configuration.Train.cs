@@ -15,4 +15,10 @@ public sealed partial class Configuration
     public int LateJoinLimitSeconds { get; set; } = 120;
 
     public int IdleLimitMinutes { get; set; } = 15;
+
+    public bool WaitForPull { get; set; } = true;
+
+    public int PullWaitSeconds { get; set; } = 180;
+
+    public bool EndWhenAllCredited { get; set; } = true;
 }
