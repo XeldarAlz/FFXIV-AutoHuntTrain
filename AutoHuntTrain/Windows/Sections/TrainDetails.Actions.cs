@@ -19,6 +19,7 @@ internal sealed partial class TrainDetails
     private const float ActionHeight = 30f;
     private const float ActionGap = 8f;
     private const float PickerGap = 2f;
+    private const float CatchUpNoteGap = 8f;
     private const int VerdictRefreshMs = 250;
     private const string RideId = "##aht_details_ride";
     private const string FlagId = "##aht_details_flag";
@@ -29,6 +30,7 @@ internal sealed partial class TrainDetails
     private const string RelayMenuId = "##aht_details_relay_menu";
 
     private RideVerdict verdict;
+    private bool catchesUp;
     private int verdictForId = -1;
     private long verdictAtMs;
     private CachedText relayHint;
@@ -45,7 +47,7 @@ internal sealed partial class TrainDetails
         var rideLabel = Loc.T(L.Feed.Ride);
         var rideOrigin = Place(ref cursor, PillButton.Width(rideLabel, FontAwesomeIcon.Train), left, right, height, gap);
         if (PillButton.Draw(RideId, rideLabel, Styling.AccentMint, rideable ? PillButton.Emphasis.Filled : PillButton.Emphasis.Ghost,
-            FontAwesomeIcon.Train, rideable, ActionHeight, rideable ? Loc.T(L.Feed.RideHint) : null))
+            FontAwesomeIcon.Train, rideable, ActionHeight, rideable ? TrainTexts.RideHint(catchesUp) : null))
         {
             plugin.Controller.StartRide(announcement);
         }
@@ -78,7 +80,22 @@ internal sealed partial class TrainDetails
         }
 
         DrawRelay(plugin.Configuration, announcement, ref cursor, left, right, height, gap);
-        return cursor.Y + height;
+        return DrawCatchUpNote(left, right, cursor.Y + height);
+    }
+
+    private float DrawCatchUpNote(float left, float right, float y)
+    {
+        if (!catchesUp || verdict != RideVerdict.Rideable)
+        {
+            return y;
+        }
+
+        using (Fonts.PushCaption())
+        {
+            var noteY = y + CatchUpNoteGap * ImGuiHelpers.GlobalScale;
+            TextDraw.At(TextDraw.Truncate(Loc.T(L.Details.CatchUpNote), right - left), new Vector2(left, noteY), Styling.AccentAmberSoft);
+            return noteY + ImGui.GetTextLineHeight();
+        }
     }
 
     private void DrawNav(in Announcement announcement, ref Vector2 cursor, float left, float right, float height, float gap)
@@ -169,6 +186,7 @@ internal sealed partial class TrainDetails
         verdictForId = announcement.Id;
         verdictAtMs = now;
         verdict = RideRules.EvaluateManual(announcement, out _);
+        catchesUp = TrainTexts.CatchesUp(announcement, DateTime.UtcNow);
     }
 
     private string RelayHint(RelayChannel channel)

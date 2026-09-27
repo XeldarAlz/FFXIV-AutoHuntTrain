@@ -22,6 +22,9 @@ internal static partial class L
         public static readonly LocString PhaseTravelling = new("ride.phase.travelling", "Riding to the flag");
         public static readonly LocString PhaseAtFlag = new("ride.phase.atFlag", "At the flag");
         public static readonly LocString PhaseWaitingForMark = new("ride.phase.waitingForMark", "Waiting for the mark");
+        public static readonly LocString PhaseCatchingUp = new("ride.phase.catchingUp", "Catching up");
+        public static readonly LocString CatchUpTeleporting = new("ride.catchUp.teleporting", "Catching up: teleporting to {0} ({1} of {2})");
+        public static readonly LocString CatchUpListening = new("ride.catchUp.listening", "Catching up: listening in {0} ({1} of {2})");
         public static readonly LocPlural FlagsFollowed = new("ride.flagsFollowed", "{0} flag followed", "{0} flags followed");
         public static readonly LocString ProgressLine = new("ride.progressLine", "{0}  ·  {1}");
         public static readonly LocString CreditedOf = new("ride.creditedOf", "{0} of {1} credited");

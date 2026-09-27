@@ -1,5 +1,6 @@
 using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Localization;
+using AutoHuntTrain.Core.Train;
 using System.Numerics;
 
 namespace AutoHuntTrain.Windows.Sections;
@@ -19,6 +20,12 @@ internal static class TrainTexts
 
         return cache.Set(key, TrainFacts.CountdownText(minutes));
     }
+
+    // A ride on a train in progress catches up with it, unless there is no route to catch up along.
+    public static bool CatchesUp(in Announcement announcement, DateTime nowUtc)
+        => announcement.InProgressAt(nowUtc) && TrainRoutes.TryFor(announcement, out _);
+
+    public static string RideHint(bool catchesUp) => Loc.T(catchesUp ? L.Feed.RideCatchUpHint : L.Feed.RideHint);
 
     // A Ride button is only ever refused for what makes a ride impossible right now.
     public static string Verdict(RideVerdict verdict) => Loc.T(verdict switch

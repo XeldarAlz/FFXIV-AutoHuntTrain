@@ -179,9 +179,16 @@ internal sealed partial class TrainDetails
             TextDraw.At(startClock, new Vector2(left, y), Styling.TextStrong);
         }
 
-        var text = TrainTexts.Countdown(ref countdown, announcement, DateTime.UtcNow, out var color);
+        var nowUtc = DateTime.UtcNow;
+        var text = TrainTexts.Countdown(ref countdown, announcement, nowUtc, out var color);
         var textSize = TextDraw.Measure(text);
-        TextDraw.At(text, new Vector2(left + clockSize.X + ClockGap * scale, y + (clockSize.Y - textSize.Y) * 0.5f), color);
+        var textX = left + clockSize.X + ClockGap * scale;
+        TextDraw.At(text, new Vector2(textX, y + (clockSize.Y - textSize.Y) * 0.5f), color);
+        if (announcement.InProgressAt(nowUtc))
+        {
+            Badge.DrawLeft(ImGui.GetWindowDrawList(), Loc.T(L.Feed.InProgress), Styling.AccentAmber, textX + textSize.X + ClockGap * scale, y + clockSize.Y * 0.5f);
+        }
+
         return y + clockSize.Y;
     }
 

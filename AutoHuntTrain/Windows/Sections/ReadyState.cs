@@ -2,6 +2,7 @@ using AutoHuntTrain.Core.External;
 using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Core.Tasks;
 using AutoHuntTrain.Core.Train;
+using AutoHuntTrain.Core.Travel;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using System.Numerics;
@@ -15,6 +16,8 @@ internal static class ReadyState
     public readonly record struct Info(Kind Kind, Vector4 Accent, Vector4 AccentSoft, FontAwesomeIcon Icon, string Title, string Detail);
 
     private static readonly CachedText[] details = new CachedText[6];
+
+    private static CachedText catchUpLine;
 
     private static int cachedFrame = -1;
     private static Info cached;
@@ -80,21 +83,28 @@ internal static class ReadyState
     };
 
     // The ride phase names what the ride is doing between marks; while a mark is engaged the hunt's own phase is the
-    // finer word, fighting or travelling back after a knockout.
+    // finer word, fighting or travelling back after a knockout. Catching up names the zone and how far along the route it is.
     public static string ActivityLabel(AutoHuntController controller)
     {
         var phase = controller.Phase;
-        var ridePhase = controller.Progress.RidePhase;
+        var progress = controller.Progress;
+        var ridePhase = progress.RidePhase;
         if (ridePhase is RidePhase.None or RidePhase.Engaging || phase is not (HuntPhase.Waiting or HuntPhase.Travelling))
         {
             return PhaseLabel(phase);
         }
 
-        return RidePhaseLabel(ridePhase);
+        return ridePhase == RidePhase.CatchingUp ? CatchUpLine(progress) : RidePhaseLabel(ridePhase);
     }
 
+    // The label already says where a catch-up is, so the detail says who the ride is waiting to hear from.
     public static string ActivityDetail(AutoHuntController controller)
     {
+        if (controller.Progress.CatchingUp)
+        {
+            return ConductorLine.Get(controller.Progress);
+        }
+
         if (CurrentMark.TryGet(controller, out var mark))
         {
             return mark.Line;
@@ -117,10 +127,29 @@ internal static class ReadyState
     public static string RidePhaseLabel(RidePhase phase) => phase switch
     {
         RidePhase.Journey        => Loc.T(L.Feed.PhaseJourney),
+        RidePhase.CatchingUp     => Loc.T(L.Ride.PhaseCatchingUp),
         RidePhase.Travelling     => Loc.T(L.Ride.PhaseTravelling),
         RidePhase.AtFlag         => Loc.T(L.Ride.PhaseAtFlag),
         RidePhase.WaitingForMark => Loc.T(L.Ride.PhaseWaitingForMark),
         RidePhase.Engaging       => Loc.T(L.Run.PhaseFighting),
         _                        => Loc.T(L.Ride.PhaseWaiting),
     };
+
+    public static string CatchUpLine(RideProgress progress)
+    {
+        var territoryId = progress.CatchUpTerritoryId;
+        if (territoryId == 0)
+        {
+            return RidePhaseLabel(RidePhase.CatchingUp);
+        }
+
+        var key = ((long)territoryId << 32) | ((long)progress.CatchUpStop << 17) | ((long)progress.CatchUpStops << 1) | (progress.CatchUpListening ? 1L : 0L);
+        if (catchUpLine.TryGet(key, out var line))
+        {
+            return line;
+        }
+
+        var text = progress.CatchUpListening ? L.Ride.CatchUpListening : L.Ride.CatchUpTeleporting;
+        return catchUpLine.Set(key, Loc.T(text, TerritoryNames.Of(territoryId), NumberText.Of(progress.CatchUpStop), NumberText.Of(progress.CatchUpStops)));
+    }
 }

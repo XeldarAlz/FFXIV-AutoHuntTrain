@@ -14,7 +14,7 @@ internal static class ConductorLine
     public static string Get(RideProgress progress)
     {
         var identity = progress.Conductor;
-        var key = HashCode.Combine((int)progress.ConductorSource, identity.WorldId, identity.Name, progress.StartTerritoryId);
+        var key = HashCode.Combine((int)progress.ConductorSource, identity.WorldId, identity.Name, progress.StartTerritoryId, progress.CatchingUp);
         if (text.TryGet(key, out var line))
         {
             return line;
@@ -23,6 +23,7 @@ internal static class ConductorLine
         return text.Set(key, Build(progress, identity));
     }
 
+    // A ride catching up takes its conductor from whichever zone it hears the train in, not from the start zone.
     private static string Build(RideProgress progress, in ConductorIdentity identity)
     {
         var name = Conductor.Describe(identity);
@@ -31,7 +32,7 @@ internal static class ConductorLine
             ConductorSource.Announced => Loc.T(L.Feed.ConductorAnnounced, name),
             ConductorSource.Picked => Loc.T(L.Feed.ConductorPicked, name),
             ConductorSource.Manual => Loc.T(L.Feed.ConductorNamed, name),
-            _ => progress.StartTerritoryId != 0
+            _ => progress.StartTerritoryId != 0 && !progress.CatchingUp
                 ? Loc.T(L.Feed.ConductorPendingIn, TerritoryNames.Of(progress.StartTerritoryId))
                 : Loc.T(L.Feed.ConductorPending),
         };

@@ -16,9 +16,10 @@ namespace AutoHuntTrain.Core.Tasks;
 
 // Follows the conductor's flags: each one is a leg, the newest flag always wins, and at every flag the zone's mark is
 // fought for credit once someone has pulled it. A ride from an announcement first travels to the train's start and,
-// when the announcement named no conductor, takes the first player to post a flag there as one. The ride ends on
-// Stop, once every mark of the expansion is credited, or once the conductor has gone quiet for the idle limit.
-internal sealed class AutoRide : AutoCommon
+// when the announcement named no conductor, takes the first player to post a flag there as one; a train already in
+// progress is caught up with along its route instead. The ride ends on Stop, once every mark of the expansion is
+// credited, or once the conductor has gone quiet for the idle limit.
+internal sealed partial class AutoRide : AutoCommon
 {
     private const string Scope = "ride";
     private const string JourneyLabel = "ride-journey";
@@ -97,7 +98,11 @@ internal sealed class AutoRide : AutoCommon
             }
 
             PublishCredits();
-            PrimeFromRecentFlags();
+            if (!hasPending)
+            {
+                PrimeFromRecentFlags();
+            }
+
             BeginWaiting();
             await FollowConductor();
         }
@@ -197,7 +202,43 @@ internal sealed class AutoRide : AutoCommon
         session.ResumeJourney = false;
         progress.SetRidePhase(RidePhase.Journey);
         Diag($"Ride: {(resumed ? "resuming the journey" : "travelling")} to the {group} train on {plan.World.Name} ({plan.World.DataCenterName}), {LeadText(plan)}");
+        // The world comes first on its own, because a transfer can take long enough for the train to leave its start.
+        if (!await CompleteJourney(plan, group, JourneyPlan.ToWorld(plan.World.Name, 0, 0, 0), resumed))
+        {
+            return false;
+        }
+
+        if (plan.InProgressAt(DateTime.UtcNow))
+        {
+            if (TrainRoutes.TryFor(plan, out var route))
+            {
+                return await CatchUp(plan, route);
+            }
+
+            Diag($"Ride: the {group} train on {plan.World.Name} is in progress, but no route is known to catch up along, since a Centurio train without a start zone could run in any of three expansions; going to its start");
+        }
+
         var journey = JourneyPlan.ToWorld(plan.World.Name, plan.AetheryteId, plan.TerritoryId, plan.NamesAetheryte ? plan.Instance : 0);
+        if (plan.NamesAetheryte && !await CompleteJourney(plan, group, journey, resumed: false))
+        {
+            return false;
+        }
+
+        if (!plan.NamesAetheryte && plan.NamesTerritory && !await TravelToStartZone(plan))
+        {
+            session.Outcome = RideOutcome.Abandoned;
+            session.CompletedByStopCondition = !CancelToken.IsCancellationRequested;
+            return false;
+        }
+
+        session.ArrivedAtTrain = true;
+        lastFlagAtMs = IdleClockStart(plan);
+        Diag($"Ride: at the start of the {group} train on {plan.World.Name} in {TerritoryNames.Of(Svc.ClientState.TerritoryType)}, {LeadText(plan)} ({ConditionTag()})");
+        return true;
+    }
+
+    private async Task<bool> CompleteJourney(Announcement plan, string group, JourneyPlan journey, bool resumed)
+    {
         JourneyOutcome outcome;
         try
         {
@@ -220,16 +261,6 @@ internal sealed class AutoRide : AutoCommon
             return false;
         }
 
-        if (!plan.NamesAetheryte && plan.NamesTerritory && !await TravelToStartZone(plan))
-        {
-            session.Outcome = RideOutcome.Abandoned;
-            session.CompletedByStopCondition = !CancelToken.IsCancellationRequested;
-            return false;
-        }
-
-        session.ArrivedAtTrain = true;
-        lastFlagAtMs = IdleClockStart(plan);
-        Diag($"Ride: at the start of the {group} train on {plan.World.Name} in {TerritoryNames.Of(Svc.ClientState.TerritoryType)}, {LeadText(plan)} ({ConditionTag()})");
         return true;
     }
 
@@ -451,10 +482,11 @@ internal sealed class AutoRide : AutoCommon
         Diag($"Ride: flag from {Conductor.Describe(conductor)} in {TerritoryNames.Of(post.TerritoryId)} at ({post.MapX:F1}, {post.MapY:F1}){InstanceText(post)} via {post.ChatType}{note}");
     }
 
-    // Only an announced ride picks, and only from a flag in the start zone, when known, posted from shortly before the start.
+    // Only an announced ride picks: from a flag in the start zone, when known, posted from shortly before the start, or
+    // while catching up, from a flag heard in the zone listened in.
     private bool TryPickConductor(in FlagPost post)
     {
-        if (announcement is not { } plan || !QualifiesAsFirstFlag(plan, post))
+        if (announcement is not { } plan || !(catchingUp ? QualifiesWhileCatchingUp(post) : QualifiesAsFirstFlag(plan, post)))
         {
             return false;
         }

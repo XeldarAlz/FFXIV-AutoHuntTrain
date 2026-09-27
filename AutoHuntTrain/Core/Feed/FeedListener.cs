@@ -9,7 +9,7 @@ using System.Numerics;
 namespace AutoHuntTrain.Core.Feed;
 
 // Turns HuntAlerts' announcements into trains waiting to be ridden: each one folded to its expansion group and world,
-// kept in start order until half an hour past its start. The relay's fields are untrusted, so an announcement carries
+// kept in start order until twenty minutes past its start. The relay's fields are untrusted, so an announcement carries
 // only what checked out. Alerts may arrive off the game thread; every one is moved onto it before it touches the ring.
 internal sealed class FeedListener : IDisposable
 {
@@ -23,7 +23,6 @@ internal sealed class FeedListener : IDisposable
     private const int TickIntervalMs = 1_000;
 
     private static readonly TimeSpan DuplicateWindow = TimeSpan.FromMinutes(2);
-    private static readonly TimeSpan ExpiryAfterStart = TimeSpan.FromMinutes(30);
     // A start further away than this is a mangled tag or a relay clock gone wrong, not a train.
     private static readonly TimeSpan MaxLead = TimeSpan.FromHours(6);
     private static readonly TimeSpan MaxAge = TimeSpan.FromHours(6);
@@ -65,7 +64,7 @@ internal sealed class FeedListener : IDisposable
         var restored = 0;
         for (var index = 0; index < saved.Length; index++)
         {
-            if (saved[index] is not { } stored || stored.StartAtUtc < nowUtc - ExpiryAfterStart)
+            if (saved[index] is not { } stored || stored.StartAtUtc < nowUtc - Announcement.ListedAfterStart)
             {
                 continue;
             }
@@ -412,7 +411,7 @@ internal sealed class FeedListener : IDisposable
 
     private void Prune(DateTime nowUtc)
     {
-        var cutoff = nowUtc - ExpiryAfterStart;
+        var cutoff = nowUtc - Announcement.ListedAfterStart;
         var kept = 0;
         for (var index = 0; index < count; index++)
         {

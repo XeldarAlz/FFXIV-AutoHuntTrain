@@ -23,6 +23,7 @@ internal static partial class L
         public static readonly LocString LabelAnnouncement = new("details.label.announcement", "Announcement");
         public static readonly LocString NotNamed = new("details.notNamed", "Not named");
         public static readonly LocString NoBody = new("details.noBody", "The announcement carried no text beyond its details.");
+        public static readonly LocString CatchUpNote = new("details.catchUpNote", "Riding now catches up with the train along its usual route");
 
         public static readonly LocString Flag = new("details.flag", "Flag on map");
         public static readonly LocString FlagHint = new("details.flagHint", "Open the map with a flag on the train's start");

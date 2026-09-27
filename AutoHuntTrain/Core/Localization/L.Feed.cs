@@ -31,7 +31,9 @@ internal static partial class L
         public static readonly LocString RegionUnknown = new("feed.region.unknown", "??");
         public static readonly LocString Ride = new("feed.ride", "Ride");
         public static readonly LocString RideHint = new("feed.rideHint", "Travel to the start of this train and follow it");
+        public static readonly LocString RideCatchUpHint = new("feed.rideCatchUpHint", "The train has moved on from its start; the ride catches up with it");
         public static readonly LocString AutoMarker = new("feed.autoMarker", "Auto");
+        public static readonly LocString InProgress = new("feed.inProgress", "In progress");
 
         public static readonly LocString VerdictOutOfRegion = new("feed.verdict.outOfRegion", "This train runs in another region");
         public static readonly LocString VerdictInDuty = new("feed.verdict.inDuty", "Leave the duty or its queue first");
@@ -65,7 +67,7 @@ internal static partial class L
         public static readonly LocString CrossDataCenter = new("feed.settings.crossDataCenter", "Auto-join on other data centers");
         public static readonly LocString CrossDataCenterHelp = new("feed.settings.crossDataCenterHelp", "Let auto-join take a train that needs a data center transfer; a Ride button click can always cross. The transfer logs the character out and back in, and Lifestream must have data center travel enabled.");
         public static readonly LocString MinimumLead = new("feed.settings.minimumLead", "Lead time for another data center");
-        public static readonly LocString MinimumLeadHelp = new("feed.settings.minimumLeadHelp", "Auto-join skips a train on another data center whose start is closer than this, because a data center transfer takes minutes plus a queue. Trains on your own data center are joined as soon as they are announced, and a train that already started is still joined for ten minutes after its start.");
+        public static readonly LocString MinimumLeadHelp = new("feed.settings.minimumLeadHelp", "Auto-join skips a train on another data center whose start is closer than this, because a data center transfer takes minutes plus a queue. Trains on your own data center are joined as soon as they are announced, and a train that already started is still joined for three minutes after its start.");
         public static readonly LocString SnoozeLength = new("feed.settings.snoozeLength", "Snooze length");
         public static readonly LocString SnoozeLengthHelp = new("feed.settings.snoozeLengthHelp", "How long /aht snooze suspends auto-join and the train notifications. /aht snooze off lifts it early.");
     }

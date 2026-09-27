@@ -100,7 +100,7 @@ internal static class RunningPanel
         }
         else
         {
-            y = DrawStatus(controller.Status, columnX, columnWidth, y);
+            y = DrawStatus(progress.CatchingUp ? ReadyState.CatchUpLine(progress) : controller.Status, columnX, columnWidth, y);
         }
 
         // While a mark is fought the bar is its health.
@@ -252,9 +252,13 @@ internal static class RunningPanel
             HuntPhase.Finishing => (Styling.AccentMint,  Styling.AccentMintSoft,  Loc.T(L.Run.PhaseFinishing)),
             HuntPhase.Idle      => (Styling.TextDim,     Styling.TextSecondary,   Loc.T(L.Run.PhaseStandingBy)),
             HuntPhase.Waiting   => (Styling.TextDim,     Styling.TextSecondary,   ReadyState.ActivityLabel(controller)),
-            _                   => (Styling.AccentBlue,  Styling.AccentBlueSoft,  ReadyState.ActivityLabel(controller)),
+            _                   => (Styling.AccentBlue,  Styling.AccentBlueSoft,  PhaseChipLabel(controller)),
         };
     }
+
+    // The chip keeps to the phase's short name; the status line under it says where a catch-up is.
+    private static string PhaseChipLabel(AutoHuntController controller)
+        => controller.Progress.CatchingUp ? ReadyState.RidePhaseLabel(RidePhase.CatchingUp) : ReadyState.ActivityLabel(controller);
 
     private static void DrawStatTiles(AutoHuntController controller)
     {

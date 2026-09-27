@@ -31,6 +31,7 @@ Hears a hunt train being called anywhere in your region, gets your character to 
 - **Gets you there**: world change, data center travel and instance switching through Lifestream, then the plugin's own teleport and flight to the start aetheryte.
 - **Follows the conductor**: reads the conductor's map flags from Shout, Yell and Say, picks the nearest aetheryte or flies when the flag is close, and understands instance numbers.
 - **Finds the conductor**: from the announcement when it names one, from the first flag posted in the start zone, or picked by hand.
+- **Catches up with a train in progress**: a train more than three minutes past its start has left its start zone, so the ride estimates how far along its expansion's usual route the train has got, teleports there and listens for the next flag, moving on a zone at a time until it hears one.
 - **Hits, never leads**: dismounts at range, waits for the conductor's pull, lands a hit on the zone's A rank for credit, and never starts a pull or drags adds into the crowd.
 - **Knows when it's over**: ends the ride once every A rank of the expansion is credited, or when the conductor has gone quiet.
 - **Way home**: return to your home world after the train, stay for the next one, or run the after-ride action.

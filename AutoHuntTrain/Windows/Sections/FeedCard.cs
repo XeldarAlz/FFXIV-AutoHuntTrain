@@ -11,7 +11,7 @@ using System.Numerics;
 namespace AutoHuntTrain.Windows.Sections;
 
 // The announced trains the picked view shows, soonest first: group, region when it is not the player's, world,
-// countdown, how far away the world is, an Auto mark when auto-join would take the train, the conductor when the
+// countdown, an In progress mark once the train has left its start, how far away the world is, an Auto mark when auto-join would take the train, the conductor when the
 // announcement named one, and a Ride button that says why it is off. A click anywhere else on a row opens the train's details. Verdicts are refreshed a few times a second
 // rather than every frame, because each one asks Lifestream whether it is busy.
 internal static class FeedCard
@@ -40,6 +40,7 @@ internal static class FeedCard
     private static readonly bool[] listed = new bool[FeedListener.Capacity];
     private static readonly bool[] autoJoined = new bool[FeedListener.Capacity];
     private static readonly bool[] homeRegion = new bool[FeedListener.Capacity];
+    private static readonly bool[] catchesUp = new bool[FeedListener.Capacity];
 
     private static int listedCount;
 
@@ -136,6 +137,7 @@ internal static class FeedCard
                 && RideRules.EvaluateAutoRules(feed[index], nowUtc, reachabilities[index]) == RideVerdict.Rideable;
             listed[index] = TrainListFilter.Shows(feed[index], view);
             homeRegion[index] = TrainListFilter.InHomeRegion(feed[index].World);
+            catchesUp[index] = TrainTexts.CatchesUp(feed[index], nowUtc);
             if (listed[index])
             {
                 listedCount++;
@@ -171,7 +173,7 @@ internal static class FeedCard
 
         ImGui.SetCursorScreenPos(buttonOrigin);
         var clicked = PillButton.Draw(RideButtonId, label, Styling.AccentMint, rideable ? PillButton.Emphasis.Filled : PillButton.Emphasis.Ghost,
-            FontAwesomeIcon.Train, rideable, RideButtonHeight, rideable ? Loc.T(L.Feed.RideHint) : null);
+            FontAwesomeIcon.Train, rideable, RideButtonHeight, rideable ? TrainTexts.RideHint(catchesUp[index]) : null);
         ImGui.PopID();
         if (clicked)
         {
@@ -198,6 +200,10 @@ internal static class FeedCard
             var countdown = TrainTexts.Countdown(ref countdowns[index], announcement, nowUtc, out var color);
             TextDraw.At(countdown, new Vector2(cursorX, captionY), color);
             cursorX += TextDraw.Measure(countdown).X + ChipGap * scale;
+            if (announcement.InProgressAt(nowUtc))
+            {
+                cursorX += Badge.DrawLeft(drawList, Loc.T(L.Feed.InProgress), Styling.AccentAmber, cursorX, captionY + captionHeight * 0.5f) + ChipGap * scale;
+            }
 
             var reachability = reachabilities[index];
             cursorX += Badge.DrawLeft(drawList, ReachLabel(reachability), ReachColor(reachability), cursorX, captionY + captionHeight * 0.5f) + ChipGap * scale;

@@ -34,8 +34,6 @@ internal enum Reachability : byte
 // centers, rides across data centers and the clock.
 internal static class RideRules
 {
-    private static readonly TimeSpan AutoJoinWindow = TimeSpan.FromMinutes(10);
-
     public static RideVerdict EvaluateManual(in Announcement announcement, out Reachability reachability)
     {
         var placement = EvaluatePlacement(announcement, ignoreRunningRide: false, out reachability);
@@ -147,8 +145,7 @@ internal static class RideRules
     }
 
     // A data center transfer takes minutes plus a queue, so a train on another data center that starts within the
-    // lead, or has already started, cannot be reached in time; and a train that started longer ago than the join
-    // window has lost most of its marks.
+    // lead, or has already started, cannot be reached in time; and a train in progress has left its start zone.
     private static RideVerdict Timing(Configuration configuration, TimeSpan lead, Reachability reachability)
     {
         if (reachability == Reachability.CrossDataCenter && lead.TotalSeconds < Math.Max(0, configuration.MinimumLeadSeconds))
@@ -156,7 +153,7 @@ internal static class RideRules
             return RideVerdict.TooSoon;
         }
 
-        if (lead <= TimeSpan.Zero && -lead > AutoJoinWindow)
+        if (lead <= TimeSpan.Zero && -lead > Announcement.InProgressAfter)
         {
             return RideVerdict.TooLate;
         }
@@ -192,7 +189,7 @@ internal static class RideRules
         RideVerdict.NotAllowedDataCenter => "its data center is not an allowed one",
         RideVerdict.CrossDataCenterOff => "auto-join across data centers is off",
         RideVerdict.TooSoon => "it starts sooner than the lead time a data center transfer needs",
-        RideVerdict.TooLate => "it started too long ago to be worth the trip",
+        RideVerdict.TooLate => "it is already in progress",
         _ => "its world is unknown",
     };
 }

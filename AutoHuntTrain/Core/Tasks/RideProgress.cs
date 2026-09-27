@@ -3,7 +3,7 @@ using AutoHuntTrain.Core.Train;
 
 namespace AutoHuntTrain.Core.Tasks;
 
-internal enum RidePhase : byte { None, Journey, WaitingForFlag, Travelling, AtFlag, WaitingForMark, Engaging }
+internal enum RidePhase : byte { None, Journey, CatchingUp, WaitingForFlag, Travelling, AtFlag, WaitingForMark, Engaging }
 
 // Where the ride's conductor came from: set by the player, named in the announcement, or picked from the first flag.
 internal enum ConductorSource : byte { None, Manual, Announced, Picked }
@@ -24,6 +24,18 @@ internal sealed class RideProgress
 
     // The zone an announced train starts in, 0 when the announcement named none.
     public uint StartTerritoryId { get; private set; }
+
+    // While a ride catches up with a train in progress: the zone it is in or heading to, its place on the route counted
+    // from 1, the route's length, and whether it has arrived there and listens for a flag.
+    public uint CatchUpTerritoryId { get; private set; }
+
+    public int CatchUpStop { get; private set; }
+
+    public int CatchUpStops { get; private set; }
+
+    public bool CatchUpListening { get; private set; }
+
+    public bool CatchingUp => RidePhase == RidePhase.CatchingUp;
 
     public bool HasFlag { get; private set; }
 
@@ -53,6 +65,7 @@ internal sealed class RideProgress
         Phase = phase switch
         {
             RidePhase.Journey => HuntPhase.Travelling,
+            RidePhase.CatchingUp => HuntPhase.Travelling,
             RidePhase.Travelling => HuntPhase.Travelling,
             RidePhase.Engaging => HuntPhase.Fighting,
             _ => HuntPhase.Waiting,
@@ -66,6 +79,14 @@ internal sealed class RideProgress
     }
 
     public void SetStartTerritory(uint territoryId) => StartTerritoryId = territoryId;
+
+    public void SetCatchUp(uint territoryId, int stop, int stops, bool listening)
+    {
+        CatchUpTerritoryId = territoryId;
+        CatchUpStop = stop;
+        CatchUpStops = stops;
+        CatchUpListening = listening;
+    }
 
     public void SetFlag(in FlagPost flag)
     {
@@ -109,6 +130,7 @@ internal sealed class RideProgress
         Conductor = ConductorIdentity.None;
         ConductorSource = ConductorSource.None;
         StartTerritoryId = 0;
+        SetCatchUp(0, 0, 0, false);
         FlagsFollowed = 0;
         MarksCredited = 0;
         ExpectedMarks = 0;
