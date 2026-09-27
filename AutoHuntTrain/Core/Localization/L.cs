@@ -325,7 +325,7 @@ internal static partial class L
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | snooze [minutes] or snooze off (suspend auto-ride) | inject <World> <DT|EW|SHB|Centurio> [aetheryte] [i<n>] [+minutes] [conductor:First Last] (a made-up announcement for testing) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).");
+        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | snooze [minutes] or snooze off (suspend auto-ride) | inject <World> <DT|EW|SHB|Centurio> [aetheryte] [i<n>] [+minutes] [conductor:First Last] [body:text] (a made-up announcement for testing) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /aht.");
     }
 }
