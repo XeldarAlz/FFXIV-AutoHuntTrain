@@ -41,7 +41,7 @@ internal static partial class L
         public static readonly LocString IdleLimit = new("ride.settings.idle", "Wait for the first flag");
         public static readonly LocString IdleLimitHelp = new("ride.settings.idleHelp", "How long the ride waits for the conductor's first flag. When none arrives in this time, the ride ends on its own.");
         public static readonly LocString QuietEnd = new("ride.settings.quietEnd", "End after the conductor goes quiet");
-        public static readonly LocString QuietEndHelp = new("ride.settings.quietEndHelp", "Once at least one mark is credited, the ride ends on its own when no new flag from the conductor arrives for this long and no fight is going on.");
+        public static readonly LocString QuietEndHelp = new("ride.settings.quietEndHelp", "Once the ride has reached a flag, it ends on its own when no new flag from the conductor arrives for this long and no fight is going on.");
         public static readonly LocString EndOnPhrase = new("ride.settings.endOnPhrase", "End when the conductor says so");
         public static readonly LocString EndOnPhraseHelp = new("ride.settings.endOnPhraseHelp", "End the ride when the conductor says in Shout, Yell, Say or party chat that the train is over, with words such as \"thanks for coming\" or \"that's all\". A fight in progress is finished first. Only English phrases are recognized for now.");
 

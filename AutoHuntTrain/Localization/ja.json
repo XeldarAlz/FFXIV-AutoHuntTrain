@@ -398,7 +398,7 @@
   "ride.settings.idle": "最初のフラッグを待つ時間",
   "ride.settings.idleHelp": "先導者の最初のフラッグを待つ時間です。この時間内に届かなければ、乗車は自動で終了します。",
   "ride.settings.quietEnd": "先導者が静かになったら終了",
-  "ride.settings.quietEndHelp": "討伐対象を1体でも獲得した後、この時間先導者から新しいフラッグが届かず、戦闘も行われていなければ、乗車は自動で終了します。",
+  "ride.settings.quietEndHelp": "フラグに一度到着したあとは、この時間のあいだ先導者から新しいフラグが届かず、戦闘も行われていなければ、乗車は自動で終わります。",
   "ride.settings.endOnPhrase": "先導者の終了宣言で終了",
   "ride.settings.endOnPhraseHelp": "先導者が Shout、Yell、Say またはパーティチャットで「thanks for coming」や「that's all」などと列車の終了を告げたら、乗車を終了します。戦闘中ならその戦闘を終えてから終了します。現在は英語のフレーズのみ認識します。",
   "ride.settings.engagement": "交戦",

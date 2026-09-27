@@ -398,7 +398,7 @@
   "ride.settings.idle": "İlk işareti bekleme",
   "ride.settings.idleHelp": "Yolculuğun kondüktörün ilk işaretini ne kadar bekleyeceği. Bu sürede hiç işaret gelmezse yolculuk kendiliğinden biter.",
   "ride.settings.quietEnd": "Kondüktör sessizleşince bitir",
-  "ride.settings.quietEndHelp": "En az bir hedef sayıldıktan sonra, kondüktörden bu süre boyunca yeni işaret gelmezse ve süren bir savaş yoksa yolculuk kendiliğinden biter.",
+  "ride.settings.quietEndHelp": "Yolculuk bir işarete ulaştıktan sonra, bu süre boyunca kondüktörden yeni işaret gelmezse ve süren bir dövüş yoksa kendiliğinden biter.",
   "ride.settings.endOnPhrase": "Kondüktör söyleyince bitir",
   "ride.settings.endOnPhraseHelp": "Kondüktör Shout, Yell, Say ya da grup sohbetinde trenin bittiğini \"thanks for coming\" veya \"that's all\" gibi sözlerle söylediğinde yolculuğu bitir. Süren bir savaş önce tamamlanır. Şimdilik yalnızca İngilizce ifadeler tanınır.",
   "ride.settings.engagement": "Saldırı",

@@ -991,9 +991,10 @@ internal sealed partial class AutoRide : AutoCommon
         => Math.Max(1, Plugin.Instance.Configuration.IdleLimitMinutes) * (long)TimeUnits.MillisecondsPerMinute;
 
     // The loop asks only between legs, so no fight is in progress, and the quiet counts from the last new flag or
-    // from the end of the last leg, whichever came later.
+    // from the end of the last leg, whichever came later. It starts once a flag was reached, so a train that fizzles
+    // before its first credit still ends.
     private bool QuietEndReached()
-        => session.MarksCredited > 0 && Environment.TickCount64 - quietSinceMs >= QuietEndMs();
+        => (session.MarksCredited > 0 || progress.FlagsFollowed > 0) && Environment.TickCount64 - quietSinceMs >= QuietEndMs();
 
     private static long QuietEndMs()
         => Math.Max(QuietEndMinutesMin, Plugin.Instance.Configuration.QuietEndMinutes) * (long)TimeUnits.MillisecondsPerMinute;

@@ -398,7 +398,7 @@
   "ride.settings.idle": "Attente du premier drapeau",
   "ride.settings.idleHelp": "Durée pendant laquelle le trajet attend le premier drapeau du conducteur. S'il n'en arrive aucun dans ce délai, le trajet se termine de lui-même.",
   "ride.settings.quietEnd": "Fin après le silence du conducteur",
-  "ride.settings.quietEndHelp": "Dès qu'au moins une cible est créditée, le trajet se termine de lui-même quand aucun nouveau drapeau du conducteur n'arrive pendant cette durée et qu'aucun combat n'est en cours.",
+  "ride.settings.quietEndHelp": "Une fois qu'un drapeau a été atteint, le trajet se termine seul si aucun nouveau drapeau du conducteur n'arrive pendant cette durée et qu'aucun combat n'est en cours.",
   "ride.settings.endOnPhrase": "Terminer quand le conducteur l'annonce",
   "ride.settings.endOnPhraseHelp": "Terminer le trajet quand le conducteur annonce en Hurler, Crier, Dire ou dans le chat de groupe que le train est fini, avec des mots comme « thanks for coming » ou « that's all ». Un combat en cours est d'abord mené à son terme. Seules les phrases en anglais sont reconnues pour l'instant.",
   "ride.settings.engagement": "Engagement",

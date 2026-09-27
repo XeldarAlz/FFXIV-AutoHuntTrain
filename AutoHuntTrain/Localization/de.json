@@ -398,7 +398,7 @@
   "ride.settings.idle": "Auf die erste Markierung warten",
   "ride.settings.idleHelp": "Wie lange die Fahrt auf die erste Markierung des Zugführers wartet. Kommt in dieser Zeit keine, endet die Fahrt von selbst.",
   "ride.settings.quietEnd": "Ende nach Funkstille des Zugführers",
-  "ride.settings.quietEndHelp": "Sobald mindestens ein Ziel angerechnet ist, endet die Fahrt von selbst, wenn so lange keine neue Markierung des Zugführers eintrifft und kein Kampf läuft.",
+  "ride.settings.quietEndHelp": "Sobald die Fahrt eine Markierung erreicht hat, endet sie von selbst, wenn so lange keine neue Markierung vom Zugführer kommt und kein Kampf läuft.",
   "ride.settings.endOnPhrase": "Beenden, wenn der Zugführer es sagt",
   "ride.settings.endOnPhraseHelp": "Die Fahrt beenden, wenn der Zugführer in Schreien, Rufen, Sagen oder im Gruppenchat sagt, dass der Zug vorbei ist, etwa mit „thanks for coming“ oder „that's all“. Ein laufender Kampf wird zuerst zu Ende geführt. Vorerst werden nur englische Sätze erkannt.",
   "ride.settings.engagement": "Angriff",

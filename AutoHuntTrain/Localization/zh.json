@@ -398,7 +398,7 @@
   "ride.settings.idle": "等待首个标记",
   "ride.settings.idleHelp": "行程等待车头首个标记的时长。在此时间内没有收到标记时，行程会自动结束。",
   "ride.settings.quietEnd": "车头沉默后结束",
-  "ride.settings.quietEndHelp": "至少计入一个目标后，如果在此时间内没有收到车头的新标记且没有正在进行的战斗，行程会自动结束。",
+  "ride.settings.quietEndHelp": "到达过一个标记后，若在这段时间内没有收到车头的新标记且没有进行中的战斗，乘车会自动结束。",
   "ride.settings.endOnPhrase": "车头宣布结束时结束",
   "ride.settings.endOnPhraseHelp": "车头在喊话、呼喊、说话或小队频道中用 \"thanks for coming\" 或 \"that's all\" 等话语宣布车队结束时，结束行程。正在进行的战斗会先打完。目前只识别英语短语。",
   "ride.settings.engagement": "交战",
