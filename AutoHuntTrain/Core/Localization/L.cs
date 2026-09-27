@@ -216,7 +216,8 @@ internal static partial class L
             new("changelog.r1000.3", "Follows the conductor's map flags from Shout, Yell and Say, picking the conductor from the announcement, the first flag, or by hand"),
             new("changelog.r1000.4", "Waits for the pull and lands a hit on each A rank for credit, never starting a pull itself"),
             new("changelog.r1000.5", "Joins the train's party, returns home after the ride, and records every train in History"),
-            new("changelog.r1000.6", "Test commands for rides without a real train: /aht inject and /aht goto"),
+            new("changelog.r1000.6", "Opens each train's details with Flag on map, Party Finder, Nav and Relay, and catches up with trains that already left their start"),
+            new("changelog.r1000.7", "A Humanizer with random reaction delays, so the character is never the first to move"),
         ];
     }
 
