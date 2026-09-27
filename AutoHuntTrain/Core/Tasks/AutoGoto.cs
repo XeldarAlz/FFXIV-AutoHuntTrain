@@ -196,7 +196,7 @@ internal sealed class AutoGoto(uint territoryId, Vector3 destination) : AutoComm
         AutoJourney.Start(JourneyPlan.ToWorld(world.Name, aetheryteId, territoryId, instance));
     }
 
-    private static bool TryParseInstance(string token, out int instance)
+    internal static bool TryParseInstance(string token, out int instance)
     {
         instance = 0;
         if (token.Length != InstanceTokenLength || char.ToLowerInvariant(token[0]) != InstancePrefix || !char.IsAsciiDigit(token[1]))

@@ -28,6 +28,7 @@ public sealed class Plugin : IDalamudPlugin
     private const string GotoSubcommand = "goto";
     private const string ConductorSubcommand = "conductor";
     private const string SnoozeSubcommand = "snooze";
+    private const string InjectSubcommand = "inject";
     private const string NavmeshIpcProviderMarker = "Navmesh.IPCProvider";
     // Lifestream's own budget for a data center transfer is up to an hour; a plan older than this is a leftover, not a journey in flight.
     private static readonly TimeSpan PendingJourneyMaxAge = TimeSpan.FromMinutes(90);
@@ -198,6 +199,10 @@ public sealed class Plugin : IDalamudPlugin
         else if (HasSubcommand(trimmed, SnoozeSubcommand))
         {
             Snooze.HandleCommand(trimmed[SnoozeSubcommand.Length..].Trim());
+        }
+        else if (HasSubcommand(trimmed, InjectSubcommand))
+        {
+            FeedInjector.HandleCommand(trimmed[InjectSubcommand.Length..].Trim(), Feed);
         }
         else
         {

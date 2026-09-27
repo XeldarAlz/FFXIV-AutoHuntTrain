@@ -251,7 +251,7 @@
   "settings.general.behavior": "動作",
   "settings.general.autoPause": "コンテンツ中は自動で一時停止",
   "settings.general.autoPauseHelp": "コンテンツ、討滅戦、レイド、その他のインスタンスコンテンツ中は乗車を一時停止し、外に戻ったら再開します。乗車とセッション統計は保持されます。",
-  "plugin.commandHelp": "Auto Hunt Train のウィンドウを開閉します。/aht config | stats | deps | log | changelog | about | pause（乗車の一時停止／再開）| conductor <名 姓>[@ワールド] または conductor clear（誰のフラッグを追うか）| target（現在のターゲットのBaseIdを出力）| goto <エリア> <x> <y> <z>、goto <ワールド> [エーテライト] [i<n>]、goto home（移動ヘルパー、goto stop で中止）。",
+  "plugin.commandHelp": "Auto Hunt Train のウィンドウを開閉します。/aht config | stats | deps | log | changelog | about | pause（乗車の一時停止／再開）| conductor <名 姓>[@ワールド] または conductor clear（誰のフラッグを追うか）| snooze [分] または snooze off（自動乗車を休止）| inject <ワールド> <DT|EW|SHB|Centurio> [エーテライト] [i<n>] [+分] [conductor:名 姓]（テスト用の架空の告知）| target（現在のターゲットのBaseIdを出力）| goto <エリア> <x> <y> <z>、goto <ワールド> [エーテライト] [i<n>]、goto home（移動ヘルパー、goto stop で中止）。",
   "plugin.commandHelpAlias": "/aht の別名です。",
   "progress.phase.upkeep": "整備中",
   "progress.markLine": "{0}  ·  {1}",

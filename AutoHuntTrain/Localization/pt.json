@@ -251,7 +251,7 @@
   "settings.general.behavior": "Comportamento",
   "settings.general.autoPause": "Pausar automaticamente em conteúdo",
   "settings.general.autoPauseHelp": "Pausa a viagem enquanto você está em uma masmorra, provação, raide ou outro conteúdo instanciado, e retoma quando você volta. Sua viagem e estatísticas são mantidas.",
-  "plugin.commandHelp": "Abre ou fecha a janela do Auto Hunt Train. /aht config | stats | deps | log | changelog | about | pause (pausar ou retomar a viagem) | conductor <Nome Sobrenome>[@Mundo] ou conductor clear (de quem seguir as marcações) | target (mostrar o BaseId do alvo atual) | goto <zona> <x> <y> <z>, goto <mundo> [éterite] [i<n>] ou goto home (ajudas de viagem, goto stop cancela).",
+  "plugin.commandHelp": "Abre ou fecha a janela do Auto Hunt Train. /aht config | stats | deps | log | changelog | about | pause (pausar ou retomar a viagem) | conductor <Nome Sobrenome>[@Mundo] ou conductor clear (de quem seguir as marcações) | snooze [minutos] ou snooze off (suspender a viagem automática) | inject <Mundo> <DT|EW|SHB|Centurio> [éterite] [i<n>] [+minutos] [conductor:Nome Sobrenome] (um anúncio inventado para testes) | target (mostrar o BaseId do alvo atual) | goto <zona> <x> <y> <z>, goto <mundo> [éterite] [i<n>] ou goto home (ajudas de viagem, goto stop cancela).",
   "plugin.commandHelpAlias": "Atalho para /aht.",
   "progress.phase.upkeep": "Manutenção",
   "progress.markLine": "{0}  ·  {1}",

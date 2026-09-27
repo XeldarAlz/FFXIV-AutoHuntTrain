@@ -251,7 +251,7 @@
   "settings.general.behavior": "Behavior",
   "settings.general.autoPause": "Auto-pause in content",
   "settings.general.autoPauseHelp": "Pause the ride while you are inside a duty, trial, raid, or any other instanced content, then resume it once you are back outside. Your ride and session stats are kept.",
-  "plugin.commandHelp": "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).",
+  "plugin.commandHelp": "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | snooze [minutes] or snooze off (suspend auto-ride) | inject <World> <DT|EW|SHB|Centurio> [aetheryte] [i<n>] [+minutes] [conductor:First Last] (a made-up announcement for testing) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).",
   "plugin.commandHelpAlias": "Alias for /aht.",
   "progress.phase.upkeep": "Upkeep",
   "progress.markLine": "{0}  ·  {1}",
