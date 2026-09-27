@@ -1,5 +1,4 @@
 using AutoHuntTrain.Core.Game.Ops;
-using AutoHuntTrain.Core.Travel;
 using Dalamud.Game.ClientState.Conditions;
 using ECommons.DalamudServices;
 using System.Threading.Tasks;
@@ -10,26 +9,26 @@ public abstract partial class AutoCommon
 {
     private const int UpkeepConsumeWaitMs = 6_000;
     private const int UpkeepConsumeCheckFrames = 100;
-    // A failed repair or break tends to fail the same way straight after (no Dark Matter, city not attuned), so it rests first.
+    // A failed repair tends to fail the same way straight after (no Dark Matter, no mender), so it rests first.
     private const int UpkeepRepairRetryMs = 600_000;
-    private const int UpkeepBreakRetryMs = 300_000;
 
-    private int marksSinceBreak;
     private long repairRetryAtMs;
-    private long breakRetryAtMs;
 
-    // One call per mark kill; the humanizer counts these toward its next city break. The count lives on this task, so it
-    // starts over whenever a run starts or resumes.
-    protected void NoteMarkKilled() => marksSinceBreak++;
-
-    // True when any step ran, which can leave the character dismounted or in another zone, so the caller should travel
-    // to its next spot afresh.
-    protected async Task<bool> RunUpkeep()
+    // Cheap enough to poll: whether RunUpkeep would find anything to do right now.
+    protected bool UpkeepDue(bool travelAllowed)
     {
         var configuration = Plugin.Instance.Configuration;
-        var repairDue = UpkeepRepairDue(configuration);
-        var breakDue = UpkeepBreakDue(configuration);
-        if (!repairDue && !breakDue && !UpkeepConsumablesDue(configuration))
+        return UpkeepRepairDue(configuration, travelAllowed) || UpkeepConsumablesDue(configuration);
+    }
+
+    // True when any step ran, which can leave the character dismounted or in another zone, so the caller should travel
+    // to its next spot afresh. Without travel only the bag's Dark Matter repairs, since a trip to a mender would carry
+    // the character away from the train. The upkeep stops between steps once interrupted says so.
+    protected async Task<bool> RunUpkeep(bool travelAllowed, Func<bool>? interrupted = null)
+    {
+        var configuration = Plugin.Instance.Configuration;
+        var repairDue = UpkeepRepairDue(configuration, travelAllowed);
+        if (!repairDue && !UpkeepConsumablesDue(configuration))
         {
             return false;
         }
@@ -41,36 +40,32 @@ public abstract partial class AutoCommon
 
         if (repairDue)
         {
-            await RunScheduledRepair();
+            await RunScheduledRepair(travelAllowed);
         }
 
-        if (breakDue && !CancelToken.IsCancellationRequested)
+        if (!CancelToken.IsCancellationRequested && !UpkeepInterrupted(interrupted) && UpkeepConsumablesDue(configuration))
         {
-            await RunScheduledBreak(configuration);
-        }
-
-        if (!CancelToken.IsCancellationRequested && UpkeepConsumablesDue(configuration))
-        {
-            await RefreshConsumables(configuration);
+            await RefreshConsumables(configuration, interrupted);
         }
 
         return true;
     }
 
-    private bool UpkeepRepairDue(Configuration configuration)
+    private bool UpkeepRepairDue(Configuration configuration, bool travelAllowed)
         => configuration.AutoRepair
         && Environment.TickCount64 >= repairRetryAtMs
+        && (travelAllowed || CanRepairWithoutTravel(configuration))
         && RepairOps.NeedsRepair(configuration.AutoRepairThresholdPercent);
 
-    private bool UpkeepBreakDue(Configuration configuration)
-        => configuration.HumanizerEnabled
-        && Environment.TickCount64 >= breakRetryAtMs
-        && marksSinceBreak >= Math.Max(1, configuration.HumanizerMarksBeforeBreak);
+    private static bool CanRepairWithoutTravel(Configuration configuration)
+        => configuration.RepairMode != RepairMode.NpcOnly && RepairOps.HasDarkMatterForAllEquipped();
 
     private static bool UpkeepConsumablesDue(Configuration configuration)
         => configuration.AutoConsume
         && configuration.AutoConsumeItems.Count > 0
         && FoodOps.AnyNeeded(configuration);
+
+    private static bool UpkeepInterrupted(Func<bool>? interrupted) => interrupted is not null && interrupted();
 
     private static bool UpkeepCharacterFree()
         => Svc.Objects.LocalPlayer is { IsDead: false }
@@ -96,13 +91,13 @@ public abstract partial class AutoCommon
             return true;
         }
 
-        Diag($"Upkeep: something is due but the character is busy ({ConditionTag()}); trying again after the next mark");
+        Diag($"Upkeep: something is due but the character is busy ({ConditionTag()}); trying again later");
         return false;
     }
 
-    private async Task RunScheduledRepair()
+    private async Task RunScheduledRepair(bool travelAllowed)
     {
-        if (await RepairGear() || CancelToken.IsCancellationRequested)
+        if (await RepairGear(travelAllowed) || CancelToken.IsCancellationRequested)
         {
             return;
         }
@@ -111,35 +106,8 @@ public abstract partial class AutoCommon
         Warn($"Upkeep: the repair did not finish; the next try waits {UpkeepRepairRetryMs / TimeUnits.MillisecondsPerMinute} minutes");
     }
 
-    private async Task RunScheduledBreak(Configuration configuration)
-    {
-        var cityTerritoryId = PickBreakCity(configuration);
-        if (cityTerritoryId == 0)
-        {
-            Diag("Upkeep: a city break is due but no listed city is ticked; skipping it");
-            marksSinceBreak = 0;
-            return;
-        }
-
-        var minutes = RollBreakMinutes(configuration);
-        Diag($"Upkeep: {marksSinceBreak} marks since the last break (every {configuration.HumanizerMarksBeforeBreak}); taking a {minutes}m break");
-        if (await TakeCityBreak(cityTerritoryId, minutes * TimeUnits.MillisecondsPerMinute))
-        {
-            marksSinceBreak = 0;
-            return;
-        }
-
-        if (CancelToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        breakRetryAtMs = Environment.TickCount64 + UpkeepBreakRetryMs;
-        Warn($"Upkeep: could not reach {TerritoryNames.Of(cityTerritoryId)} for the break; the next try waits {UpkeepBreakRetryMs / TimeUnits.MillisecondsPerMinute} minutes");
-    }
-
     // Each item gets a wall-clock deadline, so a use the game never applies cannot park the run.
-    private async Task RefreshConsumables(Configuration configuration)
+    private async Task RefreshConsumables(Configuration configuration, Func<bool>? interrupted)
     {
         if (Svc.Condition[ConditionFlag.Mounted])
         {
@@ -148,13 +116,13 @@ public abstract partial class AutoCommon
 
         if (Svc.Condition[ConditionFlag.Mounted] || Svc.Condition[ConditionFlag.InCombat])
         {
-            Diag($"Upkeep: cannot eat right now ({ConditionTag()}); trying again after the next mark");
+            Diag($"Upkeep: cannot eat right now ({ConditionTag()}); trying again later");
             return;
         }
 
         var minimumSeconds = FoodOps.MinimumBuffSeconds(configuration);
         var items = configuration.AutoConsumeItems;
-        for (var index = 0; index < items.Count && !CancelToken.IsCancellationRequested; index++)
+        for (var index = 0; index < items.Count && !CancelToken.IsCancellationRequested && !UpkeepInterrupted(interrupted); index++)
         {
             var entry = items[index];
             if (FoodOps.HasStatus(entry.StatusId, minimumSeconds) || !FoodOps.IsAvailable(entry))
@@ -178,49 +146,5 @@ public abstract partial class AutoCommon
 
         FoodOps.UseConsumable(entry);
         return false;
-    }
-
-    private static uint PickBreakCity(Configuration configuration)
-    {
-        var cities = BreakCities.All;
-        var selected = configuration.HumanizerCities;
-        var eligible = 0;
-        for (var index = 0; index < cities.Length; index++)
-        {
-            if (selected.Contains(cities[index].TerritoryId))
-            {
-                eligible++;
-            }
-        }
-
-        if (eligible == 0)
-        {
-            return 0;
-        }
-
-        var pick = Random.Shared.Next(eligible);
-        for (var index = 0; index < cities.Length; index++)
-        {
-            if (!selected.Contains(cities[index].TerritoryId))
-            {
-                continue;
-            }
-
-            if (pick == 0)
-            {
-                return cities[index].TerritoryId;
-            }
-
-            pick--;
-        }
-
-        return 0;
-    }
-
-    private static int RollBreakMinutes(Configuration configuration)
-    {
-        var shortest = Math.Max(1, configuration.HumanizerBreakMinMinutes);
-        var longest = Math.Max(shortest, configuration.HumanizerBreakMaxMinutes);
-        return Random.Shared.Next(shortest, longest + 1);
     }
 }

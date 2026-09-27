@@ -9,20 +9,20 @@ internal static partial class L
         public static readonly LocString Test = new("safety.test", "Test");
         public static readonly LocString Preview = new("safety.preview", "Preview");
 
-        public static readonly LocString CatRepair = new("safety.cat.repair", "Repair");
-        public static readonly LocString CatRepairSub = new("safety.cat.repairSub", "Auto-repair gear when equipped item condition drops below the threshold.");
-        public static readonly LocString CatConsumables = new("safety.cat.consumables", "Consumables");
-        public static readonly LocString CatConsumablesSub = new("safety.cat.consumablesSub", "Keep food and medicine buffs up while hunting: Well Fed is a free +3% EXP.");
-        public static readonly LocString CatHumanizer = new("safety.cat.humanizer", "Humanizer");
-        public static readonly LocString CatHumanizerSub = new("safety.cat.humanizerSub", "Take periodic city breaks between marks: teleport to a random hub and wander around for a few minutes before resuming.");
-        public static readonly LocString CatPartyInvites = new("safety.cat.partyInvites", "Party invites");
-        public static readonly LocString CatPartyInvitesSub = new("safety.cat.partyInvitesSub", "Auto-decline incoming party invites during a run, after a human-like delay, with an optional reply.");
+        public static readonly LocString CatUpkeep = new("safety.cat.upkeep", "Upkeep");
+        public static readonly LocString CatUpkeepSub = new("safety.cat.upkeepSub", "Repair and food during a ride. They run only in a lull while the ride waits for a flag, never on the way to one or during a fight.");
+        public static readonly LocString CatParty = new("safety.cat.partyInvites", "Party");
+        public static readonly LocString CatPartySub = new("safety.cat.partyInvitesSub", "On a train, party members share the credit on a mark. Join the parties the crowd offers, find one with a shout, and leave it once the ride is over.");
         public static readonly LocString CatGmAlert = new("safety.cat.gmAlert", "GM alert");
-        public static readonly LocString CatGmAlertSub = new("safety.cat.gmAlertSub", "Detects nearby Game Masters and reacts: stop the bot, ping you, or take more drastic action.");
+        public static readonly LocString CatGmAlertSub = new("safety.cat.gmAlertSub", "Detects nearby Game Masters and reacts: stop the ride, ping you, or take more drastic action.");
+
+        public static readonly LocString UpkeepTiming = new("safety.upkeep.timing", "Timing");
+        public static readonly LocString UpkeepQuiet = new("safety.upkeep.quiet", "Quiet time before upkeep");
+        public static readonly LocString UpkeepQuietHelp = new("safety.upkeep.quietHelp", "Repair and food wait until the ride has been waiting this long without a new flag, so they never hold you back when the conductor moves on. A flag that arrives meanwhile stops them. The upkeep before a data center transfer does not wait.");
 
         public static readonly LocString RepairTrigger = new("safety.repair.trigger", "Repair trigger");
         public static readonly LocString AutoRepair = new("safety.repair.autoRepair", "Auto-repair gear");
-        public static readonly LocString AutoRepairHelp = new("safety.repair.autoRepairHelp", "Between marks, when the lowest equipped item drops to or below the threshold, the plugin runs a repair. At 0% the gear stops working, so keep some margin.");
+        public static readonly LocString AutoRepairHelp = new("safety.repair.autoRepairHelp", "When the lowest equipped item drops to or below the threshold, the plugin repairs in a lull between flags and before a data center transfer. During a ride only Dark Matter from your bag is used; a trip to a repair NPC waits for the upkeep before a transfer. At 0% the gear stops working, so keep some margin.");
         public static readonly LocString AutoRepairOff = new("safety.repair.autoRepairOff", "Auto-repair is off. Enable it to configure repair.");
         public static readonly LocString RepairThreshold = new("safety.repair.threshold", "Repair threshold");
         public static readonly LocString RepairThresholdHelp = new("safety.repair.thresholdHelp", "Trips when the worst equipped slot reaches this condition percentage. 20% leaves comfortable margin before the 0% breakdown.");
@@ -45,7 +45,7 @@ internal static partial class L
 
         public static readonly LocString ConsumablesGroup = new("safety.consumables.group", "Consumables");
         public static readonly LocString AutoConsume = new("safety.consumables.autoConsume", "Auto-consume food & medicine");
-        public static readonly LocString AutoConsumeHelp = new("safety.consumables.autoConsumeHelp", "Use food and medicine between marks to keep their buffs up; Well Fed alone is a free +3% EXP. Items are consumed only when out of combat, and refreshed before the buff runs out.");
+        public static readonly LocString AutoConsumeHelp = new("safety.consumables.autoConsumeHelp", "Use food and medicine in a lull between flags to keep their buffs up; Well Fed alone is a free +3% EXP. Items are consumed only out of combat, and refreshed before the buff runs out.");
         public static readonly LocString AutoConsumeOff = new("safety.consumables.autoConsumeOff", "Auto-consume is off. Enable it to pick items.");
         public static readonly LocString RefreshUnder = new("safety.consumables.refreshUnder", "Refresh when under");
         public static readonly LocString RefreshUnderHelp = new("safety.consumables.refreshUnderHelp", "Re-consume once the buff has fewer than this many minutes left. 0 only re-applies after it fully wears off. A meal lasts 30 minutes.");
@@ -67,52 +67,22 @@ internal static partial class L
         public static readonly LocString Medicated = new("safety.consumables.medicated", "Medicated");
         public static readonly LocString NoneInBagShort = new("safety.consumables.noneInBagShort", "{0}, none in bag");
 
-        public static readonly LocString HumanizerBreaks = new("safety.humanizer.breaks", "Breaks");
-        public static readonly LocString HumanizerEnable = new("safety.humanizer.enable", "Take periodic city breaks");
-        public static readonly LocString HumanizerEnableHelp = new("safety.humanizer.enableHelp", "Every N marks, teleport to a random selected city and wander around for a few minutes before resuming. Helps you avoid player reports by acting a little more human, useful when you leave the PC running for long sessions and don't want others noticing you hunting non-stop.");
-        public static readonly LocString HumanizerOff = new("safety.humanizer.off", "Humanizer is off. Enable it to configure breaks.");
-        public static readonly LocString MarksBetween = new("safety.humanizer.marksBetween", "Marks between breaks");
-        public static readonly LocString MarksBetweenHelp = new("safety.humanizer.marksBetweenHelp", "Take a break after this many mark kills. The count starts over after each break, and whenever a run starts or resumes.");
-        public static readonly LocString MarksFormat = new("safety.humanizer.marksFormat", "%d marks");
-        public static readonly LocString BreakLength = new("safety.humanizer.breakLength", "Break length");
-        public static readonly LocString BreakLengthHelp = new("safety.humanizer.breakLengthHelp", "A random duration between these two values is rolled for each break.");
-        public static readonly LocString MinutesFormat = new("safety.humanizer.minutesFormat", "%d min");
-        public static readonly LocString HumanizerWandering = new("safety.humanizer.wandering", "Wandering");
-        public static readonly LocString PauseBetween = new("safety.humanizer.pauseBetween", "Pause between walks");
-        public static readonly LocString PauseBetweenHelp = new("safety.humanizer.pauseBetweenHelp", "After arriving at each random point, stand still for a random duration in this range before walking somewhere else.");
-        public static readonly LocString SecondsFormat = new("safety.humanizer.secondsFormat", "%d s");
-        public static readonly LocString WalkDistance = new("safety.humanizer.walkDistance", "Walk distance");
-        public static readonly LocString WalkDistanceHelp = new("safety.humanizer.walkDistanceHelp", "Each random destination is rolled this many meters away from your current position. Larger ranges cover more of the city; smaller ranges keep you near the aetheryte.");
-        public static readonly LocString MetersFormat = new("safety.humanizer.metersFormat", "%d m");
-        public static readonly LocString HumanizerCities = new("safety.humanizer.cities", "Cities");
-        public static readonly LocString AllowedCities = new("safety.humanizer.allowedCities", "Allowed cities");
-        public static readonly LocString AllowedCitiesHelp = new("safety.humanizer.allowedCitiesHelp", "Tick the cities the plugin is allowed to teleport to. One is picked at random each break. Untick cities you haven't unlocked or don't want visited.");
-        public static readonly LocString NoCities = new("safety.humanizer.noCities", "No cities selected, so the Humanizer skips the break and keeps hunting.");
+        public static readonly LocString MinutesFormat = new("safety.minutesFormat", "%d min");
+        public static readonly LocString SecondsFormat = new("safety.secondsFormat", "%d s");
 
-        public static readonly LocString InvitesDecline = new("safety.invites.decline", "Decline");
-        public static readonly LocString AutoDecline = new("safety.invites.autoDecline", "Auto-decline party invites");
-        public static readonly LocString AutoDeclineHelp = new("safety.invites.autoDeclineHelp", "While a hunt is running, automatically decline incoming party invites after a short random delay. Invites that arrive while idle or playing manually are left alone for you to handle.");
-        public static readonly LocString AutoDeclineOff = new("safety.invites.autoDeclineOff", "Auto-decline is off. Enable it to configure it.");
-        public static readonly LocString DeclineDelay = new("safety.invites.delay", "Decline delay");
-        public static readonly LocString DeclineDelayHelp = new("safety.invites.delayHelp", "Wait a random time in this range before declining, so it looks like you noticed the popup and dismissed it yourself.");
-        public static readonly LocString InvitesReply = new("safety.invites.reply", "Reply");
-        public static readonly LocString SendReply = new("safety.invites.sendReply", "Send a reply");
-        public static readonly LocString SendReplyHelp = new("safety.invites.sendReplyHelp", "After declining, send a chat message so it reads like a polite human brush-off rather than an instant silent decline.");
-        public static readonly LocString ReplyChannel = new("safety.invites.channel", "Reply channel");
-        public static readonly LocString ReplyChannelHelp = new("safety.invites.channelHelp", "Where the message goes. \"Tell inviter\" whispers the person who invited you. Ignored when your message starts with a slash command.");
-        public static readonly LocString ChannelTellName = new("safety.invites.channelTell.name", "Tell inviter");
-        public static readonly LocString ChannelTellDetail = new("safety.invites.channelTell.detail", "Whisper the person who invited you.");
-        public static readonly LocString ChannelSayName = new("safety.invites.channelSay.name", "Say");
-        public static readonly LocString ChannelSayDetail = new("safety.invites.channelSay.detail", "Local /say, heard by players near you.");
-        public static readonly LocString ChannelYellName = new("safety.invites.channelYell.name", "Yell");
-        public static readonly LocString ChannelYellDetail = new("safety.invites.channelYell.detail", "Zone-wide /yell.");
-        public static readonly LocString ReplyMessage = new("safety.invites.message", "Reply message");
-        public static readonly LocString ReplyMessageHelp = new("safety.invites.messageHelp", "Use {name} for the inviter's character name and {world} for their home world. If the message begins with \"/\", it's sent verbatim as a command (e.g. /tell {name}@{world} busy right now!).");
-        public static readonly LocString ReplyMessageHint = new("safety.invites.messageHint", "Sorry {name}, I'm busy right now!");
+        public static readonly LocString PartyGroup = new("safety.party.group", "Train party");
+        public static readonly LocString AcceptInvites = new("safety.party.accept", "Accept party invites");
+        public static readonly LocString AcceptInvitesHelp = new("safety.party.acceptHelp", "While a ride is running, accept party invites on their own. Nothing is accepted while you are already in a party, while the ride is paused, or while a data center transfer is pending, and invites outside a ride are left to you.");
+        public static readonly LocString LookingForGroup = new("safety.party.lfg", "Post looking for group");
+        public static readonly LocString LookingForGroupHelp = new("safety.party.lfgHelp", "Once per ride, after arriving at the train's start and while not in a party, send one line in Shout asking for a party.");
+        public static readonly LocString LookingForGroupText = new("safety.party.lfgText", "Shout text");
+        public static readonly LocString LookingForGroupTextHelp = new("safety.party.lfgTextHelp", "The line sent in Shout. Keep it short; an empty text sends nothing.");
+        public static readonly LocString LeaveParty = new("safety.party.leave", "Leave the party after the ride");
+        public static readonly LocString LeavePartyHelp = new("safety.party.leaveHelp", "When a ride ends on its own, leave the party before the way home. A party you were in before the ride started is kept. Before a data center transfer the party is always left, since the game refuses the transfer otherwise.");
 
         public static readonly LocString GmAlerts = new("safety.gm.alerts", "Alerts");
-        public static readonly LocString GmStopRun = new("safety.gm.stopRun", "Stop the run");
-        public static readonly LocString GmStopRunHelp = new("safety.gm.stopRunHelp", "Halt automation immediately when a GM appears nearby. Strongly recommended; the rest of the alerts are useless if the bot keeps hunting.");
+        public static readonly LocString GmStopRun = new("safety.gm.stopRun", "Stop the ride");
+        public static readonly LocString GmStopRunHelp = new("safety.gm.stopRunHelp", "End the ride at once when a GM appears nearby. It is recorded as stopped, and nothing runs after it: no way home and no after-ride action. Strongly recommended; the other alerts are little use if the ride keeps going.");
         public static readonly LocString GmToast = new("safety.gm.toast", "Toast notification");
         public static readonly LocString GmToastHelp = new("safety.gm.toastHelp", "Pop a Dalamud toast: \"GM <name> is nearby!\"");
         public static readonly LocString GmChat = new("safety.gm.chat", "Chat alert");

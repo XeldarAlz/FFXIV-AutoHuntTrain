@@ -59,11 +59,10 @@ internal static class ActionDock
         }
     }
 
-    // Stays disabled until the ride task exists; the reason under the button says why.
     private static void DrawStart(float innerWidth)
     {
         var readiness = HuntLauncher.Assess();
-        if (StartButton.Draw(HuntLauncher.Sublabel(), enabled: false, HuntLauncher.Reason(readiness), innerWidth))
+        if (StartButton.Draw(HuntLauncher.Sublabel(), readiness == HuntLauncher.Readiness.Ready, HuntLauncher.Reason(readiness), innerWidth))
         {
             HuntLauncher.Start();
         }

@@ -16,6 +16,7 @@ internal static class MiniPlayer
     private const float ButtonGap = 8f;
     private const float BarWidth = 160f;
     private const float BarHeight = 8f;
+    private const float CreditedGap = 12f;
 
     public static bool Draw(Plugin plugin, Vector2 size, float windowRounding)
     {
@@ -57,14 +58,16 @@ internal static class MiniPlayer
         }
 
         var textX = origin.X + padX + 22f * scale;
-        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.PhaseLabel(controller.Phase);
+        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.ActivityLabel(controller);
         var phaseSize = TextDraw.SmallCapsSize(phase);
         var lineHeight = ImGui.GetTextLineHeight();
         var gap = 2f * scale;
         var top = midY - (phaseSize.Y + gap + lineHeight) * 0.5f;
         TextDraw.SmallCaps(phase, new Vector2(textX, top), info.AccentSoft);
-        var detail = CurrentMark.TryGet(controller, out var mark) ? mark.Line : controller.Status;
-        TextDraw.At(TextDraw.Truncate(detail, barX - 16f * scale - textX), new Vector2(textX, top + phaseSize.Y + gap), Styling.TextStrong);
+        var textRight = barX - 16f * scale;
+        DrawCredited(controller, textX + phaseSize.X + CreditedGap * scale, textRight, top, phaseSize.Y);
+        var detail = ReadyState.ActivityDetail(controller);
+        TextDraw.At(TextDraw.Truncate(detail, textRight - textX), new Vector2(textX, top + phaseSize.Y + gap), Styling.TextStrong);
 
         var resumeBlocked = controller.Paused && controller.PauseReason == PauseReason.InContent;
         ImGui.SetCursorScreenPos(new Vector2(end.X - padX - buttonSize * 2f - ButtonGap * scale, midY - buttonSize * 0.5f));
@@ -85,5 +88,21 @@ internal static class MiniPlayer
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(size);
         return hit.Clicked;
+    }
+
+    // The credited tally ends the phase line, right-aligned, when it fits beside the phase.
+    private static void DrawCredited(AutoHuntController controller, float leftX, float rightX, float top, float lineHeight)
+    {
+        var text = CreditedLine.Get(controller.Progress);
+        using (Fonts.PushCaption())
+        {
+            var textSize = TextDraw.Measure(text);
+            if (leftX + textSize.X > rightX)
+            {
+                return;
+            }
+
+            TextDraw.At(text, new Vector2(rightX - textSize.X, top + (lineHeight - textSize.Y) * 0.5f), Styling.TextMuted);
+        }
     }
 }

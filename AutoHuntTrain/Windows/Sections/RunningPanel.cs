@@ -17,11 +17,12 @@ internal static class RunningPanel
     // Sized to sit on a line of body text.
     private const float InlineRankSize = 18f;
     private const float RankGap = 8f;
+    private const float ConductorLineGap = 4f;
     private const int TileCount = 3;
 
     private static uint cachedTerritoryId = uint.MaxValue;
     private static string cachedZoneName = string.Empty;
-    private static CachedText creditedText;
+    private static CachedText progressText;
 
     public static void Draw(AutoHuntController controller)
     {
@@ -81,20 +82,35 @@ internal static class RunningPanel
         var padX = PadX * scale;
         var ringRadius = size.Y * 0.5f - 18f * scale;
         var ringCenter = new Vector2(origin.X + padX + ringRadius, origin.Y + size.Y * 0.5f);
-        DrawRideRing(ringCenter, ringRadius, accent, active);
+        var progress = controller.Progress;
+        DrawRideRing(ringCenter, ringRadius, accent, active, progress);
 
         var columnX = ringCenter.X + ringRadius + 20f * scale;
         var columnWidth = end.X - padX - columnX;
         var y = origin.Y + 16f * scale;
 
         y += DrawPhaseChip(columnX, y, label, accent, accentSoft) + 10f * scale;
-        y = CurrentMark.TryGet(controller, out var mark)
-            ? DrawMark(mark, controller.Status, columnX, columnWidth, y)
-            : DrawStatus(controller.Status, columnX, columnWidth, y);
+        if (CurrentMark.TryGet(controller, out var mark))
+        {
+            y = DrawMark(mark, controller.Status, columnX, columnWidth, y);
+        }
+        else if (CurrentFlag.TryGet(controller, out var flag))
+        {
+            y = DrawFlag(flag, controller.Status, columnX, columnWidth, y);
+        }
+        else
+        {
+            y = DrawStatus(controller.Status, columnX, columnWidth, y);
+        }
 
+        // While a mark is fought the bar is its health.
         var barHeight = 8f * scale;
         var barOrigin = new Vector2(columnX, y);
-        if (active)
+        if (active && progress.HasMarkHealth)
+        {
+            Paint.Bar(drawList, barOrigin, columnWidth, barHeight, progress.MarkHealth, accent);
+        }
+        else if (active)
         {
             Paint.IndeterminateBar(drawList, barOrigin, columnWidth, barHeight, accent);
         }
@@ -106,7 +122,9 @@ internal static class RunningPanel
         y += barHeight + 8f * scale;
         using (Fonts.PushCaption())
         {
-            TextDraw.At(Credited(controller), new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
+            TextDraw.At(ProgressLine(progress), new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
+            y += ImGui.GetTextLineHeight() + ConductorLineGap * scale;
+            TextDraw.At(TextDraw.Truncate(ConductorLine.Get(progress), columnWidth), new Vector2(columnX, y), Styling.TextDim);
         }
 
         ImGui.Dummy(size);
@@ -138,6 +156,21 @@ internal static class RunningPanel
         return y + 10f * scale;
     }
 
+    private static float DrawFlag(in CurrentFlag.View flag, string status, float x, float width, float y)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        TextDraw.At(TextDraw.Truncate(flag.Line, width), new Vector2(x, y), Styling.TextStrong);
+        y += ImGui.GetTextLineHeight() + 3f * scale;
+
+        using (Fonts.PushCaption())
+        {
+            TextDraw.At(TextDraw.Truncate(status, width), new Vector2(x, y), Styling.TextMuted);
+            y += ImGui.GetTextLineHeight();
+        }
+
+        return y + 10f * scale;
+    }
+
     private static float DrawRankBadge(HuntMarkRank? rank, float leftX, float midY)
     {
         if (rank is not { } markRank)
@@ -148,11 +181,17 @@ internal static class RunningPanel
         return RankBadge.Draw(ImGui.GetWindowDrawList(), markRank, leftX, midY, InlineRankSize) + RankGap * ImGuiHelpers.GlobalScale;
     }
 
-    // A ride has no fixed number of marks to fill a ring with, so the ring only shows that it is moving.
-    private static void DrawRideRing(Vector2 center, float radius, Vector4 accent, bool active)
+    // The ring fills with the marks credited once the ride knows how many its expansion has; until then it only shows
+    // that the ride is moving.
+    private static void DrawRideRing(Vector2 center, float radius, Vector4 accent, bool active, RideProgress progress)
     {
         var thickness = 6f * ImGuiHelpers.GlobalScale;
         ProgressRing.Track(center, radius, thickness, Styling.WithAlpha(Styling.BorderDim, 0.7f));
+        if (progress.ExpectedMarks > 0)
+        {
+            ProgressRing.Fill(center, radius, thickness, progress.MarksCredited / (float)progress.ExpectedMarks, Styling.WithAlpha(accent, 0.85f));
+        }
+
         if (active)
         {
             ProgressRing.Sweep(center, radius, thickness, accent, Styling.PulseOrbit, MathF.PI * 0.6f, 1f);
@@ -161,10 +200,17 @@ internal static class RunningPanel
         ProgressRing.CenterIcon(center, FontAwesomeIcon.Train, Styling.TextDim, radius * 0.55f);
     }
 
-    private static string Credited(AutoHuntController controller)
+    // Flags followed and marks credited, rebuilt only when a count changes.
+    private static string ProgressLine(RideProgress progress)
     {
-        var credited = controller.SessionSnapshot?.MarksCredited ?? 0;
-        return creditedText.Get(credited, static key => Loc.Plural(L.Run.MarksCredited, (int)key));
+        var flags = progress.FlagsFollowed;
+        var key = ((long)flags << 40) | ((long)progress.ExpectedMarks << 20) | (uint)progress.MarksCredited;
+        if (progressText.TryGet(key, out var line))
+        {
+            return line;
+        }
+
+        return progressText.Set(key, Loc.T(L.Ride.ProgressLine, Loc.Plural(L.Ride.FlagsFollowed, flags), CreditedLine.Get(progress)));
     }
 
     private static float DrawPhaseChip(float x, float y, string text, Vector4 accent, Vector4 accentSoft)
@@ -205,7 +251,8 @@ internal static class RunningPanel
             HuntPhase.Fighting  => (Styling.AccentGlow, Styling.AccentGlowSoft, Loc.T(L.Run.PhaseFighting)),
             HuntPhase.Finishing => (Styling.AccentMint,  Styling.AccentMintSoft,  Loc.T(L.Run.PhaseFinishing)),
             HuntPhase.Idle      => (Styling.TextDim,     Styling.TextSecondary,   Loc.T(L.Run.PhaseStandingBy)),
-            _                   => (Styling.AccentBlue,  Styling.AccentBlueSoft,  ReadyState.PhaseLabel(controller.Phase)),
+            HuntPhase.Waiting   => (Styling.TextDim,     Styling.TextSecondary,   ReadyState.ActivityLabel(controller)),
+            _                   => (Styling.AccentBlue,  Styling.AccentBlueSoft,  ReadyState.ActivityLabel(controller)),
         };
     }
 

@@ -17,8 +17,13 @@ internal sealed class HistoryPage
     private const float IconColumn = 18f;
     private const float ConfirmSlide = 12f;
     private const string NoValue = "-";
+    private const float BadgeGap = 6f;
 
     private bool confirmClear;
+    private CachedText finishedText;
+    private CachedText perRideText;
+    private CachedText nutsText;
+    private CachedText topWorldText;
 
     public void Draw(Plugin plugin)
     {
@@ -29,7 +34,7 @@ internal sealed class HistoryPage
             : Loc.Plural(L.History.Summary, history.Records.Count, Formatting.Elapsed(totals.Duration), totals.MarksPerHour.ToString("F1", Loc.Culture));
         PageHeader.Draw(Loc.T(L.History.Title), subtitle);
 
-        DrawLifetime(totals);
+        DrawLifetime(totals, history.Revision);
         Styling.VSpace(14f);
 
         if (history.Records.Count == 0)
@@ -63,19 +68,35 @@ internal sealed class HistoryPage
         ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, size.Y + 8f * scale));
     }
 
-    private static void DrawLifetime(RunHistory.LifetimeTotals totals)
+    // The captions are rebuilt only when the history changes; the revision is their cache key.
+    private void DrawLifetime(RunHistory.LifetimeTotals totals, int revision)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var gap = 8f * scale;
         var tileWidth = (ImGui.GetContentRegionAvail().X - gap * (TileCount - 1)) / TileCount;
+        var finished = totals.Runs > 0 ? finishedText.Get(revision, static _ => Loc.T(L.History.TileFinished, Plugin.Instance.History.Lifetime.Finished)) : null;
+        var perRide = totals.Runs > 0 ? perRideText.Get(revision, static _ => Loc.T(L.History.TilePerRide, Plugin.Instance.History.Lifetime.MarksPerRun.ToString("F1", Loc.Culture))) : null;
+        var nuts = totals.Nuts > 0 ? nutsText.Get(revision, static _ => Loc.Plural(L.History.TileNutsCount, Plugin.Instance.History.Lifetime.Nuts)) : null;
+        var topWorld = totals.TopWorld is null ? NoValue : topWorldText.Get(revision, static _ => WhereText(Plugin.Instance.History.Lifetime.TopWorld!, Plugin.Instance.History.Lifetime.TopDataCenter ?? string.Empty));
+        var topGroup = totals.TopGroup is { } group ? GroupLabels.Name(group) : null;
 
-        StatTile.Draw(Loc.T(L.History.TileRuns), totals.Runs.ToString("N0", Loc.Culture), null, Styling.AccentGlow, tileWidth);
+        StatTile.Draw(Loc.T(L.History.TileRuns), totals.Runs.ToString("N0", Loc.Culture), finished, Styling.AccentGlow, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.History.TileMarks), totals.Marks.ToString("N0", Loc.Culture), null, Styling.AccentBlue, tileWidth);
+        StatTile.Draw(Loc.T(L.History.TileMarks), totals.Marks.ToString("N0", Loc.Culture), perRide, Styling.AccentBlue, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.History.TileSeals), totals.Seals.ToString("N0", Loc.Culture), null, Styling.AccentAmber, tileWidth);
+        StatTile.Draw(Loc.T(L.History.TileSeals), totals.Seals.ToString("N0", Loc.Culture), nuts, Styling.AccentAmber, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.History.TileNuts), totals.Nuts.ToString("N0", Loc.Culture), null, Styling.AccentNebula, tileWidth);
+        StatTile.Draw(Loc.T(L.History.TileTopWorld), topWorld, topGroup, Styling.AccentNebula, tileWidth);
+    }
+
+    private static string WhereText(string world, string dataCenter)
+    {
+        if (world.Length == 0)
+        {
+            return NoValue;
+        }
+
+        return dataCenter.Length == 0 ? world : Loc.T(L.History.WorldAndDataCenter, world, dataCenter);
     }
 
     private static void DrawEmptyState()
@@ -185,9 +206,8 @@ internal sealed class HistoryPage
         var midY = origin.Y + size.Y * 0.5f;
         var textX = DrawRideIcon(origin.X + padX, midY);
         var when = RelativeTime(record.EndedAtUtc);
-        var world = record.WorldName.Length == 0 ? NoValue : record.WorldName;
         var job = string.IsNullOrEmpty(record.JobAbbreviation) ? NoValue : record.JobAbbreviation;
-        var detail = Loc.T(L.History.RowDetail, world, job, Formatting.Elapsed(record.Duration));
+        var detail = Loc.T(L.History.RowDetail, WhereText(record.WorldName, record.DataCenterName), job, Formatting.Elapsed(record.Duration));
 
         var whenSize = TextDraw.Measure(when);
         Vector2 detailSize;
@@ -198,6 +218,7 @@ internal sealed class HistoryPage
 
         var top = midY - (whenSize.Y + 3f * scale + detailSize.Y) * 0.5f;
         TextDraw.At(when, new Vector2(textX, top), Styling.TextStrong);
+        DrawRowBadges(drawList, record, textX + whenSize.X + BadgeGap * 2f * scale, top + whenSize.Y * 0.5f);
         using (Fonts.PushCaption())
         {
             TextDraw.At(detail, new Vector2(textX, top + whenSize.Y + 3f * scale), Styling.TextDim);
@@ -216,6 +237,38 @@ internal sealed class HistoryPage
             Tooltip.Show(RunTooltip(record));
         }
     }
+
+    private static void DrawRowBadges(ImDrawListPtr drawList, RunRecord record, float x, float midY)
+    {
+        var gap = BadgeGap * ImGuiHelpers.GlobalScale;
+        if (record.Outcome is { } outcome)
+        {
+            x += Badge.DrawLeft(drawList, OutcomeLabel(outcome), OutcomeColor(outcome), x, midY) + gap;
+        }
+
+        if (record.ResolveGroup() is { } group)
+        {
+            Badge.DrawLeft(drawList, GroupLabels.Name(group), GroupLabels.Color(group), x, midY);
+        }
+    }
+
+    private static string OutcomeLabel(RideOutcome outcome) => outcome switch
+    {
+        RideOutcome.AllCredited => Loc.T(L.History.OutcomeAllCredited),
+        RideOutcome.ConductorQuiet => Loc.T(L.History.OutcomeConductorQuiet),
+        RideOutcome.Stopped => Loc.T(L.History.OutcomeStopped),
+        RideOutcome.Abandoned => Loc.T(L.History.OutcomeAbandoned),
+        _ => Loc.T(L.History.OutcomeFaulted),
+    };
+
+    private static Vector4 OutcomeColor(RideOutcome outcome) => outcome switch
+    {
+        RideOutcome.AllCredited => Styling.AccentMint,
+        RideOutcome.ConductorQuiet => Styling.AccentBlue,
+        RideOutcome.Stopped => Styling.TextDim,
+        RideOutcome.Abandoned => Styling.AccentAmber,
+        _ => Styling.AccentRose,
+    };
 
     // Returns where the row's text starts; the icon is centred in a fixed column so every row's text lines up.
     private static float DrawRideIcon(float x, float midY)
@@ -251,6 +304,11 @@ internal sealed class HistoryPage
         if (record.WorldName.Length > 0)
         {
             lines += "\n" + Loc.T(L.History.TooltipWorld, record.WorldName, record.DataCenterName.Length == 0 ? NoValue : record.DataCenterName);
+        }
+
+        if (record.CrossedDataCenter)
+        {
+            lines += "\n" + Loc.T(L.History.TooltipCrossed);
         }
 
         return lines;

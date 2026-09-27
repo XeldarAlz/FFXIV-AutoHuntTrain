@@ -1,9 +1,11 @@
 using AutoHuntTrain.Core.External;
+using AutoHuntTrain.Core.Ipc;
 using AutoHuntTrain.Core.Travel;
 using ECommons.DalamudServices;
 using System.Globalization;
 using System.Numerics;
 using System.Threading.Tasks;
+using Automation = clib.Services.Automation;
 
 namespace AutoHuntTrain.Core.Tasks;
 
@@ -11,33 +13,31 @@ internal sealed class AutoGoto(uint territoryId, Vector3 destination) : AutoComm
 {
     private const float ArriveWithinMeters = 3f;
     private const string StopArgument = "stop";
-    private const string Usage = AhtConstants.LogPrefix + " Usage: /aht goto <territoryId> <x> <y> <z>, or /aht goto stop.";
+    private const string HomeArgument = "home";
+    private const char InstancePrefix = 'i';
+    private const int InstanceTokenLength = 2;
+    private const int CoordinateFormTokens = 4;
+    private const string Usage = AhtConstants.LogPrefix + " Usage: /aht goto <territoryId> <x> <y> <z>, /aht goto <world> [<aetheryte>] [i<n>], /aht goto home, or /aht goto stop.";
 
-    private static readonly char[] ArgumentSeparators = [' ', ','];
+    private static readonly char[] CoordinateSeparators = [' ', ','];
+    private static readonly char[] WordSeparators = [' '];
 
     public static void HandleCommand(string arguments, bool huntRunning)
     {
         var automation = clib.Services.Svc.Automation;
         if (arguments.Equals(StopArgument, StringComparison.OrdinalIgnoreCase))
         {
-            if (automation.CurrentTask is not AutoGoto)
-            {
-                Svc.Chat.Print($"{AhtConstants.LogPrefix} No goto is running.");
-                return;
-            }
-
-            automation.Stop();
-            Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto stopped.");
+            Stop(automation);
             return;
         }
 
-        if (!TryParse(arguments, out var territoryId, out var destination))
+        if (arguments.Length == 0)
         {
             Svc.Chat.PrintError(Usage);
             return;
         }
 
-        if (automation.CurrentTask is AutoGoto)
+        if (automation.CurrentTask is AutoGoto or AutoJourney)
         {
             Svc.Chat.PrintError($"{AhtConstants.LogPrefix} A goto is already running. /aht goto stop cancels it.");
             return;
@@ -45,7 +45,7 @@ internal sealed class AutoGoto(uint territoryId, Vector3 destination) : AutoComm
 
         if (huntRunning)
         {
-            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Stop the hunt before using goto.");
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Stop the ride before using goto.");
             return;
         }
 
@@ -55,8 +55,19 @@ internal sealed class AutoGoto(uint territoryId, Vector3 destination) : AutoComm
             return;
         }
 
-        Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto: heading to {TerritoryNames.Of(territoryId)} ({territoryId}) at {destination.X:F1}, {destination.Y:F1}, {destination.Z:F1}.");
-        automation.Start(new AutoGoto(territoryId, destination));
+        if (arguments.Equals(HomeArgument, StringComparison.OrdinalIgnoreCase))
+        {
+            StartHomeTrip();
+            return;
+        }
+
+        if (char.IsAsciiDigit(arguments[0]))
+        {
+            StartPointTrip(arguments, automation);
+            return;
+        }
+
+        StartWorldTrip(arguments);
     }
 
     protected override async Task Execute()
@@ -88,12 +99,121 @@ internal sealed class AutoGoto(uint territoryId, Vector3 destination) : AutoComm
         }
     }
 
-    private static bool TryParse(string arguments, out uint territoryId, out Vector3 destination)
+    private static void Stop(Automation automation)
+    {
+        if (automation.CurrentTask is not (AutoGoto or AutoJourney))
+        {
+            Svc.Chat.Print($"{AhtConstants.LogPrefix} No goto is running.");
+            return;
+        }
+
+        var journey = automation.CurrentTask is AutoJourney;
+        automation.Stop();
+        if (!journey)
+        {
+            Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto stopped.");
+            return;
+        }
+
+        // The player's stop ends the journey for good, so a later login must not pick it up again.
+        Plugin.Instance.Configuration.ClearPendingJourney();
+        var lifestream = LifestreamIPC.Instance;
+        if (!lifestream.IsBusy())
+        {
+            Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto stopped.");
+            return;
+        }
+
+        lifestream.Abort();
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto stopped; Lifestream's travel was aborted with it.");
+    }
+
+    private static void StartPointTrip(string arguments, Automation automation)
+    {
+        if (!TryParsePoint(arguments, out var territoryId, out var destination))
+        {
+            Svc.Chat.PrintError(Usage);
+            return;
+        }
+
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto: heading to {TerritoryNames.Of(territoryId)} ({territoryId}) at {destination.X:F1}, {destination.Y:F1}, {destination.Z:F1}.");
+        automation.Start(new AutoGoto(territoryId, destination));
+    }
+
+    private static void StartHomeTrip()
+    {
+        if (!Worlds.TryHome(out var home))
+        {
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The home world could not be read; is a character logged in?");
+            return;
+        }
+
+        if (Worlds.TryCurrent(out var current) && current.Id == home.Id)
+        {
+            Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto: already on the home world, {home.Name}.");
+            return;
+        }
+
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto: heading home to {home.Name} ({home.DataCenterName}).");
+        AutoJourney.Start(JourneyPlan.Home(home.Name));
+    }
+
+    // The first word is the world, a trailing i<n> is the instance, and whatever sits between is the aetheryte's name.
+    private static void StartWorldTrip(string arguments)
+    {
+        var words = arguments.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);
+        if (!Worlds.TryFind(words[0], out var world))
+        {
+            Svc.Chat.PrintError($"{AhtConstants.LogPrefix} No world matches '{words[0]}'.");
+            return;
+        }
+
+        var instance = 0;
+        var nameEnd = words.Length;
+        if (words.Length > 1 && TryParseInstance(words[^1], out instance))
+        {
+            nameEnd--;
+        }
+
+        var aetheryteId = 0u;
+        var territoryId = 0u;
+        var stop = string.Empty;
+        if (nameEnd > 1)
+        {
+            var name = string.Join(' ', words, 1, nameEnd - 1);
+            if (!ZoneAetherytes.TryFindByName(name, out territoryId, out var aetheryte))
+            {
+                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} No single aetheryte matches '{name}'.");
+                return;
+            }
+
+            aetheryteId = aetheryte.Id;
+            stop = $", {aetheryte.Name} in {TerritoryNames.Of(territoryId)}";
+        }
+
+        var instanceText = instance > 0 ? $", instance {instance}" : string.Empty;
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Goto: heading to {world.Name} ({world.DataCenterName}){stop}{instanceText}.");
+        AutoJourney.Start(JourneyPlan.ToWorld(world.Name, aetheryteId, territoryId, instance));
+    }
+
+    internal static bool TryParseInstance(string token, out int instance)
+    {
+        instance = 0;
+        if (token.Length != InstanceTokenLength || char.ToLowerInvariant(token[0]) != InstancePrefix || !char.IsAsciiDigit(token[1]))
+        {
+            return false;
+        }
+
+        instance = token[1] - '0';
+        return instance > 0;
+    }
+
+    private static bool TryParsePoint(string arguments, out uint territoryId, out Vector3 destination)
     {
         territoryId = 0;
         destination = default;
-        var parts = arguments.Split(ArgumentSeparators, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 4)
+        var parts = arguments.Split(CoordinateSeparators, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != CoordinateFormTokens)
         {
             return false;
         }

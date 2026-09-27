@@ -1,6 +1,3 @@
-using AutoHuntTrain.Core.Travel;
-using Newtonsoft.Json;
-
 namespace AutoHuntTrain;
 
 public sealed partial class Configuration
@@ -16,25 +13,16 @@ public sealed partial class Configuration
     public int AutoConsumeMinMinutes { get; set; } = 3;
     public List<ConsumableEntry> AutoConsumeItems { get; set; } = [];
 
-    public bool HumanizerEnabled { get; set; } = false;
-    public int HumanizerMarksBeforeBreak { get; set; } = 30;
-    public int HumanizerBreakMinMinutes { get; set; } = 5;
-    public int HumanizerBreakMaxMinutes { get; set; } = 10;
-    public int HumanizerPauseMinSeconds { get; set; } = 3;
-    public int HumanizerPauseMaxSeconds { get; set; } = 8;
-    public int HumanizerWanderMinMeters { get; set; } = 25;
-    public int HumanizerWanderMaxMeters { get; set; } = 80;
+    // A conductor posts the next flag within seconds of a kill, so a lull shorter than this is not one.
+    public const int UpkeepQuietSecondsMin = 20;
 
-    // Replace, because by default the loader adds the saved cities into this pre-filled set and every unticked city would come back.
-    [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-    public HashSet<uint> HumanizerCities { get; set; } = BreakCities.NewDefaultSelection();
+    // How long a ride waits with no new flag before it repairs or eats.
+    public int UpkeepQuietSeconds { get; set; } = UpkeepQuietSecondsMin;
 
-    public bool DeclinePartyInvites { get; set; } = false;
-    public int DeclineInviteDelayMinSeconds { get; set; } = 2;
-    public int DeclineInviteDelayMaxSeconds { get; set; } = 6;
-    public bool DeclineInviteReply { get; set; } = false;
-    public PartyInviteReplyChannel DeclineInviteReplyChannel { get; set; } = PartyInviteReplyChannel.Tell;
-    public string DeclineInviteReplyMessage { get; set; } = "";
+    public bool AcceptPartyInvites { get; set; } = true;
+    public bool PostLookingForGroup { get; set; } = false;
+    public string LookingForGroupText { get; set; } = "LFG";
+    public bool LeavePartyAfterRide { get; set; } = true;
 
     public bool GmAlertStopRun { get; set; } = true;
     public bool GmAlertToast { get; set; } = false;

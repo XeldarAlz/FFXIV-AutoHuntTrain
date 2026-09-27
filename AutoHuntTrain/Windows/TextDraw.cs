@@ -163,6 +163,8 @@ internal static class TextDraw
         At(Truncate(text, rightX - x - separatorWidth), new Vector2(x + separatorWidth, y), color);
     }
 
+    public static float TrailingWidth(string text) => Measure(Separator).X + Measure(text).X;
+
     public static void SmallCaps(string label, Vector2 pos, Vector4 color)
     {
         using (Fonts.PushCaption())

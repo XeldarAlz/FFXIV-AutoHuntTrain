@@ -27,7 +27,6 @@ internal static partial class L
         public static readonly LocString StatusRunning = new("shell.status.running", "Riding");
         public static readonly LocString StatusPaused = new("shell.status.paused", "Paused");
         public static readonly LocString StatusFeedReady = new("shell.status.feedReady", "Feed ready");
-        public static readonly LocString StatusChatOnly = new("shell.status.chatOnly", "Chat only");
         public static readonly LocString StatusSetupNeeded = new("shell.status.setupNeeded", "Setup needed");
         public static readonly LocString StatusIdle = new("shell.status.idle", "Idle");
         public static readonly LocString Minimize = new("shell.minimize", "Minimize to the title strip");
@@ -45,8 +44,6 @@ internal static partial class L
         public static readonly LocString DetailSetupNeeded = new("train.detail.setupNeeded", "Install the required plugins before your first ride.");
         public static readonly LocString TitleFeedReady = new("train.title.feedReady", "HuntAlerts is listening");
         public static readonly LocString DetailFeedReady = new("train.detail.feedReady", "Train announcements from the community feed will show up on this page.");
-        public static readonly LocString TitleChatOnly = new("train.title.chatOnly", "Chat only");
-        public static readonly LocString DetailChatOnly = new("train.detail.chatOnly", "HuntAlerts is not loaded, so a train can only be followed from a conductor's chat on your current world.");
         public static readonly LocString TitleRiding = new("train.title.riding", "Riding");
         public static readonly LocString TitlePaused = new("train.title.paused", "Paused");
         public static readonly LocString DetailPausedInContent = new("train.detail.pausedInContent", "Resumes once you leave the duty");
@@ -61,10 +58,13 @@ internal static partial class L
         public static readonly LocString Upcoming = new("train.upcoming", "Upcoming trains");
         public static readonly LocString UpcomingEmpty = new("train.upcomingEmpty", "No announcements have arrived yet. HuntAlerts provides them as trains are called.");
         public static readonly LocString Ride = new("train.ride", "Ride");
-        public static readonly LocString RideEmpty = new("train.rideEmpty", "The ride logic is not built yet. The train being ridden, its conductor and the next flag will show here.");
 
         public static readonly LocString WhenDone = new("train.whenDone", "When the ride ends");
         public static readonly LocString WhenDoneHelp = new("train.whenDoneHelp", "What to do once a ride ends on its own. A manual Stop or a fault never triggers it.");
+        public static readonly LocString ReturnHome = new("train.returnHome", "Return home after the ride");
+        public static readonly LocString ReturnHomeHelp = new("train.returnHomeHelp", "Travel back to your home world once the ride ends, crossing data centers when the train ran on another one. Off leaves you on the train's world, ready for the next one.");
+        public static readonly LocString StayForNext = new("train.stayForNext", "Stay for the next train");
+        public static readonly LocString StayForNextHelp = new("train.stayForNextHelp", "With auto-ride on, when a train on this data center that passes every rule starts within 20 minutes, skip the way home and the after-ride action and let auto-ride take it.");
         public static readonly LocString AfterStayName = new("train.after.stay.name", "Stay where you are");
         public static readonly LocString AfterStayDetail = new("train.after.stay.detail", "Just stop. You're left standing wherever the last mark fell.");
         public static readonly LocString AfterInnName = new("train.after.inn.name", "Return to the inn");
@@ -74,21 +74,13 @@ internal static partial class L
         public static readonly LocString AfterCloseName = new("train.after.close.name", "Close the game");
         public static readonly LocString AfterCloseDetail = new("train.after.close.detail", "Close FFXIV entirely (via XIVLauncher's /xlkill).");
 
-        public static readonly LocString ExpansionArr = new("train.expansion.arr", "A Realm Reborn");
-        public static readonly LocString ExpansionHw = new("train.expansion.hw", "Heavensward");
-        public static readonly LocString ExpansionSb = new("train.expansion.sb", "Stormblood");
-        public static readonly LocString ExpansionShb = new("train.expansion.shb", "Shadowbringers");
-        public static readonly LocString ExpansionEw = new("train.expansion.ew", "Endwalker");
-        public static readonly LocString ExpansionDt = new("train.expansion.dt", "Dawntrail");
-
         public static readonly LocString Start = new("train.start", "START");
         public static readonly LocString Stop = new("train.stop", "STOP");
         public static readonly LocString PauseCaps = new("train.pause", "PAUSE");
         public static readonly LocString ResumeCaps = new("train.resume", "RESUME");
         public static readonly LocString InContent = new("train.inContent", "in content");
         public static readonly LocString ReasonInstall = new("train.reason.install", "install the required plugins");
-        public static readonly LocString ReasonNotBuilt = new("train.reason.notBuilt", "the ride logic is not built yet");
-        public static readonly LocString StartSub = new("train.startSub", "no ride to start yet");
+        public static readonly LocString StartSub = new("train.startSub", "follow the conductor's flags");
         public static readonly LocString StateRunning = new("train.state.running", "riding");
         public static readonly LocString StatePaused = new("train.state.paused", "paused");
         public static readonly LocString StopSub = new("train.stopSub", "{0} · {1}");
@@ -138,6 +130,17 @@ internal static partial class L
         public static readonly LocString ClearHistory = new("history.clear", "Clear history");
         public static readonly LocString ClearQuestion = new("history.clearQuestion", "Delete all recorded rides?");
         public static readonly LocString ClearYes = new("history.clearYes", "Yes, clear");
+        public static readonly LocString WorldAndDataCenter = new("history.worldDataCenter", "{0} Â· {1}");
+        public static readonly LocString TileFinished = new("history.tile.finished", "{0} finished");
+        public static readonly LocString TilePerRide = new("history.tile.perRide", "{0} per ride");
+        public static readonly LocPlural TileNutsCount = new("history.tile.nutsCount", "{0} nut", "{0} nuts");
+        public static readonly LocString TileTopWorld = new("history.tile.topWorld", "Top world");
+        public static readonly LocString TooltipCrossed = new("history.tooltip.crossed", "Crossed data centers");
+        public static readonly LocString OutcomeAllCredited = new("history.outcome.allCredited", "All credited");
+        public static readonly LocString OutcomeConductorQuiet = new("history.outcome.conductorQuiet", "Conductor quiet");
+        public static readonly LocString OutcomeStopped = new("history.outcome.stopped", "Stopped");
+        public static readonly LocString OutcomeAbandoned = new("history.outcome.abandoned", "Abandoned");
+        public static readonly LocString OutcomeFaulted = new("history.outcome.faulted", "Error");
     }
 
     internal static class Plugins
@@ -156,7 +159,7 @@ internal static partial class L
         public static readonly LocString PurposeVnavmesh = new("plugins.purpose.vnavmesh", "Pathfinding, flying, and movement to hunt marks.");
         public static readonly LocString PurposeBossMod = new("plugins.purpose.bossMod", "Auto-rotation, targeting, and dodging while fighting marks.");
         public static readonly LocString PurposeLifestream = new("plugins.purpose.lifestream", "World, data center and instance travel to reach the train.");
-        public static readonly LocString PurposeHuntAlerts = new("plugins.purpose.huntAlerts", "Hunt train announcements from the community feed. Without it, ride by following a conductor on your current world.");
+        public static readonly LocString PurposeHuntAlerts = new("plugins.purpose.huntAlerts", "Hunt train announcements from the community feed.");
     }
 
     internal static class Log
@@ -207,9 +210,14 @@ internal static partial class L
         public static readonly LocString New = new("changelog.new", "New");
         public static readonly LocPlural Changes = new("changelog.changes", "{0} change", "{0} changes");
 
-        public static readonly LocString[] Release0100 =
+        public static readonly LocString[] Release1000 =
         [
-            new("changelog.r0100.1", "Scaffolded from Auto Hunt Grinder: the shell, console, travel and mark engine, and the release chain"),
+            new("changelog.r1000.1", "Rides hunt trains announced through HuntAlerts, with ride rules, auto-ride and snooze"),
+            new("changelog.r1000.2", "Travels to the train's world, data center and instance through Lifestream, and carries a ride across the data center relog"),
+            new("changelog.r1000.3", "Follows the conductor's map flags from Shout, Yell and Say, picking the conductor from the announcement, the first flag, or by hand"),
+            new("changelog.r1000.4", "Waits for the pull and lands a hit on each A rank for credit, never starting a pull itself"),
+            new("changelog.r1000.5", "Joins the train's party, returns home after the ride, and records every train in History"),
+            new("changelog.r1000.6", "Test commands for rides without a real train: /aht inject and /aht goto"),
         ];
     }
 
@@ -302,6 +310,8 @@ internal static partial class L
 
         public static readonly LocString CatGeneral = new("settings.cat.general", "General");
         public static readonly LocString CatGeneralSub = new("settings.cat.generalSub", "Window and behavior preferences.");
+        public static readonly LocString CatFeedSub = new("settings.cat.feedSub", "Which announced trains to ride, and how to hear about them.");
+        public static readonly LocString CatRideSub = new("settings.cat.rideSub", "Following the conductor, fighting the marks, and what happens after.");
 
         public static readonly LocString GeneralWindow = new("settings.general.window", "Window");
         public static readonly LocString OpenOnLogin = new("settings.general.openOnLogin", "Open on login");
@@ -309,11 +319,13 @@ internal static partial class L
         public static readonly LocString GeneralBehavior = new("settings.general.behavior", "Behavior");
         public static readonly LocString AutoPause = new("settings.general.autoPause", "Auto-pause in content");
         public static readonly LocString AutoPauseHelp = new("settings.general.autoPauseHelp", "Pause the ride while you are inside a duty, trial, raid, or any other instanced content, then resume it once you are back outside. Your ride and session stats are kept.");
+        public static readonly LocString PauseTyping = new("settings.general.pauseTyping", "Hold while typing");
+        public static readonly LocString PauseTypingHelp = new("settings.general.pauseTypingHelp", "While a text box of the game has focus, like the chat line, the ride starts no new move until you close it. A move already under way carries on, and the latest flag is taken once you are done.");
     }
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z> (travel to a point, goto stop cancels).");
+        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | conductor <First Last>[@World] or conductor clear (whose flags to follow) | snooze [minutes] or snooze off (suspend auto-ride) | inject <World> <DT|EW|SHB|Centurio> [aetheryte] [i<n>] [+minutes] [conductor:First Last] (a made-up announcement for testing) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z>, goto <world> [aetheryte] [i<n>] or goto home (travel helpers, goto stop cancels).");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /aht.");
     }
 }

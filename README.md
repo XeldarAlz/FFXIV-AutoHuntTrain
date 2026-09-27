@@ -20,27 +20,25 @@
 
 ## What it does
 
-Hears a hunt train being called anywhere in your region, gets your character to the start aetheryte on that world, follows the conductor's flags from mark to mark, and lands a hit on every A rank before the crowd deletes it. With no feed installed it still follows a conductor you pick on your current world.
-
-> In development. The scaffold is in place and the ride logic lands phase by phase; the first release is 1.0.0.0.
+Hears a hunt train being called anywhere in your region, gets your character to the start aetheryte on that world, follows the conductor's flags from mark to mark, and lands a hit on every A rank before the crowd deletes it.
 
 ## Features
 
 - **Rides announced trains**: subscribes to the HuntAlerts feed for train announcements across every data center in your region, with a countdown and a Ride button for each.
-- **Ride rules**: choose expansions, data centers and worlds, whether cross-data-center rides are allowed, and how much lead time a train needs before the plugin commits.
+- **Train notifications**: when a train you could ride is announced, the Train page opens by itself and the taskbar flashes while the game is in the background.
+- **Ride rules**: choose expansions and data centers, whether cross-data-center rides are allowed, and how much lead time a train on another data center needs before auto-ride commits.
 - **Gets you there**: world change, data center travel and instance switching through Lifestream, then the plugin's own teleport and flight to the start aetheryte.
 - **Follows the conductor**: reads the conductor's map flags from Shout, Yell and Say, picks the nearest aetheryte or flies when the flag is close, and understands instance numbers.
 - **Finds the conductor**: from the announcement when it names one, from the first flag posted in the start zone, or picked by hand.
 - **Hits, never leads**: dismounts at range, waits for the conductor's pull, lands a hit on the zone's A rank for credit, and never starts a pull or drags adds into the crowd.
-- **Knows when it's over**: ends the ride when the conductor calls it, the expected marks are credited, or the flags stop.
+- **Knows when it's over**: ends the ride once every A rank of the expansion is credited, or when the conductor has gone quiet.
 - **Way home**: return to your home world after the train, stay for the next one, or run the after-ride action.
 - **Recovery**: gets back up after a death and rejoins the train; re-paths, jumps, or teleports out when it gets stuck.
-- **Auto-repair**: Dark Matter first, Grand Company mender as fallback.
-- **Auto-consume**: keeps food and medicine buffs up between trains, HQ first.
-- **Humanizer**: takes random breaks between trains so long sessions look less mechanical.
-- **Pause & resume**: park a ride without losing your progress, and auto-pause while you're in a duty.
-- **Party invites**: auto-declines incoming invites during a ride after a random delay, with an optional reply message.
-- **GM alert**: stops the bot when a GM is near, with optional toast, beeps, or custom commands.
+- **Auto-repair**: Dark Matter during a lull between flags; the Grand Company mender only before a data center transfer.
+- **Auto-consume**: keeps food and medicine buffs up in the lulls between flags, HQ first.
+- **Pause & resume**: park a ride without losing your progress, auto-pause while you're in a duty, and hold new moves while you type in chat.
+- **Train party**: accepts party invites during a ride so the party shares mark credit, can shout for a group at the start, and leaves the party when the ride is over.
+- **GM alert**: ends the ride when a GM is near, with optional toast, beeps, or custom commands.
 - **History**: every train recorded with world, data center, marks credited, time on the rails, and seals earned.
 
 ## Install
@@ -53,7 +51,7 @@ https://raw.githubusercontent.com/XeldarAlz/DalamudPlugins/main/repo.json
 
 Tick **Enabled**, click **+**, then **Save and Close**. Open `/xlplugins` → **All Plugins**, search for **Auto Hunt Train**, and install.
 
-The plugin needs a few helpers for movement, combat and travel to be installed and loaded, and HuntAlerts if you want announced trains. Open `/aht deps` after install to see the list and one-click each missing one. Data center rides also need data center travel enabled in Lifestream's own settings.
+The plugin needs a few helpers to be installed and loaded: movement, combat, travel through Lifestream, and HuntAlerts for the train announcements. Open `/aht deps` after install to see the list and one-click each missing one. Data center rides also need data center travel enabled in Lifestream's own settings.
 
 ## Commands
 
@@ -68,8 +66,15 @@ The plugin needs a few helpers for movement, combat and travel to be installed a
 | `/aht changelog` | Open the Changelog page |
 | `/aht about` | Open the About page |
 | `/aht pause` | Pause or resume the current ride |
+| `/aht conductor <First Last>[@World]` | Follow this player's flags; the world defaults to yours. Alone, shows the current conductor |
+| `/aht conductor clear` | Stop following anyone |
+| `/aht snooze [<minutes>]` | Suspend auto-ride for the snooze length set in Settings, or for the minutes given |
+| `/aht snooze off` | Lift the snooze |
+| `/aht inject <World> <DT\|EW\|SHB\|Centurio> [<aetheryte>] [i<n>] [+<minutes>] [conductor:<First Last>]` | Push a made-up train announcement through the same intake as HuntAlerts, so the rules and the whole ride can be tried with no real train, e.g. `/aht inject Raiden DT Wachunpelo +5 conductor:Pandora Rainfall` (debug helper) |
 | `/aht target` | Log targeted NPC's BaseId (debug helper) |
 | `/aht goto <territory> <x> <y> <z>` | Travel to a point, `/aht goto stop` cancels (debug helper) |
+| `/aht goto <world> [<aetheryte>] [i<n>]` | Travel to a world in your region, and on it to a named aetheryte and instance, e.g. `/aht goto Zalera Wachunpelo i2` (debug helper) |
+| `/aht goto home` | Travel back to your home world (debug helper) |
 
 ## Languages
 

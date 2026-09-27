@@ -1,4 +1,6 @@
+using Dalamud.Game;
 using ECommons.DalamudServices;
+using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Numerics;
 using MapHelper = ECommons.GameHelpers.Map;
@@ -24,9 +26,59 @@ internal static class ZoneAetherytes
     private static readonly Dictionary<uint, ZoneGateway?> gatewayByTerritory = new();
     private static readonly Dictionary<uint, AethernetNode[]> aethernetByTerritory = new();
     private static AetheryteIndex? sheetIndex;
+    private static NamedAetheryte[]? namedIndex;
 
     // One pass over the sheet serves every territory, where a scan per territory would read the whole sheet each time.
     private static AetheryteIndex SheetIndex => sheetIndex ??= BuildSheetIndex();
+
+    private static NamedAetheryte[] NamedIndex => namedIndex ??= BuildNamedIndex();
+
+    private enum NameMatch : byte { Exact, Prefix, Fragment }
+
+    // A name a player typed, in the client language or in English: exact first, then a prefix, then a fragment, each
+    // accepted only when it fits a single aetheryte.
+    public static bool TryFindByName(string name, out uint territoryId, out ZoneAetheryte aetheryte)
+    {
+        territoryId = 0;
+        aetheryte = default;
+        var query = NormalizeName(name);
+        if (query.Length == 0)
+        {
+            return false;
+        }
+
+        var index = NamedIndex;
+        if (!FindUnique(index, query, NameMatch.Exact, out var found)
+            && !FindUnique(index, query, NameMatch.Prefix, out found)
+            && !FindUnique(index, query, NameMatch.Fragment, out found))
+        {
+            return false;
+        }
+
+        territoryId = found.TerritoryId;
+        aetheryte = found.Aetheryte;
+        return true;
+    }
+
+    public static bool TryFindById(uint aetheryteId, out uint territoryId, out ZoneAetheryte aetheryte)
+    {
+        var index = NamedIndex;
+        for (var entryIndex = 0; entryIndex < index.Length; entryIndex++)
+        {
+            if (index[entryIndex].Aetheryte.Id != aetheryteId)
+            {
+                continue;
+            }
+
+            territoryId = index[entryIndex].TerritoryId;
+            aetheryte = index[entryIndex].Aetheryte;
+            return true;
+        }
+
+        territoryId = 0;
+        aetheryte = default;
+        return false;
+    }
 
     // Unattuned aetherytes are skipped: a teleport to one is refused.
     public static bool TryFindNearest(uint territoryId, Vector3 target, out ZoneAetheryte nearest)
@@ -352,6 +404,86 @@ internal static class ZoneAetherytes
         return new AetheryteIndex(rowsByTerritory, primaries);
     }
 
+    private static bool FindUnique(NamedAetheryte[] index, string query, NameMatch match, out NamedAetheryte found)
+    {
+        found = default;
+        var matches = 0;
+        for (var entryIndex = 0; entryIndex < index.Length; entryIndex++)
+        {
+            var entry = index[entryIndex];
+            if (!Matches(entry.ClientKey, query, match) && !Matches(entry.EnglishKey, query, match))
+            {
+                continue;
+            }
+
+            matches++;
+            if (matches > 1)
+            {
+                return false;
+            }
+
+            found = entry;
+        }
+
+        return matches == 1;
+    }
+
+    private static bool Matches(string candidate, string query, NameMatch match) => match switch
+    {
+        NameMatch.Exact => string.Equals(candidate, query, StringComparison.OrdinalIgnoreCase),
+        NameMatch.Prefix => candidate.StartsWith(query, StringComparison.OrdinalIgnoreCase),
+        _ => candidate.Contains(query, StringComparison.OrdinalIgnoreCase),
+    };
+
+    // Game names carry the typographic apostrophe; a keyboard types the straight one.
+    private static string NormalizeName(string name) => name.Trim().Replace('’', '\'');
+
+    private static NamedAetheryte[] BuildNamedIndex()
+    {
+        var sheet = Svc.Data.GetExcelSheet<Aetheryte>();
+        var english = EnglishAetheryteSheet();
+        var found = new List<NamedAetheryte>(sheet.Count);
+        for (var rowIndex = 0; rowIndex < sheet.Count; rowIndex++)
+        {
+            var row = sheet.GetRowAt(rowIndex);
+            if (!row.IsAetheryte || row.Territory.RowId == 0)
+            {
+                continue;
+            }
+
+            var clientName = row.PlaceName.ValueNullable?.Name.ExtractText();
+            if (string.IsNullOrWhiteSpace(clientName) || !TryResolvePosition(row, out var position))
+            {
+                continue;
+            }
+
+            var englishName = english?.GetRowOrDefault(row.RowId)?.PlaceName.ValueNullable?.Name.ExtractText();
+            var stop = new ZoneAetheryte(row.RowId, clientName, position);
+            found.Add(new NamedAetheryte(row.Territory.RowId, stop, NormalizeName(clientName), NormalizeName(string.IsNullOrWhiteSpace(englishName) ? clientName : englishName)));
+        }
+
+        return found.ToArray();
+    }
+
+    // Null on an English client, where the client names already are the English ones, and on a client without English data.
+    private static ExcelSheet<Aetheryte>? EnglishAetheryteSheet()
+    {
+        if (Svc.ClientState.ClientLanguage == ClientLanguage.English)
+        {
+            return null;
+        }
+
+        try
+        {
+            return Svc.Data.GetExcelSheet<Aetheryte>(ClientLanguage.English);
+        }
+        catch (Exception exception)
+        {
+            RunLog.Debug($"English aetheryte names are unavailable on this client; matching client names only ({exception.Message})");
+            return null;
+        }
+    }
+
     private static string ResolveName(Aetheryte row)
     {
         var placeName = row.IsAetheryte ? row.PlaceName : row.AethernetName;
@@ -376,6 +508,8 @@ internal static class ZoneAetherytes
     }
 
     private readonly record struct AethernetNode(ZoneAetheryte Stop, uint PrimaryId, bool Visible);
+
+    private readonly record struct NamedAetheryte(uint TerritoryId, ZoneAetheryte Aetheryte, string ClientKey, string EnglishKey);
 
     private sealed record AetheryteIndex(Dictionary<uint, Aetheryte[]> RowsByTerritory, Dictionary<byte, uint> PrimaryByGroup);
 }

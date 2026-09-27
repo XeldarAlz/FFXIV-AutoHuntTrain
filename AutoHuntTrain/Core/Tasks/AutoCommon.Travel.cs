@@ -484,7 +484,7 @@ public abstract partial class AutoCommon
         return await TeleportToAetheryte(territoryId, chosen, $"{scope}-landmass");
     }
 
-    private async Task<bool> TeleportToAetheryte(uint territoryId, ZoneAetheryte aetheryte, string label)
+    private protected async Task<bool> TeleportToAetheryte(uint territoryId, ZoneAetheryte aetheryte, string label)
     {
         var moved = false;
         await RunWithStatusPinned($"Teleporting to {aetheryte.Name}", async () =>

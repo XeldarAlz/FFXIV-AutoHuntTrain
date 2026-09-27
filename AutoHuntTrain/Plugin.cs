@@ -1,14 +1,18 @@
 using AutoHuntTrain.Core;
 using AutoHuntTrain.Core.Debug;
+using AutoHuntTrain.Core.Feed;
 using AutoHuntTrain.Core.Game.Watchers;
 using AutoHuntTrain.Core.Kills;
 using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Tasks;
+using AutoHuntTrain.Core.Train;
 using AutoHuntTrain.Windows;
 using AutoHuntTrain.Windows.Shell;
 using clib;
 using Dalamud.Game.Command;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.IoC;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
@@ -24,7 +28,14 @@ namespace AutoHuntTrain;
 public sealed class Plugin : IDalamudPlugin
 {
     private const string GotoSubcommand = "goto";
+    private const string ConductorSubcommand = "conductor";
+    private const string SnoozeSubcommand = "snooze";
+    private const string InjectSubcommand = "inject";
     private const string NavmeshIpcProviderMarker = "Navmesh.IPCProvider";
+    private const uint OpenTrainLinkCommandId = 1;
+    // Lifestream's own budget for a data center transfer is up to an hour; a plan older than this is a leftover, not a journey in flight.
+    private static readonly TimeSpan PendingJourneyMaxAge = TimeSpan.FromMinutes(90);
+    private static readonly TimeSpan PendingRideMaxAge = TimeSpan.FromMinutes(90);
 
     [PluginService]
     internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
@@ -40,6 +51,10 @@ public sealed class Plugin : IDalamudPlugin
     internal WindowSystem WindowSystem { get; } = new("AutoHuntTrain");
     internal RunHistory History { get; }
     internal AutoHuntController Controller { get; }
+    internal FlagListener Flags { get; }
+    internal FeedListener Feed { get; }
+    internal TrainNotifier Notifier { get; }
+    internal DalamudLinkPayload OpenTrainLink { get; }
 
     private readonly DutyWatcher dutyWatcher;
     private readonly GmAlertWatcher gmAlertWatcher;
@@ -57,8 +72,12 @@ public sealed class Plugin : IDalamudPlugin
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        OpenTrainLink = Svc.Chat.AddChatLinkHandler(OpenTrainLinkCommandId, OnOpenTrainLink);
         History = new RunHistory();
         Controller = new AutoHuntController();
+        Flags = new FlagListener();
+        Feed = new FeedListener();
+        Notifier = new TrainNotifier(Feed);
         dutyWatcher = new DutyWatcher();
         gmAlertWatcher = new GmAlertWatcher();
         partyInviteWatcher = new PartyInviteWatcher();
@@ -107,9 +126,13 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(AhtConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AhtConstants.AliasCommand);
 
+        Svc.Chat.RemoveChatLinkHandler(OpenTrainLinkCommandId);
         dutyWatcher.Dispose();
         gmAlertWatcher.Dispose();
         partyInviteWatcher.Dispose();
+        Notifier.Dispose();
+        Feed.Dispose();
+        Flags.Dispose();
         Kills.Dispose();
 
         CLibMain.Dispose();
@@ -135,6 +158,8 @@ public sealed class Plugin : IDalamudPlugin
     public void ToggleLogUi() => appWindow.TogglePage(AppWindow.Page.Log);
 
     public void ToggleChangelogUi() => appWindow.TogglePage(AppWindow.Page.Changelog);
+
+    public void ShowTrainPage() => appWindow.Show(AppWindow.Page.Train);
 
     private void OnCommand(string command, string args)
     {
@@ -175,9 +200,21 @@ public sealed class Plugin : IDalamudPlugin
         {
             HuntMarkDumper.Dump();
         }
-        else if (IsGotoCommand(trimmed))
+        else if (HasSubcommand(trimmed, GotoSubcommand))
         {
             AutoGoto.HandleCommand(trimmed[GotoSubcommand.Length..].Trim(), Controller.Running);
+        }
+        else if (HasSubcommand(trimmed, ConductorSubcommand))
+        {
+            Conductor.HandleCommand(trimmed[ConductorSubcommand.Length..].Trim());
+        }
+        else if (HasSubcommand(trimmed, SnoozeSubcommand))
+        {
+            Snooze.HandleCommand(trimmed[SnoozeSubcommand.Length..].Trim());
+        }
+        else if (HasSubcommand(trimmed, InjectSubcommand))
+        {
+            FeedInjector.HandleCommand(trimmed[InjectSubcommand.Length..].Trim(), Feed);
         }
         else
         {
@@ -185,17 +222,24 @@ public sealed class Plugin : IDalamudPlugin
         }
     }
 
+    private void OnOpenTrainLink(uint commandId, SeString message) => ShowTrainPage();
+
     private void OnDraw()
     {
         WindowSystem.Draw();
         Configuration.FlushPendingSave();
     }
 
-    private void OnFrameworkUpdate(IFramework framework) => Controller.Tick();
+    private void OnFrameworkUpdate(IFramework framework)
+    {
+        Feed.Tick();
+        Notifier.Tick();
+        Controller.Tick();
+    }
 
-    private static bool IsGotoCommand(string arguments)
-        => arguments.StartsWith(GotoSubcommand, StringComparison.OrdinalIgnoreCase)
-        && (arguments.Length == GotoSubcommand.Length || char.IsWhiteSpace(arguments[GotoSubcommand.Length]));
+    private static bool HasSubcommand(string arguments, string subcommand)
+        => arguments.StartsWith(subcommand, StringComparison.OrdinalIgnoreCase)
+        && (arguments.Length == subcommand.Length || char.IsWhiteSpace(arguments[subcommand.Length]));
 
     // The navmesh plugin answers pathfind IPC on fire-and-forget tasks this plugin never gets a handle to. When one
     // faults, typically a query issued while the zone mesh is still building, the finalizer would rethrow it as noise.
@@ -248,11 +292,87 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnLogin()
     {
+        ResumePendingTravel();
         if (!Configuration.AutoShowOnLogin)
         {
             return;
         }
 
         appWindow.Show(AppWindow.Page.Train);
+    }
+
+    // A data center transfer logs the character out; when the task did not live through that, what it wrote first
+    // picks it up here: the whole ride when a ride made the transfer, else the journey alone. A task that did live
+    // through it keeps the ride and the journey for itself.
+    private void ResumePendingTravel()
+    {
+        if (Configuration.PendingRide is null && Configuration.PendingJourney is null)
+        {
+            return;
+        }
+
+        if (Controller.Running)
+        {
+            RunLog.Info("Travel is pending and a task is already running; leaving it to that task.");
+            return;
+        }
+
+        if (!ResumePendingRide())
+        {
+            ResumePendingJourney();
+        }
+    }
+
+    // A ride is rebuilt only while its journey is still pending: a ride saved without one had already arrived, and
+    // a relog after that is the player's own, not the transfer's.
+    private bool ResumePendingRide()
+    {
+        if (Configuration.PendingRide is not { } ride)
+        {
+            return false;
+        }
+
+        var age = DateTime.UtcNow - ride.SavedAtUtc;
+        if (age > PendingRideMaxAge)
+        {
+            RunLog.Info($"Dropping the saved ride to {ride.WorldName}: it was saved {age.TotalMinutes:F0} minutes ago.");
+            Configuration.ClearPendingRide();
+            return false;
+        }
+
+        if (Configuration.PendingJourney is not { ReturnTrip: false } plan || !string.Equals(plan.World, ride.WorldName, StringComparison.OrdinalIgnoreCase))
+        {
+            RunLog.Info($"Dropping the saved ride to {ride.WorldName}: no journey to it is pending.");
+            Configuration.ClearPendingRide();
+            return false;
+        }
+
+        RunLog.Info($"Resuming the ride to {ride.WorldName} after login.");
+        if (Controller.ResumeRide(ride))
+        {
+            return true;
+        }
+
+        Configuration.ClearPendingRide();
+        return false;
+    }
+
+    private void ResumePendingJourney()
+    {
+        if (Configuration.PendingJourney is not { } plan)
+        {
+            return;
+        }
+
+        var age = DateTime.UtcNow - plan.StartedAtUtc;
+        if (age > PendingJourneyMaxAge)
+        {
+            RunLog.Info($"Dropping the pending journey to {plan.World}: it started {age.TotalMinutes:F0} minutes ago.");
+            Configuration.ClearPendingJourney();
+            return;
+        }
+
+        RunLog.Info($"Resuming the journey to {plan.World} after login.");
+        AutoJourney.Resume(plan);
     }
 }

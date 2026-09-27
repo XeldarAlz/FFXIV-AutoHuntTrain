@@ -76,7 +76,7 @@ internal sealed partial class AutoHuntController
         resuming.Rebaseline();
         Diag("Resuming the ride.");
         ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Resuming the ride.");
-        StartRide(resuming);
+        RunRide(resuming);
     }
 
     public void TogglePause()

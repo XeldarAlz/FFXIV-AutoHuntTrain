@@ -38,22 +38,39 @@ internal sealed class TrainPage
         }
 
         Styling.VSpace(20f);
-        SectionTitle(Loc.T(L.Train.Upcoming));
-        EmptyCard(FontAwesomeIcon.Train, Loc.T(L.Train.UpcomingEmpty));
+        SectionTitle(Loc.T(L.Train.Upcoming), FeedStatusLine.Get(plugin.Configuration));
+        if (plugin.Feed.Count == 0)
+        {
+            EmptyCard(FontAwesomeIcon.Train, Loc.T(L.Train.UpcomingEmpty));
+        }
+        else
+        {
+            FeedCard.Draw(plugin);
+        }
 
         Styling.VSpace(16f);
         SectionTitle(Loc.T(L.Train.Ride));
-        EmptyCard(FontAwesomeIcon.Route, Loc.T(L.Train.RideEmpty));
+        RideCard.Draw(plugin);
         Styling.VSpace(12f);
     }
 
-    private static void SectionTitle(string text)
+    private static void SectionTitle(string text, string? trailing = null)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
         var size = TextDraw.SectionTitleSize(text);
         TextDraw.SectionTitle(text, origin, Styling.TextStrong);
-        ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, size.Y + 8f * scale));
+        if (trailing is not null)
+        {
+            using (Fonts.PushCaption())
+            {
+                var trailingSize = TextDraw.Measure(trailing);
+                TextDraw.At(trailing, new Vector2(origin.X + width - trailingSize.X, origin.Y + size.Y - trailingSize.Y - 2f * scale), Styling.TextMuted);
+            }
+        }
+
+        ImGui.Dummy(new Vector2(width, size.Y + 8f * scale));
     }
 
     private static void EmptyCard(FontAwesomeIcon icon, string text)

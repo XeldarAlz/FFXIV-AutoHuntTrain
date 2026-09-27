@@ -1,3 +1,4 @@
+using AutoHuntTrain.Core.Feed;
 using Newtonsoft.Json;
 using System.IO;
 
@@ -19,6 +20,9 @@ internal sealed class RunHistory
     public List<RunRecord> Records { get; private set; } = [];
 
     public LifetimeTotals Lifetime { get; private set; }
+
+    // Rises on every change, so text built from the totals is rebuilt only when they move.
+    public int Revision { get; private set; }
 
     private static string FilePath
         => Path.Combine(Plugin.PluginInterface.ConfigDirectory.FullName, FileName);
@@ -68,6 +72,9 @@ internal sealed class RunHistory
     private void RecomputeLifetime()
     {
         var totals = new LifetimeTotals { Runs = Records.Count };
+        var worldCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        Span<int> groupCounts = stackalloc int[ExpansionGroups.Count];
+        var topWorldCount = 0;
         for (var index = 0; index < Records.Count; index++)
         {
             var record = Records[index];
@@ -75,9 +82,45 @@ internal sealed class RunHistory
             totals.Seals += record.Seals;
             totals.Nuts += record.Nuts;
             totals.Seconds += record.DurationSeconds;
+            if (record.Finished)
+            {
+                totals.Finished++;
+            }
+
+            if (record.ResolveGroup() is { } group && (uint)group < (uint)groupCounts.Length)
+            {
+                groupCounts[(int)group]++;
+            }
+
+            if (record.WorldName.Length == 0)
+            {
+                continue;
+            }
+
+            worldCounts.TryGetValue(record.WorldName, out var count);
+            worldCounts[record.WorldName] = ++count;
+            if (count > topWorldCount)
+            {
+                topWorldCount = count;
+                totals.TopWorld = record.WorldName;
+                totals.TopDataCenter = record.DataCenterName;
+            }
+        }
+
+        var topGroupCount = 0;
+        for (var index = 0; index < groupCounts.Length; index++)
+        {
+            if (groupCounts[index] <= topGroupCount)
+            {
+                continue;
+            }
+
+            topGroupCount = groupCounts[index];
+            totals.TopGroup = (ExpansionGroup)index;
         }
 
         Lifetime = totals;
+        Revision++;
     }
 
     private void Save()
@@ -101,12 +144,17 @@ internal sealed class RunHistory
     public struct LifetimeTotals
     {
         public int Runs;
+        public int Finished;
         public int Marks;
         public int Seals;
         public int Nuts;
         public double Seconds;
+        public string? TopWorld;
+        public string? TopDataCenter;
+        public ExpansionGroup? TopGroup;
 
         public readonly double MarksPerHour => Seconds > 0 ? Marks / (Seconds / 3600.0) : 0;
+        public readonly double MarksPerRun => Runs > 0 ? (double)Marks / Runs : 0;
         public readonly TimeSpan Duration => TimeSpan.FromSeconds(Seconds);
     }
 }

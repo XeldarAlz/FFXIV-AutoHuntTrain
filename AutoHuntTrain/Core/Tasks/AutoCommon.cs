@@ -4,6 +4,7 @@ using Dalamud.Plugin.Services;
 using ECommons.DalamudServices;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using AutoTask = clib.Services.AutoTask;
 
 namespace AutoHuntTrain.Core.Tasks;
 
@@ -44,6 +45,21 @@ public abstract partial class AutoCommon : TaskBase
         finally
         {
             Svc.Framework.Update -= pin;
+        }
+    }
+
+    // A leg run as its own task reports into its own Status, and the windows only read the ride's.
+    protected async Task RunWithStatusFrom(AutoTask source, Func<Task> work)
+    {
+        IFramework.OnUpdateDelegate mirror = _ => Status = source.Status;
+        Svc.Framework.Update += mirror;
+        try
+        {
+            await work();
+        }
+        finally
+        {
+            Svc.Framework.Update -= mirror;
         }
     }
 
