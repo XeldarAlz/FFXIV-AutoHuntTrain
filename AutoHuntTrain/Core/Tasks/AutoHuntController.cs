@@ -1,5 +1,6 @@
 using AutoHuntTrain.Core.External;
 using AutoHuntTrain.Core.Ipc;
+using AutoHuntTrain.Core.Train;
 using clib.Services;
 
 namespace AutoHuntTrain.Core.Tasks;
@@ -33,21 +34,37 @@ internal sealed partial class AutoHuntController
     private static void Diag(string message)
         => RunLog.Info(message);
 
-    // The ride task lands with the train logic; until then there is no ride to begin, and the Start button says so.
     public void Start()
     {
+        if (Running)
+        {
+            Diag("Start ignored: a ride is already running.");
+            return;
+        }
+
         if (!RequiredPluginsReady())
         {
             return;
         }
 
-        Diag("Start aborted: the ride logic is not built yet, so there is no ride to begin.");
+        var conductor = Conductor.Current;
+        if (!conductor.IsSet)
+        {
+            Diag("Start aborted: no conductor is set.");
+            ECommons.DalamudServices.Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Pick a conductor first, on the Train page or with /aht conductor First Last.");
+            return;
+        }
+
+        var name = Conductor.Describe(conductor);
+        BeginRun(new AutoHuntSession(), owning => new AutoRide(owning, progress, Plugin.Instance.Flags), $"following {name}");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Following {name}'s flags.");
     }
 
     public void Stop()
     {
         var ending = session;
         var wasPaused = Paused;
+        var flagsFollowed = progress.FlagsFollowed;
         currentTask = null;
         PauseReason = PauseReason.None;
         Svc.Automation.Stop();
@@ -59,10 +76,13 @@ internal sealed partial class AutoHuntController
         // Pause already credited the run, and anything done since was the player's own play.
         FinalizeRun(ending, sample: !wasPaused);
         ClearRun();
-        if (ending is not null)
+        if (ending is null)
         {
-            Diag("Stop requested; session cleared.");
+            return;
         }
+
+        Diag($"Stop requested after {flagsFollowed} flag(s); session cleared.");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Ride stopped after {flagsFollowed} flag(s).");
     }
 
     // Credits seals as they land, so the stat tiles keep pace with the wallet. A paused run is left alone, because
@@ -155,4 +175,4 @@ internal sealed partial class AutoHuntController
     }
 }
 
-internal enum HuntPhase { Idle, Preparing, Travelling, Searching, Fighting, Upkeep, Finishing, Paused }
+internal enum HuntPhase { Idle, Preparing, Waiting, Travelling, Searching, Fighting, Upkeep, Finishing, Paused }

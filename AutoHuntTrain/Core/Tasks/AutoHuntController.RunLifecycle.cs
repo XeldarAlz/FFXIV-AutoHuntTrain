@@ -38,6 +38,7 @@ internal sealed partial class AutoHuntController
         }
 
         progress.ClearMark();
+        progress.ClearFlag();
         if (!TryRunAfterAction(owningSession))
         {
             ClearRun();

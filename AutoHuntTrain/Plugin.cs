@@ -5,6 +5,7 @@ using AutoHuntTrain.Core.Kills;
 using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Core.Stats;
 using AutoHuntTrain.Core.Tasks;
+using AutoHuntTrain.Core.Train;
 using AutoHuntTrain.Windows;
 using AutoHuntTrain.Windows.Shell;
 using clib;
@@ -24,6 +25,7 @@ namespace AutoHuntTrain;
 public sealed class Plugin : IDalamudPlugin
 {
     private const string GotoSubcommand = "goto";
+    private const string ConductorSubcommand = "conductor";
     private const string NavmeshIpcProviderMarker = "Navmesh.IPCProvider";
     // Lifestream's own budget for a data center transfer is up to an hour; a plan older than this is a leftover, not a journey in flight.
     private static readonly TimeSpan PendingJourneyMaxAge = TimeSpan.FromMinutes(90);
@@ -42,6 +44,7 @@ public sealed class Plugin : IDalamudPlugin
     internal WindowSystem WindowSystem { get; } = new("AutoHuntTrain");
     internal RunHistory History { get; }
     internal AutoHuntController Controller { get; }
+    internal FlagListener Flags { get; }
 
     private readonly DutyWatcher dutyWatcher;
     private readonly GmAlertWatcher gmAlertWatcher;
@@ -61,6 +64,7 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         History = new RunHistory();
         Controller = new AutoHuntController();
+        Flags = new FlagListener();
         dutyWatcher = new DutyWatcher();
         gmAlertWatcher = new GmAlertWatcher();
         partyInviteWatcher = new PartyInviteWatcher();
@@ -112,6 +116,7 @@ public sealed class Plugin : IDalamudPlugin
         dutyWatcher.Dispose();
         gmAlertWatcher.Dispose();
         partyInviteWatcher.Dispose();
+        Flags.Dispose();
         Kills.Dispose();
 
         CLibMain.Dispose();
@@ -177,9 +182,13 @@ public sealed class Plugin : IDalamudPlugin
         {
             HuntMarkDumper.Dump();
         }
-        else if (IsGotoCommand(trimmed))
+        else if (HasSubcommand(trimmed, GotoSubcommand))
         {
             AutoGoto.HandleCommand(trimmed[GotoSubcommand.Length..].Trim(), Controller.Running);
+        }
+        else if (HasSubcommand(trimmed, ConductorSubcommand))
+        {
+            Conductor.HandleCommand(trimmed[ConductorSubcommand.Length..].Trim());
         }
         else
         {
@@ -195,9 +204,9 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnFrameworkUpdate(IFramework framework) => Controller.Tick();
 
-    private static bool IsGotoCommand(string arguments)
-        => arguments.StartsWith(GotoSubcommand, StringComparison.OrdinalIgnoreCase)
-        && (arguments.Length == GotoSubcommand.Length || char.IsWhiteSpace(arguments[GotoSubcommand.Length]));
+    private static bool HasSubcommand(string arguments, string subcommand)
+        => arguments.StartsWith(subcommand, StringComparison.OrdinalIgnoreCase)
+        && (arguments.Length == subcommand.Length || char.IsWhiteSpace(arguments[subcommand.Length]));
 
     // The navmesh plugin answers pathfind IPC on fire-and-forget tasks this plugin never gets a handle to. When one
     // faults, typically a query issued while the zone mesh is still building, the finalizer would rethrow it as noise.
