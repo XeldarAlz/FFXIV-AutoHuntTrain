@@ -14,14 +14,57 @@ internal enum WorldRegion : byte
 
 internal readonly record struct WorldInfo(uint Id, string Name, uint DataCenterId, string DataCenterName, WorldRegion Region);
 
+internal readonly record struct DataCenterInfo(uint Id, string Name);
+
 // Every public world a character can visit, read once from the World and WorldDCGroupType sheets.
 internal static class Worlds
 {
     private const string CloudDataCenterMarker = "Cloud";
 
+    private static readonly Dictionary<WorldRegion, DataCenterInfo[]> dataCentersByRegion = new();
+
     private static WorldInfo[]? all;
 
     private static WorldInfo[] All => all ??= Build();
+
+    // The data centers of a region in sheet order, each once.
+    public static DataCenterInfo[] DataCentersIn(WorldRegion region)
+    {
+        if (dataCentersByRegion.TryGetValue(region, out var cached))
+        {
+            return cached;
+        }
+
+        var worlds = All;
+        var found = new List<DataCenterInfo>();
+        for (var index = 0; index < worlds.Length; index++)
+        {
+            var world = worlds[index];
+            if (world.Region != region || ContainsDataCenter(found, world.DataCenterId))
+            {
+                continue;
+            }
+
+            found.Add(new DataCenterInfo(world.DataCenterId, world.DataCenterName));
+        }
+
+        var resolved = found.ToArray();
+        dataCentersByRegion[region] = resolved;
+        return resolved;
+    }
+
+    private static bool ContainsDataCenter(List<DataCenterInfo> dataCenters, uint id)
+    {
+        for (var index = 0; index < dataCenters.Count; index++)
+        {
+            if (dataCenters[index].Id == id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     // Case-insensitive exact name first, then a prefix that matches exactly one world.
     public static bool TryFind(string name, out WorldInfo world)
