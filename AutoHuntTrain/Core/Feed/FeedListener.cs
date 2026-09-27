@@ -38,6 +38,7 @@ internal sealed class FeedListener : IDisposable
     private int nextId = (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() % 1_000_000) * 1_000 + 1;
     private bool feedLoaded;
     private long nextTickAtMs;
+    private int savedVersion;
 
     public event Action<Announcement>? Announced;
 
@@ -47,9 +48,52 @@ internal sealed class FeedListener : IDisposable
         subscriber = Svc.PluginInterface.GetIpcSubscriber<HuntAlertMessage, object>(EventName);
         subscriber.Subscribe(onMessage);
         feedLoaded = ExternalPlugins.IsInstalled(ExternalPlugin.HuntAlerts);
+        RestoreSaved();
     }
 
-    public void Dispose() => subscriber.Unsubscribe(onMessage);
+    public void Dispose()
+    {
+        subscriber.Unsubscribe(onMessage);
+        SaveIfChanged();
+    }
+
+    // Trains saved before a reload come back without notifying again; the ones long past their start stay gone.
+    private void RestoreSaved()
+    {
+        var saved = FeedStore.Load();
+        var nowUtc = DateTime.UtcNow;
+        var restored = 0;
+        for (var index = 0; index < saved.Length; index++)
+        {
+            if (saved[index] is not { } stored || stored.StartAtUtc < nowUtc - ExpiryAfterStart)
+            {
+                continue;
+            }
+
+            if (stored.TryRebuild(nextId, out var announcement) && Insert(announcement))
+            {
+                nextId++;
+                restored++;
+            }
+        }
+
+        savedVersion = version;
+        if (restored > 0)
+        {
+            RunLog.Info($"Feed: restored {restored} train(s) saved before the reload");
+        }
+    }
+
+    private void SaveIfChanged()
+    {
+        if (version == savedVersion)
+        {
+            return;
+        }
+
+        savedVersion = version;
+        FeedStore.Save(items.AsSpan(0, count));
+    }
 
     public int Count => count;
 
@@ -93,6 +137,7 @@ internal sealed class FeedListener : IDisposable
         nextTickAtMs = now + TickIntervalMs;
         feedLoaded = ExternalPlugins.IsInstalled(ExternalPlugin.HuntAlerts);
         Prune(DateTime.UtcNow);
+        SaveIfChanged();
     }
 
     // The one intake for the IPC event and the debug injection; framework thread only.
@@ -154,9 +199,22 @@ internal sealed class FeedListener : IDisposable
         }
 
         var postedAt = PostedAt(message, now);
-        var startAt = AnnouncementText.TryReadStartTime(text, out var announced) ? announced
-            : AnnouncementText.TryReadClockTime(text, postedAt, out var clock) ? clock
-            : postedAt;
+        DateTime startAt;
+        if (AnnouncementText.TryReadStartTime(text, out var announced))
+        {
+            startAt = announced;
+            RunLog.Debug($"Feed: start time for {world.Name} read from a Discord timestamp");
+        }
+        else if (AnnouncementText.TryReadClockTime(text, postedAt, out var clock))
+        {
+            startAt = clock;
+            RunLog.Debug($"Feed: start time for {world.Name} read from the clock time in the post");
+        }
+        else
+        {
+            startAt = postedAt;
+            RunLog.Info($"Feed: no start time found in the post for {world.Name}; the post time stands in. Text: {Flatten(text)}");
+        }
         if (startAt - now > MaxLead || now - startAt > MaxAge)
         {
             problem = $"the start time {startAt:yyyy-MM-dd HH:mm:ss}Z is out of range";
@@ -387,6 +445,14 @@ internal sealed class FeedListener : IDisposable
         OtherRegion,
         OtherDataCenter,
         AllowedDataCenter,
+    }
+
+    // One log line for a post of several lines, cut short so a long post cannot flood the console.
+    private static string Flatten(string text)
+    {
+        const int MaxLogLength = 600;
+        var flat = text.Replace("\r", string.Empty, StringComparison.Ordinal).Replace("\n", " | ", StringComparison.Ordinal);
+        return flat.Length <= MaxLogLength ? flat : string.Concat(flat.AsSpan(0, MaxLogLength), "...");
     }
 
     private static string Describe(in Announcement announcement)
