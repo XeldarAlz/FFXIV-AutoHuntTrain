@@ -1,6 +1,4 @@
-using AutoHuntTrain.Core.Custom;
 using AutoHuntTrain.Core.External;
-using AutoHuntTrain.Core.Hunts;
 using AutoHuntTrain.Core.Ipc;
 using clib.Services;
 
@@ -10,11 +8,10 @@ internal sealed partial class AutoHuntController
 {
     private const int SessionSampleIntervalMs = 1_000;
 
-    private readonly HuntProgress progress = new();
+    private readonly RideProgress progress = new();
 
     private AutoHuntSession? session;
-    private HuntBill[] activeBills = [];
-    private byte[] activeLogSlots = [];
+    private Func<AutoHuntSession, AutoCommon>? rideTaskFactory;
     private AutoCommon? currentTask;
     private long nextSessionSampleAtMs;
 
@@ -29,74 +26,22 @@ internal sealed partial class AutoHuntController
 
     public HuntPhase Phase => progress.Phase;
 
-    public HuntProgress Progress => progress;
+    public RideProgress Progress => progress;
 
     public AutoHuntSession? SessionSnapshot => session;
-
-    public HuntMode Mode => session?.Mode ?? HuntMode.MarkBills;
-
-    public IReadOnlyList<HuntBill> ActiveBills => activeBills;
-
-    public IReadOnlyList<byte> ActiveHuntingLogSlots => activeLogSlots;
-
-    public IReadOnlyList<HuntObjective> Objectives => progress.Objectives;
 
     private static void Diag(string message)
         => RunLog.Info(message);
 
-    public void Start(IReadOnlyList<HuntBill> bills)
+    // The ride task lands with the train logic; until then there is no ride to begin, and the Start button says so.
+    public void Start()
     {
-        if (bills.Count == 0)
-        {
-            Diag("Start aborted: no bills selected.");
-            return;
-        }
-
         if (!RequiredPluginsReady())
         {
             return;
         }
 
-        activeBills = [.. bills];
-        activeLogSlots = [];
-        BeginRun(new AutoHuntSession(activeBills), $"{activeBills.Length} bill(s)");
-    }
-
-    public void StartHuntingLog(IReadOnlyList<byte> slots)
-    {
-        if (slots.Count == 0)
-        {
-            Diag("Start aborted: no Hunting Log queued.");
-            return;
-        }
-
-        if (!RequiredPluginsReady())
-        {
-            return;
-        }
-
-        activeBills = [];
-        activeLogSlots = [.. slots];
-        BeginRun(new AutoHuntSession(activeLogSlots), $"{activeLogSlots.Length} Hunting Log(s)");
-    }
-
-    public void StartCustomList()
-    {
-        var pending = CustomMobList.CountNeedingKills();
-        if (pending == 0)
-        {
-            Diag("Start aborted: no enabled custom mob needs kills.");
-            return;
-        }
-
-        if (!RequiredPluginsReady())
-        {
-            return;
-        }
-
-        activeBills = [];
-        activeLogSlots = [];
-        BeginRun(new AutoHuntSession(Plugin.Instance.Configuration.CustomMobs), $"{pending} custom mob(s)");
+        Diag("Start aborted: the ride logic is not built yet, so there is no ride to begin.");
     }
 
     public void Stop()
@@ -120,8 +65,8 @@ internal sealed partial class AutoHuntController
         }
     }
 
-    // Credits kills as they land, so the stat tiles keep pace with the live kill counts. A paused run is left alone,
-    // because Resume makes the game state its new zero point.
+    // Credits seals as they land, so the stat tiles keep pace with the wallet. A paused run is left alone, because
+    // Resume makes the game state its new zero point.
     public void Tick()
     {
         if (session is null || session.Recorded || Paused)
@@ -152,36 +97,25 @@ internal sealed partial class AutoHuntController
         return false;
     }
 
-    private void BeginRun(AutoHuntSession newSession, string plan)
+    // Every Resume and fault restart builds the ride task afresh from the same factory.
+    private void BeginRun(AutoHuntSession newSession, Func<AutoHuntSession, AutoCommon> taskFactory, string plan)
     {
         PauseReason = PauseReason.None;
         ResetFaultBudget();
         session = newSession;
+        rideTaskFactory = taskFactory;
         Diag($"Run starting: {plan}, job {newSession.JobAbbreviation}.");
-        StartHunt(newSession);
+        StartRide(newSession);
     }
 
-    private void StartHunt(AutoHuntSession owningSession)
+    private void StartRide(AutoHuntSession owningSession)
     {
         progress.Reset();
-        progress.SetPhase(HuntPhase.Reading);
-        RunTask(CreateRunTask(owningSession), () => OnHuntEnded(owningSession));
+        progress.SetPhase(HuntPhase.Preparing);
+        RunTask(rideTaskFactory!(owningSession), () => OnRideEnded(owningSession));
     }
 
-    private AutoCommon CreateRunTask(AutoHuntSession owningSession) => owningSession.Mode switch
-    {
-        HuntMode.HuntingLog => new AutoHuntingLog(activeLogSlots, owningSession, progress),
-        HuntMode.CustomList => new AutoCustomHunt(owningSession, progress),
-        _                   => new AutoHunt(activeBills, owningSession, progress),
-    };
-
-    // Resume and a fault restart rebuild the task from what the run started with; a custom run rereads the list itself.
-    private bool CanRestart(AutoHuntSession run) => run.Mode switch
-    {
-        HuntMode.HuntingLog => activeLogSlots.Length > 0,
-        HuntMode.CustomList => true,
-        _                   => activeBills.Length > 0,
-    };
+    private bool CanRestart() => rideTaskFactory is not null;
 
     // The movement library fires OnCompleted off the game thread: its await of the task does not return to the framework
     // scheduler, and the runtime moves the continuation to the thread pool. Recording a run reads the object table, which
@@ -207,8 +141,7 @@ internal sealed partial class AutoHuntController
     private void ClearRun()
     {
         session = null;
-        activeBills = [];
-        activeLogSlots = [];
+        rideTaskFactory = null;
         progress.Reset();
     }
 
@@ -222,4 +155,4 @@ internal sealed partial class AutoHuntController
     }
 }
 
-internal enum HuntPhase { Idle, Reading, PickingUp, Travelling, Searching, Fighting, Upkeep, Finishing, Paused }
+internal enum HuntPhase { Idle, Preparing, Travelling, Searching, Fighting, Upkeep, Finishing, Paused }

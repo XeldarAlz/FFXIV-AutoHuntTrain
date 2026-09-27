@@ -1,7 +1,4 @@
-using AutoHuntTrain.Core.Achievements;
-using AutoHuntTrain.Core.Hunts;
 using AutoHuntTrain.Core.Marks;
-using AutoHuntTrain.Core.Spawns;
 using AutoHuntTrain.Core.Travel;
 using ECommons.DalamudServices;
 using System.Text;
@@ -12,16 +9,8 @@ internal static class HuntMarkDumper
 {
     public static void Dump()
     {
-        DumpRegistry();
-        AchievementDump.LogLoadState(Log);
-        DumpAchievements();
-        Svc.Chat.Print($"{AhtConstants.LogPrefix} Hunt mark dump written to the plugin log (/xllog).");
-    }
-
-    private static void DumpRegistry()
-    {
         var marks = HuntMarkRegistry.Marks;
-        Log($"registry: {marks.Length} marks, {LinkedCount()} of them count toward a Mark achievement");
+        Log($"registry: {marks.Length} marks");
         for (var expansion = ExpansionKind.ARR; expansion <= ExpansionKind.DT; expansion++)
         {
             var line = new StringBuilder(expansion.ShortName()).Append(": ").Append(ZoneCount(expansion)).Append(" zones;");
@@ -34,12 +23,13 @@ internal static class HuntMarkDumper
         }
 
         DumpExpansionWide(marks);
+        Svc.Chat.Print($"{AhtConstants.LogPrefix} Hunt mark dump written to the plugin log (/xllog).");
     }
 
     private static void AppendRankCount(StringBuilder line, ReadOnlySpan<HuntMark> marks, ExpansionKind expansion, HuntMarkRank rank)
     {
         var count = 0;
-        var searchable = 0;
+        var covered = 0;
         for (var index = 0; index < marks.Length; index++)
         {
             var mark = marks[index];
@@ -49,14 +39,13 @@ internal static class HuntMarkDumper
             }
 
             count++;
-            var territoryId = HuntMarkRegistry.SpawnTerritoryAt(index);
-            if (MobSpawns.IsSearchable(mark.NameId, territoryId) || HuntSpawns.Covers(mark.NameId, territoryId))
+            if (HuntSpawns.Covers(mark.NameId, HuntMarkRegistry.SpawnTerritoryAt(index)))
             {
-                searchable++;
+                covered++;
             }
         }
 
-        line.Append(' ').Append(rank).Append(' ').Append(count).Append(" (").Append(searchable).Append(" with non-FATE points)");
+        line.Append(' ').Append(rank).Append(' ').Append(count).Append(" (").Append(covered).Append(" with zone spawn points)");
     }
 
     private static void DumpExpansionWide(ReadOnlySpan<HuntMark> marks)
@@ -69,11 +58,7 @@ internal static class HuntMarkDumper
             }
 
             var mark = marks[index];
-            var firstTerritory = MobSpawns.FirstSearchableTerritory(mark.NameId);
-            var searchable = firstTerritory == 0
-                ? "none with non-FATE points"
-                : $"the first with non-FATE points is {TerritoryNames.Of(firstTerritory)} ({firstTerritory})";
-            Log($"expansion-wide: {HuntMarkRegistry.NameAt(index)} (BNpcName {mark.NameId}, rank {mark.Rank}, {mark.Expansion.ShortName()}, first listed in {mark.TerritoryId}): the spawn table knows {MobSpawns.Territories(mark.NameId).Length} zone(s), {searchable}");
+            Log($"expansion-wide: {HuntMarkRegistry.NameAt(index)} (BNpcName {mark.NameId}, rank {mark.Rank}, {mark.Expansion.ShortName()}, first listed in {TerritoryNames.Of(mark.TerritoryId)} ({mark.TerritoryId})); only a flag can place it");
         }
     }
 
@@ -98,46 +83,6 @@ internal static class HuntMarkDumper
         }
 
         return zones;
-    }
-
-    // The achievements' zones never overlap and each asks for one rank, so no mark is counted twice.
-    private static int LinkedCount()
-    {
-        var achievements = MarkAchievements.All;
-        var linked = 0;
-        for (var index = 0; index < achievements.Length; index++)
-        {
-            linked += achievements[index].MarkCount;
-        }
-
-        return linked;
-    }
-
-    private static void DumpAchievements()
-    {
-        var achievements = MarkAchievements.All;
-        Log($"Mark achievements: {achievements.Length} of {MarkAchievements.TableSize} table rows resolved");
-        for (var index = 0; index < achievements.Length; index++)
-        {
-            var achievement = achievements[index];
-            var marks = MarkAchievements.Marks(achievement);
-            Log($"{achievement.AchievementId} {achievement.Name} ({achievement.Expansion.ShortName()}, rank {achievement.Rank}, {marks.Length} marks, icon {achievement.IconId}): {AchievementReader.Status(achievement.AchievementId)}");
-            for (var markIndex = 0; markIndex < marks.Length; markIndex++)
-            {
-                var mark = marks[markIndex];
-                Log($"  {HuntMarkRegistry.NameOf(mark.NameId)} (BNpcName {mark.NameId}) in {TerritoryNames.Of(mark.TerritoryId)} ({mark.TerritoryId}): {SpawnText(mark)}");
-            }
-        }
-    }
-
-    private static string SpawnText(in HuntMark mark)
-    {
-        if (MobSpawns.TryGetSearchable(mark.NameId, mark.TerritoryId, out var points))
-        {
-            return $"{points.Length} non-FATE point(s)";
-        }
-
-        return MobSpawns.IsFateOnly(mark.NameId, mark.TerritoryId) ? "FATE points only" : "no points";
     }
 
     private static void Log(string message) => RunLog.Info(message);

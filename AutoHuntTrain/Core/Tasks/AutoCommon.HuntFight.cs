@@ -1,6 +1,6 @@
 using AutoHuntTrain.Core.Game.Player;
-using AutoHuntTrain.Core.Hunts;
 using AutoHuntTrain.Core.Ipc;
+using AutoHuntTrain.Core.Marks;
 using AutoHuntTrain.Core.Travel;
 using Dalamud.Game.ClientState.Conditions;
 using ECommons.DalamudServices;
@@ -32,9 +32,9 @@ public abstract partial class AutoCommon
     private const int MarkApproachWatchdogMs = 40_000;
     private const int MaxMarkApproachLegs = 4;
     private const int MarkFightTickFrames = 15;
-    private const int DailyMarkFightBudgetMs = 180_000;
-    private const int EliteMarkFightBudgetMs = 420_000;
-    // The bill's kill count lands a moment after the mark dies.
+    private const int MobFightBudgetMs = 180_000;
+    private const int HuntMarkFightBudgetMs = 420_000;
+    // The kill ledger credits a kill a moment after the mark dies, once its death and its log line have folded together.
     private const int MarkKillSettleMs = 5_000;
     private const int MarkOutOfReachStallMs = 8_000;
     private const int MaxMarkRepositions = 3;
@@ -142,8 +142,8 @@ public abstract partial class AutoCommon
     private async Task<MarkFight> FightMark(MarkHuntContext hunt, MarkSighting sighting, string scope)
     {
         MarkPhase = HuntPhase.Fighting;
-        Diag($"{scope}: {hunt.Name} {sighting.DistanceToHitbox:F0}m away at {FormatPosition(sighting.Position)}, {sighting.CurrentHp} hp, fate {sighting.FateId} ({ConditionTag()})");
-        var baselineKilled = ReadMarkProgress(hunt, force: true).Killed;
+        Diag($"{scope}: {hunt.Name} {sighting.DistanceToHitbox:F0}m away at {FormatPosition(sighting.Position)}, {sighting.CurrentHp} hp ({ConditionTag()})");
+        var baselineKilled = ReadMarkProgress(hunt).Killed;
         var approach = await CloseOnMark(hunt, sighting.GameObjectId, scope);
         if (approach != MarkFight.Reached)
         {
@@ -267,16 +267,12 @@ public abstract partial class AutoCommon
         && live.DistanceToHitbox > stopAt
         && GroundDistance.Between(live.Position, destination) <= MarkDriftMeters;
 
-    // Keeps the mark targeted and the preset active until the bill counts the kill. A kill only counts once the bill's
-    // own number rises, so a copy someone else finished or that despawned is told apart from a real kill.
+    // Keeps the mark targeted and the preset active until the kill ledger credits the kill. A kill only counts once the
+    // ledger's number rises, so a copy someone else finished or that despawned is told apart from a real kill.
     private async Task<MarkFight> EngageMark(MarkHuntContext hunt, ulong markId, int baselineKilled, string scope)
     {
-        if (hunt.WatchesKills)
-        {
-            Plugin.Kills.Watch(markId, hunt.NameId);
-            Diag($"{scope}: the kill ledger now watches {hunt.Name} ({markId:X})");
-        }
-
+        Plugin.Kills.Watch(markId, hunt.NameId);
+        Diag($"{scope}: the kill ledger now watches {hunt.Name} ({markId:X})");
         var reach = ReachMeters();
         var deadline = Environment.TickCount64 + hunt.FightBudgetMs;
         var lastHp = uint.MaxValue;
@@ -301,18 +297,12 @@ public abstract partial class AutoCommon
                     return MarkFight.KnockedOut;
                 }
 
-                var progress = ReadMarkProgress(hunt, force: true);
+                var progress = ReadMarkProgress(hunt);
                 if (KillCounted(progress, baselineKilled))
                 {
-                    Diag($"{scope}: the kill counted, {progress.Killed}/{progress.Needed} ({DescribeProgress(hunt)})");
+                    Diag($"{scope}: the kill counted, {progress.Killed}/{progress.Needed}");
                     await FightOffAttackers(scope);
                     return MarkFight.Counted;
-                }
-
-                if (!progress.Tracked)
-                {
-                    await FightOffAttackers(scope);
-                    return MarkFight.Lost;
                 }
 
                 var now = Environment.TickCount64;
@@ -335,11 +325,6 @@ public abstract partial class AutoCommon
                 }
 
                 AssertHuntPresetActive();
-                if (hunt.FateId != 0)
-                {
-                    SyncToMarkFate(hunt);
-                }
-
                 if (Svc.Targets.Target?.GameObjectId != markId)
                 {
                     TargetMark(live, scope);
@@ -399,10 +384,10 @@ public abstract partial class AutoCommon
     private async Task<MarkFight> SettleMarkKill(MarkHuntContext hunt, int baselineKilled, string scope)
     {
         var counted = await WaitUntilTimed(
-            () => KillCounted(ReadMarkProgress(hunt, force: true), baselineKilled),
+            () => KillCounted(ReadMarkProgress(hunt), baselineKilled),
             MarkKillSettleMs,
             $"{scope}-count");
-        var progress = ReadMarkProgress(hunt, force: true);
+        var progress = ReadMarkProgress(hunt);
         if (counted)
         {
             Diag($"{scope}: {hunt.Name} is down and the kill counted, {progress.Killed}/{progress.Needed}");
@@ -410,7 +395,7 @@ public abstract partial class AutoCommon
             return MarkFight.Counted;
         }
 
-        Diag($"{scope}: {hunt.Name} is gone and {hunt.SourceName} still reads {progress.Killed}/{progress.Needed}; it did not count");
+        Diag($"{scope}: {hunt.Name} is gone and the kill ledger still reads {progress.Killed}/{progress.Needed}; it did not count");
         return MarkFight.NotCounted;
     }
 
@@ -628,8 +613,7 @@ public abstract partial class AutoCommon
         return MarkFinder.TryGetLive(markId, player.Position, out live);
     }
 
-    private static bool KillCounted(MarkProgress progress, int baselineKilled)
-        => progress.Done || (progress.Listed && progress.Killed > baselineKilled);
+    private static bool KillCounted(MarkProgress progress, int baselineKilled) => progress.Killed > baselineKilled;
 
     private static bool FightsInMelee()
         => Svc.Objects.LocalPlayer?.ClassJob.ValueNullable?.Role is MarkRoleTank or MarkRoleMelee;

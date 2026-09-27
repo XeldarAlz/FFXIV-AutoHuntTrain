@@ -1,4 +1,4 @@
-using AutoHuntTrain.Core.Hunts;
+using AutoHuntTrain.Core.Marks;
 
 namespace AutoHuntTrain.Core.Travel;
 

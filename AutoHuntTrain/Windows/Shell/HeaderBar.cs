@@ -74,7 +74,7 @@ internal static class HeaderBar
             }
         }
 
-        var info = ReadyState.Resolve(plugin.Configuration, plugin.Controller);
+        var info = ReadyState.Resolve(plugin.Controller);
         var pillEnd = DrawStatusPill(drawList, info, x, buttonsLeft, midY);
         if (pillEnd > x)
         {
@@ -149,34 +149,15 @@ internal static class HeaderBar
 
         if (!controller.Running)
         {
-            var configuration = plugin.Configuration;
-            var plan = HuntLauncher.Assess(configuration, configuration.Mode);
-            if (plan.Readiness != HuntLauncher.Readiness.Ready)
-            {
-                return;
-            }
-
-            var summary = HuntLauncher.Sublabel(configuration, plan);
-            using (Fonts.PushCaption())
-            {
-                var summarySize = TextDraw.Measure(summary);
-                TextDraw.At(TextDraw.Truncate(summary, rightX - x), new Vector2(x, midY - summarySize.Y * 0.5f), Styling.TextDim);
-            }
-
             return;
         }
 
-        var workload = RunWorkload.Measure(controller);
         var drawList = ImGui.GetWindowDrawList();
         var barWidth = CompactBarWidth * scale;
         var barX = rightX - barWidth;
         var barHeight = 6f * scale;
         var barOrigin = new Vector2(barX, midY - barHeight * 0.5f);
-        if (workload.KillsNeeded > 0)
-        {
-            Paint.Bar(drawList, barOrigin, barWidth, barHeight, workload.KillsDone / (float)workload.KillsNeeded, info.Accent);
-        }
-        else if (controller.Paused)
+        if (controller.Paused)
         {
             Paint.Bar(drawList, barOrigin, barWidth, barHeight, 0f, info.Accent);
         }
@@ -191,7 +172,7 @@ internal static class HeaderBar
             return;
         }
 
-        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.PhaseLabel(controller.Phase, controller.Mode);
+        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.PhaseLabel(controller.Phase);
         var detail = CurrentMark.TryGet(controller, out var mark) ? mark.Line : controller.Status;
         using (Fonts.PushCaption())
         {

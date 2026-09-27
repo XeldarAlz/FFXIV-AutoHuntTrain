@@ -24,8 +24,7 @@ internal static class MiniPlayer
         var end = origin + size;
         var drawList = ImGui.GetWindowDrawList();
         var controller = plugin.Controller;
-        var info = ReadyState.Resolve(plugin.Configuration, controller);
-        var workload = RunWorkload.Measure(controller);
+        var info = ReadyState.Resolve(controller);
 
         Dock.Background(drawList, origin, end, windowRounding);
 
@@ -48,11 +47,7 @@ internal static class MiniPlayer
         var barRight = end.X - padX - buttonsWidth - 16f * scale;
         var barX = barRight - barWidth;
         var barOrigin = new Vector2(barX, midY - BarHeight * scale * 0.5f);
-        if (workload.KillsNeeded > 0)
-        {
-            Paint.Bar(drawList, barOrigin, barWidth, BarHeight * scale, workload.KillsDone / (float)workload.KillsNeeded, info.Accent);
-        }
-        else if (controller.Paused)
+        if (controller.Paused)
         {
             Paint.Bar(drawList, barOrigin, barWidth, BarHeight * scale, 0f, info.Accent);
         }
@@ -62,7 +57,7 @@ internal static class MiniPlayer
         }
 
         var textX = origin.X + padX + 22f * scale;
-        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.PhaseLabel(controller.Phase, controller.Mode);
+        var phase = controller.Paused ? Loc.T(L.Run.PhasePaused) : ReadyState.PhaseLabel(controller.Phase);
         var phaseSize = TextDraw.SmallCapsSize(phase);
         var lineHeight = ImGui.GetTextLineHeight();
         var gap = 2f * scale;

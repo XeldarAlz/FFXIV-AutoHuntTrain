@@ -8,8 +8,6 @@ public enum MarkOutcome
     Unsupported,
     Cancelled,
     Unreachable,
-    FateMissed,
-    NotHeld,
     KillsNotCounted,
     CombatUnavailable,
 }

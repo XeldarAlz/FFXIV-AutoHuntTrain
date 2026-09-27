@@ -34,7 +34,7 @@ Keep logic small and direct. This plugin has one job.
 
 ## Good first issues
 
-Check the tracker for anything labeled `good first issue`. Mark-specific quirks (a spawn area the plugin never finds, a mark it can't reach, a board it can't use) are usually the lowest-friction way to help: pick the bill that's misbehaving, attach a log of what the plugin did vs. what should have happened, and a fix is usually a small change.
+Check the tracker for anything labeled `good first issue`. Mark-specific quirks (a flag the plugin misreads, a mark it can't reach, a world it can't get to) are usually the lowest-friction way to help: name the train that misbehaved, attach a log of what the plugin did vs. what should have happened, and a fix is usually a small change.
 
 ## Security
 

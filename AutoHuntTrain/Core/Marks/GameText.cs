@@ -4,7 +4,7 @@ using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Globalization;
 
-namespace AutoHuntTrain.Core.Hunts;
+namespace AutoHuntTrain.Core.Marks;
 
 internal static class GameText
 {

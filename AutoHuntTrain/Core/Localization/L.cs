@@ -7,30 +7,27 @@ internal static partial class L
         public static readonly LocString Close = new("common.close", "Close");
         public static readonly LocString Cancel = new("common.cancel", "Cancel");
         public static readonly LocString Clear = new("common.clear", "Clear");
-        public static readonly LocString SelectAll = new("common.selectAll", "Select all");
         public static readonly LocString Pause = new("common.pause", "Pause");
         public static readonly LocString Resume = new("common.resume", "Resume");
         public static readonly LocString StopRun = new("common.stopRun", "Stop the run");
         public static readonly LocString Working = new("common.working", "Working…");
-        public static readonly LocString PlayerNotLoaded = new("common.playerNotLoaded", "Player not loaded.");
         public static readonly LocString DragAdjustHint = new("common.dragAdjustHint", "Drag to adjust · Ctrl+click to type");
         public static readonly LocString NoMatches = new("common.noMatches", "Nothing matches “{0}”.");
     }
 
     internal static class Shell
     {
-        public static readonly LocString NavHunt = new("shell.nav.hunt", "Hunt");
+        public static readonly LocString NavTrain = new("shell.nav.train", "Train");
         public static readonly LocString NavSettings = new("shell.nav.settings", "Settings");
         public static readonly LocString NavHistory = new("shell.nav.history", "History");
         public static readonly LocString NavPlugins = new("shell.nav.plugins", "Plugins");
         public static readonly LocString NavLog = new("shell.nav.log", "Console");
         public static readonly LocString NavChangelog = new("shell.nav.changelog", "Changelog");
         public static readonly LocString NavAbout = new("shell.nav.about", "About");
-        public static readonly LocString StatusRunning = new("shell.status.running", "Running");
+        public static readonly LocString StatusRunning = new("shell.status.running", "Riding");
         public static readonly LocString StatusPaused = new("shell.status.paused", "Paused");
-        public static readonly LocString StatusReady = new("shell.status.ready", "Ready");
-        public static readonly LocString StatusPickBills = new("shell.status.pickBills", "Pick bills");
-        public static readonly LocString StatusAllDone = new("shell.status.allDone", "All done");
+        public static readonly LocString StatusFeedReady = new("shell.status.feedReady", "Feed ready");
+        public static readonly LocString StatusChatOnly = new("shell.status.chatOnly", "Chat only");
         public static readonly LocString StatusSetupNeeded = new("shell.status.setupNeeded", "Setup needed");
         public static readonly LocString StatusIdle = new("shell.status.idle", "Idle");
         public static readonly LocString Minimize = new("shell.minimize", "Minimize to the title strip");
@@ -42,95 +39,64 @@ internal static partial class L
         public static readonly LocString GreetingNight = new("shell.greeting.night", "Late night");
     }
 
-    internal static class Hunt
+    internal static class Train
     {
-        public static readonly LocString TitleSetupNeeded = new("hunt.title.setupNeeded", "Setup needed");
-        public static readonly LocString DetailSetupNeeded = new("hunt.detail.setupNeeded", "Install the required plugins before your first run.");
-        public static readonly LocString TitlePickBills = new("hunt.title.pickBills", "Pick a bill to begin");
-        public static readonly LocString DetailPickBills = new("hunt.detail.pickBills", "Tick bills in the list below and they'll appear in your plan.");
-        public static readonly LocString TitleAllDone = new("hunt.title.allDone", "All caught up");
-        public static readonly LocString DetailAllDone = new("hunt.detail.allDone", "Every bill you picked is done. New bills are posted at the next reset.");
-        public static readonly LocString TitleReady = new("hunt.title.ready", "Ready to hunt");
-        public static readonly LocString DetailReady = new("hunt.detail.ready", "Everything's set. Press Start whenever you're ready.");
-        public static readonly LocString TitleRunning = new("hunt.title.running", "Hunting");
-        public static readonly LocString TitlePaused = new("hunt.title.paused", "Paused");
-        public static readonly LocString DetailPausedInContent = new("hunt.detail.pausedInContent", "Resumes once you leave the duty");
-        public static readonly LocString DetailPausedManual = new("hunt.detail.pausedManual", "Resume whenever you're ready");
-        public static readonly LocString OpenPlugins = new("hunt.openPlugins", "Open plugins");
-        public static readonly LocString NoRunsYet = new("hunt.noRunsYet", "No runs yet");
-        public static readonly LocString StatsAppearHere = new("hunt.statsAppearHere", "your stats will appear here");
-        public static readonly LocString LastRun = new("hunt.lastRun", "Last run  ·  {0} marks");
-        public static readonly LocString LastRunDetail = new("hunt.lastRunDetail", "{0}  ·  {1} bills");
-        public static readonly LocString LastRunKills = new("hunt.lastRunKills", "Last run  ·  {0} kills");
+        public static readonly LocString TitleSetupNeeded = new("train.title.setupNeeded", "Setup needed");
+        public static readonly LocString DetailSetupNeeded = new("train.detail.setupNeeded", "Install the required plugins before your first ride.");
+        public static readonly LocString TitleFeedReady = new("train.title.feedReady", "HuntAlerts is listening");
+        public static readonly LocString DetailFeedReady = new("train.detail.feedReady", "Train announcements from the community feed will show up on this page.");
+        public static readonly LocString TitleChatOnly = new("train.title.chatOnly", "Chat only");
+        public static readonly LocString DetailChatOnly = new("train.detail.chatOnly", "HuntAlerts is not loaded, so a train can only be followed from a conductor's chat on your current world.");
+        public static readonly LocString TitleRiding = new("train.title.riding", "Riding");
+        public static readonly LocString TitlePaused = new("train.title.paused", "Paused");
+        public static readonly LocString DetailPausedInContent = new("train.detail.pausedInContent", "Resumes once you leave the duty");
+        public static readonly LocString DetailPausedManual = new("train.detail.pausedManual", "Resume whenever you're ready");
+        public static readonly LocString OpenPlugins = new("train.openPlugins", "Open plugins");
+        public static readonly LocString NoRidesYet = new("train.noRidesYet", "No rides yet");
+        public static readonly LocString StatsAppearHere = new("train.statsAppearHere", "your stats will appear here");
+        public static readonly LocString LastRide = new("train.lastRide", "Last ride  ·  {0} marks");
+        public static readonly LocString LastRideDetail = new("train.lastRideDetail", "{0}  ·  {1}");
+        public static readonly LocString SentenceEnd = new("train.sentence.end", ".");
 
-        public static readonly LocString Plan = new("hunt.plan", "Plan");
-        public static readonly LocString SentenceHunt = new("hunt.sentence.hunt", "Hunt");
-        public static readonly LocString SentenceThen = new("hunt.sentence.then", "then");
-        public static readonly LocString SentenceEnd = new("hunt.sentence.end", ".");
-        public static readonly LocString BillsNone = new("hunt.billsNone", "no bills yet");
-        public static readonly LocPlural BillsCount = new("hunt.billsCount", "{0} bill", "{0} bills");
-        public static readonly LocString PlanLocked = new("hunt.planLocked", "Stop the run to change the plan.");
-        public static readonly LocString PlanHint = new("hunt.planHint", "The bills you pick will appear here.");
-        public static readonly LocString RemoveFromPlan = new("hunt.removeFromPlan", "Remove from the plan");
-        public static readonly LocString AfterStayToken = new("hunt.after.stay.token", "stay where you are");
-        public static readonly LocString AfterStayName = new("hunt.after.stay.name", "Stay where you are");
-        public static readonly LocString AfterStayDetail = new("hunt.after.stay.detail", "Just stop. You're left standing wherever the last mark fell.");
-        public static readonly LocString AfterInnToken = new("hunt.after.inn.token", "return to the inn");
-        public static readonly LocString AfterInnName = new("hunt.after.inn.name", "Return to the inn");
-        public static readonly LocString AfterInnDetail = new("hunt.after.inn.detail", "Travel to your Grand Company city and enter the inn room.");
-        public static readonly LocString AfterLogoutToken = new("hunt.after.logout.token", "log out");
-        public static readonly LocString AfterLogoutName = new("hunt.after.logout.name", "Log out to title");
-        public static readonly LocString AfterLogoutDetail = new("hunt.after.logout.detail", "Log out to the title screen.");
-        public static readonly LocString AfterCloseToken = new("hunt.after.close.token", "close the game");
-        public static readonly LocString AfterCloseName = new("hunt.after.close.name", "Close the game");
-        public static readonly LocString AfterCloseDetail = new("hunt.after.close.detail", "Close FFXIV entirely (via XIVLauncher's /xlkill).");
-        public static readonly LocString WhenDone = new("hunt.whenDone", "When every bill is done");
+        public static readonly LocString Upcoming = new("train.upcoming", "Upcoming trains");
+        public static readonly LocString UpcomingEmpty = new("train.upcomingEmpty", "No announcements have arrived yet. HuntAlerts provides them as trains are called.");
+        public static readonly LocString Ride = new("train.ride", "Ride");
+        public static readonly LocString RideEmpty = new("train.rideEmpty", "The ride logic is not built yet. The train being ridden, its conductor and the next flag will show here.");
 
-        public static readonly LocString Bills = new("hunt.library.bills", "Hunt bills");
-        public static readonly LocString SelectedSummary = new("hunt.library.selected", "{0} of {1} selected");
-        public static readonly LocString Daily = new("hunt.library.daily", "Daily");
-        public static readonly LocString Weekly = new("hunt.library.weekly", "Weekly");
-        public static readonly LocString BillsLockedRunning = new("hunt.library.lockedRunning", "Stop the run to change your bills.");
-        public static readonly LocString LockedQuest = new("hunt.library.lockedQuest", "Locked: complete “{0}” to unlock this bill.");
-        public static readonly LocString LockedRank = new("hunt.library.lockedRank", "Locked: reach the Grand Company rank this board asks for.");
-        public static readonly LocString NoBillsInData = new("hunt.library.noBills", "No hunt bills found in game data.");
-        public static readonly LocString StatusNotTaken = new("hunt.status.notTaken", "not taken");
-        public static readonly LocString StatusOld = new("hunt.status.old", "old bill");
-        public static readonly LocString StatusDone = new("hunt.status.done", "done");
-        public static readonly LocString TooltipNotTaken = new("hunt.tooltip.notTaken", "Picked up at the hunt board when the run starts.");
-        public static readonly LocString TooltipOld = new("hunt.tooltip.old", "You still hold an older bill of this kind. It is finished first, then the current one is picked up.");
-        public static readonly LocString TooltipDone = new("hunt.tooltip.done", "Done until the next reset.");
-        public static readonly LocString TooltipTarget = new("hunt.tooltip.target", "{0}  ·  {1}/{2}  ·  {3}");
+        public static readonly LocString WhenDone = new("train.whenDone", "When the ride ends");
+        public static readonly LocString WhenDoneHelp = new("train.whenDoneHelp", "What to do once a ride ends on its own. A manual Stop or a fault never triggers it.");
+        public static readonly LocString AfterStayName = new("train.after.stay.name", "Stay where you are");
+        public static readonly LocString AfterStayDetail = new("train.after.stay.detail", "Just stop. You're left standing wherever the last mark fell.");
+        public static readonly LocString AfterInnName = new("train.after.inn.name", "Return to the inn");
+        public static readonly LocString AfterInnDetail = new("train.after.inn.detail", "Travel to your Grand Company city and enter the inn room.");
+        public static readonly LocString AfterLogoutName = new("train.after.logout.name", "Log out to title");
+        public static readonly LocString AfterLogoutDetail = new("train.after.logout.detail", "Log out to the title screen.");
+        public static readonly LocString AfterCloseName = new("train.after.close.name", "Close the game");
+        public static readonly LocString AfterCloseDetail = new("train.after.close.detail", "Close FFXIV entirely (via XIVLauncher's /xlkill).");
 
-        public static readonly LocString ExpansionArr = new("hunt.expansion.arr", "A Realm Reborn");
-        public static readonly LocString ExpansionHw = new("hunt.expansion.hw", "Heavensward");
-        public static readonly LocString ExpansionSb = new("hunt.expansion.sb", "Stormblood");
-        public static readonly LocString ExpansionShb = new("hunt.expansion.shb", "Shadowbringers");
-        public static readonly LocString ExpansionEw = new("hunt.expansion.ew", "Endwalker");
-        public static readonly LocString ExpansionDt = new("hunt.expansion.dt", "Dawntrail");
+        public static readonly LocString ExpansionArr = new("train.expansion.arr", "A Realm Reborn");
+        public static readonly LocString ExpansionHw = new("train.expansion.hw", "Heavensward");
+        public static readonly LocString ExpansionSb = new("train.expansion.sb", "Stormblood");
+        public static readonly LocString ExpansionShb = new("train.expansion.shb", "Shadowbringers");
+        public static readonly LocString ExpansionEw = new("train.expansion.ew", "Endwalker");
+        public static readonly LocString ExpansionDt = new("train.expansion.dt", "Dawntrail");
 
-        public static readonly LocString Start = new("hunt.start", "START");
-        public static readonly LocString Stop = new("hunt.stop", "STOP");
-        public static readonly LocString PauseCaps = new("hunt.pause", "PAUSE");
-        public static readonly LocString ResumeCaps = new("hunt.resume", "RESUME");
-        public static readonly LocString InContent = new("hunt.inContent", "in content");
-        public static readonly LocString ReasonInstall = new("hunt.reason.install", "install the required plugins");
-        public static readonly LocString ReasonPickBill = new("hunt.reason.pickBill", "pick at least one bill");
-        public static readonly LocString ReasonAllDone = new("hunt.reason.allDone", "every bill you picked is done");
-        public static readonly LocString StartSub = new("hunt.startSub", "{0}  ·  {1}");
-        public static readonly LocPlural ToPickUp = new("hunt.toPickUp", "{0} to pick up", "{0} to pick up");
-        public static readonly LocPlural KillsLeft = new("hunt.killsLeft", "{0} kill left", "{0} kills left");
-        public static readonly LocString StateRunning = new("hunt.state.running", "running");
-        public static readonly LocString StatePaused = new("hunt.state.paused", "paused");
-        public static readonly LocString StopSub = new("hunt.stopSub", "{0} · {1}");
+        public static readonly LocString Start = new("train.start", "START");
+        public static readonly LocString Stop = new("train.stop", "STOP");
+        public static readonly LocString PauseCaps = new("train.pause", "PAUSE");
+        public static readonly LocString ResumeCaps = new("train.resume", "RESUME");
+        public static readonly LocString InContent = new("train.inContent", "in content");
+        public static readonly LocString ReasonInstall = new("train.reason.install", "install the required plugins");
+        public static readonly LocString ReasonNotBuilt = new("train.reason.notBuilt", "the ride logic is not built yet");
+        public static readonly LocString StartSub = new("train.startSub", "no ride to start yet");
+        public static readonly LocString StateRunning = new("train.state.running", "riding");
+        public static readonly LocString StatePaused = new("train.state.paused", "paused");
+        public static readonly LocString StopSub = new("train.stopSub", "{0} · {1}");
     }
 
     internal static class Run
     {
-        public static readonly LocString PhaseReading = new("run.phase.reading", "Reading bills");
-        public static readonly LocString PhaseReadingLogs = new("run.phase.readingLogs", "Reading your logs");
-        public static readonly LocString PhaseReadingList = new("run.phase.readingList", "Reading your list");
-        public static readonly LocString PhasePickingUp = new("run.phase.pickingUp", "Picking up bills");
+        public static readonly LocString PhasePreparing = new("run.phase.preparing", "Getting ready");
         public static readonly LocString PhaseTravelling = new("run.phase.travelling", "Travelling");
         public static readonly LocString PhaseSearching = new("run.phase.searching", "Searching");
         public static readonly LocString PhaseFighting = new("run.phase.fighting", "Fighting");
@@ -139,59 +105,38 @@ internal static partial class L
         public static readonly LocString PhaseReady = new("run.phase.ready", "Ready");
         public static readonly LocString PhasePaused = new("run.phase.paused", "Paused");
         public static readonly LocString PhasePausedInContent = new("run.phase.pausedInContent", "Paused (in content)");
-        public static readonly LocString UpNext = new("run.upNext", "Up next");
-        public static readonly LocString NoMarksLeft = new("run.noMarksLeft", "No marks left on your bills.");
-        public static readonly LocString PickUpFirst = new("run.pickUpFirst", "Marks show up here once their bills are picked up.");
-        public static readonly LocString RouteFirst = new("run.routeFirst", "Targets show up here once the route is planned.");
-        public static readonly LocString NoTargetsLeft = new("run.noTargetsLeft", "Nothing left to hunt in this pass.");
-        public static readonly LocString TargetMeta = new("run.targetMeta", "{0}  ·  {1}/{2}");
-        public static readonly LocPlural InPlay = new("run.inPlay", "{1}  ·  {0} bill in play", "{1}  ·  {0} bills in play");
-        public static readonly LocPlural LogsInPlay = new("run.logsInPlay", "{1}  ·  {0} log in play", "{1}  ·  {0} logs in play");
-        public static readonly LocPlural MobsInPlay = new("run.mobsInPlay", "{1}  ·  {0} mob in play", "{1}  ·  {0} mobs in play");
         public static readonly LocString SomewhereElse = new("run.somewhereElse", "Somewhere else");
+        public static readonly LocPlural MarksCredited = new("run.marksCredited", "{0} mark credited", "{0} marks credited");
         public static readonly LocString TileMarks = new("run.tile.marks", "Marks");
-        public static readonly LocString TileKills = new("run.tile.kills", "Kills");
-        public static readonly LocString TileBills = new("run.tile.bills", "Bills");
-        public static readonly LocString TileTargets = new("run.tile.targets", "Targets");
         public static readonly LocString TileSeals = new("run.tile.seals", "Seals");
         public static readonly LocString TileElapsed = new("run.tile.elapsed", "Elapsed");
         public static readonly LocString NutsSub = new("run.nutsSub", "+{0} nuts");
-        public static readonly LocString GoalOf = new("run.goal.of", "/ {0}");
-        public static readonly LocPlural KillsToGo = new("run.goal.killsToGo", "{0} kill to go", "{0} kills to go");
-        public static readonly LocString AllKillsDone = new("run.goal.allDone", "every mark down");
-        public static readonly LocString AllTargetsDone = new("run.goal.allTargetsDone", "every target down");
     }
 
     internal static class History
     {
         public static readonly LocString Title = new("history.title", "History");
-        public static readonly LocString Empty = new("history.empty", "Your finished runs will show up here.");
-        public static readonly LocPlural Summary = new("history.summary", "{0} recorded run  ·  {1} hunting  ·  {2} marks/h average", "{0} recorded runs  ·  {1} hunting  ·  {2} marks/h average");
-        public static readonly LocString TileRuns = new("history.tile.runs", "Runs");
-        public static readonly LocString TileBills = new("history.tile.bills", "Bills");
+        public static readonly LocString Empty = new("history.empty", "Your finished rides will show up here.");
+        public static readonly LocPlural Summary = new("history.summary", "{0} recorded ride  ·  {1} on the rails  ·  {2} marks/h average", "{0} recorded rides  ·  {1} on the rails  ·  {2} marks/h average");
+        public static readonly LocString TileRuns = new("history.tile.runs", "Rides");
         public static readonly LocString TileMarks = new("history.tile.marks", "Marks");
-        public static readonly LocString TileKills = new("history.tile.kills", "Kills");
         public static readonly LocString TileSeals = new("history.tile.seals", "Seals");
         public static readonly LocString TileNuts = new("history.tile.nuts", "Nuts");
-        public static readonly LocString NoRuns = new("history.noRuns", "No runs recorded yet. Finish (or stop) a hunt and it'll show up here.");
-        public static readonly LocString MarksPerRun = new("history.marksPerRun", "Marks per run");
-        public static readonly LocString RecentRuns = new("history.recentRuns", "Recent runs");
-        public static readonly LocPlural ChartRange = new("history.chartRange", "last {0} run  ·  oldest to newest", "last {0} runs  ·  oldest to newest");
+        public static readonly LocString NoRuns = new("history.noRuns", "No rides recorded yet. Finish (or stop) a ride and it'll show up here.");
+        public static readonly LocString MarksPerRun = new("history.marksPerRun", "Marks per ride");
+        public static readonly LocString RecentRuns = new("history.recentRuns", "Recent rides");
+        public static readonly LocPlural ChartRange = new("history.chartRange", "last {0} ride  ·  oldest to newest", "last {0} rides  ·  oldest to newest");
         public static readonly LocString ChartPeak = new("history.chartPeak", "peak {0}");
-        public static readonly LocString ChartTooltip = new("history.chartTooltip", "{0}  ·  {1} marks  ·  {2} bills  ·  {3}");
-        public static readonly LocString ChartTooltipKills = new("history.chartTooltipKills", "{0}  ·  {1} kills  ·  {2}");
+        public static readonly LocString ChartTooltip = new("history.chartTooltip", "{0}  ·  {1} marks  ·  {2}");
         public static readonly LocString RowDetail = new("history.rowDetail", "{0}  ·  {1}  ·  {2}");
         public static readonly LocString TooltipRate = new("history.tooltip.rate", "Rate: {0} marks/h");
-        public static readonly LocString TooltipRateKills = new("history.tooltip.rateKills", "Rate: {0} kills/h");
-        public static readonly LocString TooltipBills = new("history.tooltip.bills", "Bills: {0}");
-        public static readonly LocString TooltipLogs = new("history.tooltip.logs", "Logs: {0}");
-        public static readonly LocString TooltipMobs = new("history.tooltip.mobs", "Mobs: {0}");
+        public static readonly LocString TooltipWorld = new("history.tooltip.world", "World: {0}  ·  {1}");
         public static readonly LocString JustNow = new("history.time.justNow", "just now");
         public static readonly LocString MinutesAgo = new("history.time.minutesAgo", "{0}m ago");
         public static readonly LocString HoursAgo = new("history.time.hoursAgo", "{0}h ago");
         public static readonly LocString DaysAgo = new("history.time.daysAgo", "{0}d ago");
         public static readonly LocString ClearHistory = new("history.clear", "Clear history");
-        public static readonly LocString ClearQuestion = new("history.clearQuestion", "Delete all recorded runs?");
+        public static readonly LocString ClearQuestion = new("history.clearQuestion", "Delete all recorded rides?");
         public static readonly LocString ClearYes = new("history.clearYes", "Yes, clear");
     }
 
@@ -352,7 +297,7 @@ internal static partial class L
     {
         public static readonly LocString Title = new("settings.title", "Settings");
         public static readonly LocString Language = new("settings.language", "Language");
-        public static readonly LocString LanguageHelp = new("settings.languageHelp", "The language of this plugin's windows. Zone, mark, and bill names always follow the game client.");
+        public static readonly LocString LanguageHelp = new("settings.languageHelp", "The language of this plugin's windows. Zone, mark, and world names always follow the game client.");
         public static readonly LocString SearchHint = new("settings.searchHint", "Search...");
 
         public static readonly LocString CatGeneral = new("settings.cat.general", "General");
@@ -363,12 +308,12 @@ internal static partial class L
         public static readonly LocString OpenOnLoginHelp = new("settings.general.openOnLoginHelp", "Pop the main window automatically the next time you log in.");
         public static readonly LocString GeneralBehavior = new("settings.general.behavior", "Behavior");
         public static readonly LocString AutoPause = new("settings.general.autoPause", "Auto-pause in content");
-        public static readonly LocString AutoPauseHelp = new("settings.general.autoPauseHelp", "Pause the run while you are inside a duty, trial, raid, or any other instanced content, then resume it once you are back outside. Your bills and session stats are kept.");
+        public static readonly LocString AutoPauseHelp = new("settings.general.autoPauseHelp", "Pause the ride while you are inside a duty, trial, raid, or any other instanced content, then resume it once you are back outside. Your ride and session stats are kept.");
     }
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the run) | target (dump the current target's BaseId and spawn points) | logdump (write the Hunting Log state to the plugin log) | marks (write the hunt marks and Mark achievements to the plugin log).");
+        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Auto Hunt Train window. /aht config | stats | deps | log | changelog | about | pause (pause or resume the ride) | target (dump the current target's BaseId) | goto <territory> <x> <y> <z> (travel to a point, goto stop cancels).");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /aht.");
     }
 }

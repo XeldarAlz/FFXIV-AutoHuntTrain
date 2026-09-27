@@ -11,8 +11,6 @@ internal static class Layout
     public const float ContentRightInset = 6f;
 
     public const float HeroButtonHeight = 54f;
-    public const float BillCardHeight = 52f;
-    public const float BillCardMinWidth = 260f;
     public const float SegmentHeight = 40f;
     public const float LibraryHeaderHeight = 36f;
     public const float ChipHeight = 32f;
@@ -21,8 +19,6 @@ internal static class Layout
 
     public const float HeroCardHeight = 142f;
     public const float StatTileHeight = 66f;
-    public const float QueueRowHeight = 54f;
-    public const float QueueBarHeight = 5f;
 
     public const float SettingsNavWidth = 196f;
     public const float PluginCardHeight = 76f;

@@ -1,7 +1,6 @@
 using AutoHuntTrain.Core;
 using AutoHuntTrain.Core.Debug;
 using AutoHuntTrain.Core.Game.Watchers;
-using AutoHuntTrain.Core.HuntingLog;
 using AutoHuntTrain.Core.Kills;
 using AutoHuntTrain.Core.Localization;
 using AutoHuntTrain.Core.Stats;
@@ -64,7 +63,6 @@ public sealed class Plugin : IDalamudPlugin
         gmAlertWatcher = new GmAlertWatcher();
         partyInviteWatcher = new PartyInviteWatcher();
         Kills = new KillLedger();
-        Kills.HuntingLogChanged += OnHuntingLogChanged;
 
         InitializeLocalization();
         Fonts.Initialize(PluginInterface.UiBuilder, PluginDirectory);
@@ -112,7 +110,6 @@ public sealed class Plugin : IDalamudPlugin
         dutyWatcher.Dispose();
         gmAlertWatcher.Dispose();
         partyInviteWatcher.Dispose();
-        Kills.HuntingLogChanged -= OnHuntingLogChanged;
         Kills.Dispose();
 
         CLibMain.Dispose();
@@ -173,11 +170,6 @@ public sealed class Plugin : IDalamudPlugin
         else if (trimmed.Equals("target", StringComparison.OrdinalIgnoreCase))
         {
             TargetDumper.Dump();
-            SpawnDumper.DumpTarget();
-        }
-        else if (trimmed.Equals("logdump", StringComparison.OrdinalIgnoreCase))
-        {
-            HuntingLogDumper.Dump();
         }
         else if (trimmed.Equals("marks", StringComparison.OrdinalIgnoreCase))
         {
@@ -200,10 +192,6 @@ public sealed class Plugin : IDalamudPlugin
     }
 
     private void OnFrameworkUpdate(IFramework framework) => Controller.Tick();
-
-    // The game prints a Hunting Log line as it writes new counts, so the library and a run read them at once instead of
-    // on the reader's next throttled refresh.
-    private static void OnHuntingLogChanged() => HuntingLogReader.Refresh(force: true);
 
     private static bool IsGotoCommand(string arguments)
         => arguments.StartsWith(GotoSubcommand, StringComparison.OrdinalIgnoreCase)
@@ -265,6 +253,6 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        appWindow.Show(AppWindow.Page.Hunt);
+        appWindow.Show(AppWindow.Page.Train);
     }
 }

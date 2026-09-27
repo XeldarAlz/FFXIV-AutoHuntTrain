@@ -22,8 +22,8 @@ internal sealed unsafe class KillLedger : IDisposable
     private const int InterestTrackCapacity = 16;
     private const int CreditedRingCapacity = 32;
     private const int PendingCapacity = 16;
-    // A Hunting Log rank names at most 40 targets (10 entries of up to 4).
-    private const int InitialInterestCapacity = 64;
+    // A train rides one expansion's A ranks, two per zone, plus the odd S rank.
+    private const int InitialInterestCapacity = 16;
     // The game's enemy list holds 32 entries.
     private const int HaterCapacity = 32;
     private const long ScanIntervalMs = 200;
@@ -33,10 +33,6 @@ internal sealed unsafe class KillLedger : IDisposable
     private const uint DefeatLogMessageId = 557;
     // "<target> is defeated." Its trigger is unconfirmed (another player's kill reads the same), so it is logged for review, never credited.
     private const uint DefeatedLogMessageId = 559;
-    private const uint HuntingLogFirstProgressMessageId = 1001;
-    private const uint HuntingLogLastProgressMessageId = 1005;
-    private const uint HuntingLogRankUnlockedMessageId = 1011;
-    private const uint HuntingLogRankUnlockedWithArticleMessageId = 1012;
     // ObjStr ids from here up name event NPCs and objects; below it a battle NPC's id is its BNpcName row.
     private const uint FirstNonBattleNpcObjStrId = 1_000_000;
     private const byte UntaggedType = 0;
@@ -60,7 +56,6 @@ internal sealed unsafe class KillLedger : IDisposable
     private long nextScanAtMs;
     private ulong localPlayerId;
     private uint localPlayerEntityId;
-    private bool huntingLogChangePending;
 
     public KillLedger()
     {
@@ -69,8 +64,6 @@ internal sealed unsafe class KillLedger : IDisposable
     }
 
     public event Action<uint>? Credited;
-
-    public event Action? HuntingLogChanged;
 
     private enum TagOwner : byte
     {
@@ -181,12 +174,6 @@ internal sealed unsafe class KillLedger : IDisposable
     {
         var now = Environment.TickCount64;
         EmitSettledCredits(now);
-        if (huntingLogChangePending)
-        {
-            huntingLogChangePending = false;
-            HuntingLogChanged?.Invoke();
-        }
-
         if (now < nextScanAtMs)
         {
             return;
@@ -196,17 +183,10 @@ internal sealed unsafe class KillLedger : IDisposable
         Scan(now);
     }
 
-    // Runs inside the game's log hook: only the ids are copied out, and the Hunting Log refresh is raised on the next
-    // framework update, after the handler that printed the line has also written the new counts.
+    // Runs inside the game's log hook, so only the ids are copied out.
     private void OnLogMessage(ILogMessage message)
     {
         var logMessageId = message.LogMessageId;
-        if (IsHuntingLogMessage(logMessageId))
-        {
-            huntingLogChangePending = true;
-            return;
-        }
-
         if (logMessageId != DefeatLogMessageId && logMessageId != DefeatedLogMessageId)
         {
             return;
@@ -664,11 +644,6 @@ internal sealed unsafe class KillLedger : IDisposable
         var signals = credit.Signals == KillSignal.Both ? $"death and log message {DefeatLogMessageId}" : "death";
         return $"Kill ledger: credited hunt mark BNpcName {credit.NameId}, object {credit.GameObjectId:X} ({signals}; {DescribePart(onEnemyList: true)})";
     }
-
-    private static bool IsHuntingLogMessage(uint logMessageId)
-        => logMessageId is >= HuntingLogFirstProgressMessageId and <= HuntingLogLastProgressMessageId
-            or HuntingLogRankUnlockedMessageId
-            or HuntingLogRankUnlockedWithArticleMessageId;
 
     private static bool IsDown(IBattleNpc npc) => npc.IsDead || npc.CurrentHp == 0;
 

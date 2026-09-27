@@ -1,4 +1,3 @@
-using AutoHuntTrain.Core.Hunts;
 
 namespace AutoHuntTrain.Core.Marks;
 

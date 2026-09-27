@@ -17,8 +17,8 @@ public sealed partial class Configuration : IPluginConfiguration
 
     public string Language { get; set; } = "";
 
-    // MobHuntOrderType row ids, which double as the MobHunt mark indices.
-    public HashSet<byte> SelectedBills { get; set; } = [];
+    // The bundled hunt preset is rewritten in the combat plugin only while this trails its revision, so edits to it survive otherwise.
+    public int BundledCombatPresetRevision { get; set; }
 
     // Never fires on a manual Stop or a fault.
     public AfterRunAction AfterRun { get; set; } = AfterRunAction.StayLoggedIn;

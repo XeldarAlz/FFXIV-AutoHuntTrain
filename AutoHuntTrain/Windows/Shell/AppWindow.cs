@@ -9,7 +9,7 @@ namespace AutoHuntTrain.Windows.Shell;
 
 public sealed class AppWindow : Window, IDisposable
 {
-    public enum Page { Hunt, Settings, History, Plugins, Log, Changelog, About }
+    public enum Page { Train, Settings, History, Plugins, Log, Changelog, About }
 
     private const float PageRevealMs = 260f;
     private const float PageSlide = 12f;
@@ -34,7 +34,7 @@ public sealed class AppWindow : Window, IDisposable
     };
 
     private readonly Plugin plugin;
-    private readonly HuntPage huntPage = new();
+    private readonly TrainPage trainPage = new();
     private readonly SettingsPage settingsPage = new();
     private readonly HistoryPage historyPage = new();
     private readonly PluginsPage pluginsPage = new();
@@ -42,7 +42,7 @@ public sealed class AppWindow : Window, IDisposable
     private readonly ChangelogPage changelogPage = new();
     private readonly AboutPage aboutPage = new();
 
-    private Page page = Page.Hunt;
+    private Page page = Page.Train;
     private long pageShownTick = Environment.TickCount64;
     private bool resetScroll;
 
@@ -204,7 +204,7 @@ public sealed class AppWindow : Window, IDisposable
         var scale = ImGuiHelpers.GlobalScale;
         var dl = ImGui.GetWindowDrawList();
         var running = plugin.Controller.Running;
-        var dockHeight = page == Page.Hunt ? Layout.DockHeight * scale
+        var dockHeight = page == Page.Train ? Layout.DockHeight * scale
             : running ? Layout.MiniPlayerHeight * scale
             : 0f;
         var railWidth = Layout.RailWidth * scale;
@@ -232,8 +232,8 @@ public sealed class AppWindow : Window, IDisposable
         if (dockHeight <= 0f) return;
         ImGui.SetCursorScreenPos(new Vector2(windowPos.X, windowPos.Y + windowSize.Y - dockHeight));
         var dockSize = new Vector2(windowSize.X, dockHeight);
-        if (page == Page.Hunt) ActionDock.Draw(plugin, dockSize, windowRounding);
-        else if (MiniPlayer.Draw(plugin, dockSize, windowRounding)) Show(Page.Hunt);
+        if (page == Page.Train) ActionDock.Draw(plugin, dockSize, windowRounding);
+        else if (MiniPlayer.Draw(plugin, dockSize, windowRounding)) Show(Page.Train);
     }
 
     private void DrawPage()
@@ -247,7 +247,7 @@ public sealed class AppWindow : Window, IDisposable
         using var reveal = Motion.PushReveal(Motion.Reveal(pageShownTick, PageRevealMs), PageSlide);
         switch (page)
         {
-            case Page.Hunt: huntPage.Draw(plugin, this); break;
+            case Page.Train: trainPage.Draw(plugin, this); break;
             case Page.Settings: settingsPage.Draw(plugin); break;
             case Page.History: historyPage.Draw(plugin); break;
             case Page.Plugins: pluginsPage.Draw(); break;

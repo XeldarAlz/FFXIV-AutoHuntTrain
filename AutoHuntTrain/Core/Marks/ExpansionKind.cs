@@ -1,4 +1,4 @@
-namespace AutoHuntTrain.Core.Hunts;
+namespace AutoHuntTrain.Core.Marks;
 
 public enum ExpansionKind
 {

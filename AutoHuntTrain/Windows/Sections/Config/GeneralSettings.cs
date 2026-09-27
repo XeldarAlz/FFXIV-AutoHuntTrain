@@ -5,11 +5,24 @@ namespace AutoHuntTrain.Windows.Sections.Config;
 
 internal static class GeneralSettings
 {
+    private static readonly AfterRunAction[] afterRunOrder =
+        [AfterRunAction.StayLoggedIn, AfterRunAction.ReturnToInn, AfterRunAction.Logout, AfterRunAction.CloseGame];
+
+    // Ordered like afterRunOrder, because the picked index reads both.
+    private static readonly SettingsControls.Choices.Choice[] afterRunChoices =
+    [
+        new(L.Train.AfterStayName, L.Train.AfterStayDetail),
+        new(L.Train.AfterInnName, L.Train.AfterInnDetail),
+        new(L.Train.AfterLogoutName, L.Train.AfterLogoutDetail),
+        new(L.Train.AfterCloseName, L.Train.AfterCloseDetail),
+    ];
+
     public static void Draw(Configuration configuration)
     {
         DrawLanguageGroup(configuration);
         DrawWindowGroup(configuration);
         DrawBehaviorGroup(configuration);
+        DrawAfterRideGroup(configuration);
     }
 
     private static void DrawLanguageGroup(Configuration configuration)
@@ -48,5 +61,21 @@ internal static class GeneralSettings
             SettingsControls.ToggleWidth,
             () => SettingsControls.DrawToggle(configuration, () => configuration.AutoResumeOnFault, value => configuration.AutoResumeOnFault = value, "##aht_general_autoresume"),
             SettingsRow.ToggleHeight);
+    }
+
+    private static void DrawAfterRideGroup(Configuration configuration)
+    {
+        using var group = SettingsGroup.Begin(Loc.T(L.Train.WhenDone));
+
+        var selected = Math.Max(0, Array.IndexOf(afterRunOrder, configuration.AfterRun));
+        SettingsRow.Draw(Loc.T(L.Train.WhenDone),
+            Loc.T(L.Train.WhenDoneHelp),
+            SettingsControls.RowComboWidth,
+            () => SettingsControls.Choices.DrawCombo("##aht_general_afterride", afterRunChoices, selected, choice =>
+            {
+                configuration.AfterRun = afterRunOrder[choice];
+                configuration.SaveDebounced();
+            }));
+        SettingsRow.Caption(Loc.T(afterRunChoices[selected].Detail));
     }
 }

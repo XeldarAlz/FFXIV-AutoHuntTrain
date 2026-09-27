@@ -1,4 +1,3 @@
-using AutoHuntTrain.Core.Hunts;
 using clib.Services;
 
 namespace AutoHuntTrain.Core.Tasks;
@@ -51,10 +50,10 @@ internal sealed partial class AutoHuntController
         Svc.Automation.Stop();
         ReleaseHelpers();
 
-        Diag($"Run paused ({reason}); session kept at {pausing.MarksKilled} marks, {pausing.BillsCompleted} bills.");
+        Diag($"Run paused ({reason}); session kept at {pausing.MarksCredited} marks credited.");
         ECommons.DalamudServices.Svc.Chat.Print(reason == PauseReason.InContent
-            ? $"{AhtConstants.LogPrefix} Paused: you are in instanced content. The hunt resumes once you are back outside."
-            : $"{AhtConstants.LogPrefix} Paused. Your {(pausing.Mode == HuntMode.MarkBills ? "bills" : "run")} and session stats are kept until you resume or stop.");
+            ? $"{AhtConstants.LogPrefix} Paused: you are in instanced content. The ride resumes once you are back outside."
+            : $"{AhtConstants.LogPrefix} Paused. Your ride and session stats are kept until you resume or stop.");
     }
 
     public void Resume()
@@ -65,7 +64,7 @@ internal sealed partial class AutoHuntController
         }
 
         var resuming = session;
-        if (resuming is null || !CanRestart(resuming))
+        if (resuming is null || !CanRestart())
         {
             Diag("Resume requested with no session or nothing to resume; stopping instead.");
             Stop();
@@ -75,9 +74,9 @@ internal sealed partial class AutoHuntController
         PauseReason = PauseReason.None;
         resuming.EndPause();
         resuming.Rebaseline();
-        Diag("Resuming the hunt.");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Resuming the hunt.");
-        StartHunt(resuming);
+        Diag("Resuming the ride.");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} Resuming the ride.");
+        StartRide(resuming);
     }
 
     public void TogglePause()

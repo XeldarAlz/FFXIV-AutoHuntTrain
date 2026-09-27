@@ -1,7 +1,7 @@
 using ECommons.DalamudServices;
 using FFXIVClientStructs.FFXIV.Client.Game;
 
-namespace AutoHuntTrain.Core.Hunts;
+namespace AutoHuntTrain.Core.Marks;
 
 internal readonly record struct HuntWallet(int AlliedSeals, int CenturioSeals, int Nuts)
 {

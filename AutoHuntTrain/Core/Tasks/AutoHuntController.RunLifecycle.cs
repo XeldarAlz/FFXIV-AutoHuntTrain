@@ -12,7 +12,7 @@ internal sealed partial class AutoHuntController
     private int runFaultResumeCount;
     private long faultWindowStartedAtMs;
 
-    private void OnHuntEnded(AutoHuntSession owningSession)
+    private void OnRideEnded(AutoHuntSession owningSession)
     {
         var faulted = ReferenceEquals(session, owningSession) && owningSession.EndedWithFault;
         if (faulted && !owningSession.CompletedByStopCondition && TryAutoResumeAfterFault(owningSession))
@@ -22,7 +22,7 @@ internal sealed partial class AutoHuntController
 
         if (faulted)
         {
-            ECommons.DalamudServices.Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The hunt stopped on an unexpected error. The log has the details.");
+            ECommons.DalamudServices.Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The ride stopped on an unexpected error. The log has the details.");
         }
 
         EndRun(owningSession);
@@ -38,9 +38,6 @@ internal sealed partial class AutoHuntController
         }
 
         progress.ClearMark();
-        progress.ClearRoute();
-        progress.ClearObjective();
-        progress.ClearObjectives();
         if (!TryRunAfterAction(owningSession))
         {
             ClearRun();
@@ -111,20 +108,20 @@ internal sealed partial class AutoHuntController
 
             var record = new RunRecord
             {
-                Mode = ending.Mode,
                 StartedAtUtc = ending.StartedAt,
                 EndedAtUtc = DateTime.UtcNow,
                 DurationSeconds = ending.Elapsed.TotalSeconds,
-                BillsCompleted = ending.BillsCompleted,
-                MarksKilled = ending.MarksKilled,
+                WorldName = ending.WorldName,
+                DataCenterName = ending.DataCenterName,
+                Expansion = ending.Expansion,
+                MarksCredited = ending.MarksCredited,
                 AlliedSeals = ending.AlliedSeals,
                 CenturioSeals = ending.CenturioSeals,
                 Nuts = ending.Nuts,
                 JobAbbreviation = ending.JobAbbreviation,
-                BillNames = [.. ending.BillNames],
             };
             Plugin.Instance.History.Append(record);
-            Diag($"Run recorded to history ({record.Mode}): {record.BillsCompleted} bills, {record.MarksKilled} marks, {record.AlliedSeals} allied seals, {record.CenturioSeals} centurio seals, {record.Nuts} nuts over {record.Duration} as {record.JobAbbreviation}.");
+            Diag($"Run recorded to history: {record.MarksCredited} marks credited, {record.AlliedSeals} allied seals, {record.CenturioSeals} centurio seals, {record.Nuts} nuts over {record.Duration} as {record.JobAbbreviation} on {record.WorldName} ({record.DataCenterName}).");
         }
         catch (Exception exception)
         {
@@ -146,19 +143,19 @@ internal sealed partial class AutoHuntController
     {
         if (!Plugin.Instance.Configuration.AutoResumeOnFault)
         {
-            Diag("Hunt task faulted and auto-resume on fault is off; the run ends.");
+            Diag("Ride task faulted and auto-resume on fault is off; the run ends.");
             return false;
         }
 
-        if (!CanRestart(owningSession))
+        if (!CanRestart())
         {
-            Diag($"Hunt task faulted with nothing to resume ({owningSession.Mode}); the run ends.");
+            Diag("Ride task faulted with nothing to resume; the run ends.");
             return false;
         }
 
         if (runFaultResumeCount >= MaxFaultResumesPerRun)
         {
-            Diag($"Hunt task faulted after {runFaultResumeCount} restarts in this run; not resuming. The run ends.");
+            Diag($"Ride task faulted after {runFaultResumeCount} restarts in this run; not resuming. The run ends.");
             return false;
         }
 
@@ -171,16 +168,16 @@ internal sealed partial class AutoHuntController
 
         if (faultResumeCount >= MaxFaultResumes)
         {
-            Diag($"Hunt task faulted {faultResumeCount} times within {FaultResumeWindowMs / TimeUnits.MillisecondsPerMinute} minutes; not resuming. The run ends.");
+            Diag($"Ride task faulted {faultResumeCount} times within {FaultResumeWindowMs / TimeUnits.MillisecondsPerMinute} minutes; not resuming. The run ends.");
             return false;
         }
 
         faultResumeCount++;
         runFaultResumeCount++;
         owningSession.ClearFault();
-        Diag($"Hunt task ended on an unexpected fault; auto-resuming (resume {faultResumeCount}/{MaxFaultResumes} in this {FaultResumeWindowMs / TimeUnits.MillisecondsPerMinute} minute window, {runFaultResumeCount}/{MaxFaultResumesPerRun} in this run).");
-        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} The hunt stopped on an unexpected error; restarting it ({faultResumeCount}/{MaxFaultResumes}).");
-        StartHunt(owningSession);
+        Diag($"Ride task ended on an unexpected fault; auto-resuming (resume {faultResumeCount}/{MaxFaultResumes} in this {FaultResumeWindowMs / TimeUnits.MillisecondsPerMinute} minute window, {runFaultResumeCount}/{MaxFaultResumesPerRun} in this run).");
+        ECommons.DalamudServices.Svc.Chat.Print($"{AhtConstants.LogPrefix} The ride stopped on an unexpected error; restarting it ({faultResumeCount}/{MaxFaultResumes}).");
+        StartRide(owningSession);
         return true;
     }
 }

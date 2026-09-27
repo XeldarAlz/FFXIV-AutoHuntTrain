@@ -6,7 +6,7 @@ using System.Numerics;
 using CSGameObject = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using CSObjectKind = FFXIVClientStructs.FFXIV.Client.Game.Object.ObjectKind;
 
-namespace AutoHuntTrain.Core.Hunts;
+namespace AutoHuntTrain.Core.Marks;
 
 internal readonly record struct MarkSighting(
     ulong GameObjectId,
@@ -14,8 +14,7 @@ internal readonly record struct MarkSighting(
     Vector3 Position,
     float HitboxRadius,
     float DistanceToHitbox,
-    uint CurrentHp,
-    ushort FateId);
+    uint CurrentHp);
 
 // Walks the object table through its cached wrappers, so a scan allocates nothing and is cheap enough for a move's stop check.
 internal static unsafe class MarkFinder
@@ -23,8 +22,8 @@ internal static unsafe class MarkFinder
     // The id the game stores when a character targets nothing.
     private const ulong NoTargetId = 0xE0000000;
 
-    // fateId 0 matches only mobs outside any FATE; any other value matches only mobs spawned by that FATE.
-    public static bool TryFindNearest(uint nameId, uint fateId, bool honorClaims, Vector3 from, ReadOnlySpan<ulong> ignored, out MarkSighting sighting, out int claimedSkipped)
+    // Only mobs outside any FATE count: a FATE's mobs are never fought outside it.
+    public static bool TryFindNearest(uint nameId, bool honorClaims, Vector3 from, ReadOnlySpan<ulong> ignored, out MarkSighting sighting, out int claimedSkipped)
     {
         sighting = default;
         claimedSkipped = 0;
@@ -39,7 +38,7 @@ internal static unsafe class MarkFinder
                 continue;
             }
 
-            if (!IsHuntable(npc, fateId) || ignored.Contains(npc.GameObjectId))
+            if (!IsHuntable(npc) || ignored.Contains(npc.GameObjectId))
             {
                 continue;
             }
@@ -93,7 +92,7 @@ internal static unsafe class MarkFinder
         return gameObject is not null && gameObject.GameObjectId == sighting.GameObjectId ? gameObject : null;
     }
 
-    private static bool IsHuntable(IBattleNpc npc, uint fateId)
+    private static bool IsHuntable(IBattleNpc npc)
     {
         if (!IsAlive(npc))
         {
@@ -101,7 +100,7 @@ internal static unsafe class MarkFinder
         }
 
         var native = (CSGameObject*)npc.Address;
-        return native->BattleNpcSubKind == BattleNpcSubKind.Combatant && native->FateId == fateId;
+        return native->BattleNpcSubKind == BattleNpcSubKind.Combatant && native->FateId == 0;
     }
 
     private static bool IsAlive(IBattleNpc npc) => npc.IsTargetable && !npc.IsDead && npc.CurrentHp > 0;
@@ -131,7 +130,7 @@ internal static unsafe class MarkFinder
     }
 
     private static MarkSighting Describe(IBattleNpc npc, int objectIndex, float distance)
-        => new(npc.GameObjectId, objectIndex, npc.Position, npc.HitboxRadius, distance, npc.CurrentHp, ((CSGameObject*)npc.Address)->FateId);
+        => new(npc.GameObjectId, objectIndex, npc.Position, npc.HitboxRadius, distance, npc.CurrentHp);
 
     private static float DistanceToHitbox(Vector3 from, IBattleNpc npc)
         => MathF.Max(0f, Vector3.Distance(from, npc.Position) - npc.HitboxRadius);

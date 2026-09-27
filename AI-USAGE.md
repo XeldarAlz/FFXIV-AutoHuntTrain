@@ -53,7 +53,7 @@ Nobody is judged for the level they declare. An undeclared one is the problem.
 
 ## Translations
 
-The eight non-English catalogs under AutoHuntTrain/Localization/ are AI-assisted with human review. English is the source: it is the default text of every string in `Core/Localization/L.cs`, and en.json is never loaded when the plugin runs in English. Game data is not translated at all: zone, mark, and bill names are read from the game client, so they always match what the player sees in their own client.
+The eight non-English catalogs under AutoHuntTrain/Localization/ are AI-assisted with human review. English is the source: it is the default text of every string in `Core/Localization/L.cs`, and en.json is never loaded when the plugin runs in English. Game data is not translated at all: zone, mark, and world names are read from the game client, so they always match what the player sees in their own client.
 
 This is the approach Dalamud's policy asks for, and the gap is coverage rather than method: catalogs without a native-speaker pass should be treated as placeholders until one lands. Native corrections are welcome from anyone, through the [translation issue form](https://github.com/XeldarAlz/FFXIV-AutoHuntTrain/issues/new?template=translation_report.yml).
 

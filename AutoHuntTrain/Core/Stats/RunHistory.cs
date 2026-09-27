@@ -71,8 +71,7 @@ internal sealed class RunHistory
         for (var index = 0; index < Records.Count; index++)
         {
             var record = Records[index];
-            totals.Bills += record.BillsCompleted;
-            totals.Marks += record.MarksKilled;
+            totals.Marks += record.MarksCredited;
             totals.Seals += record.Seals;
             totals.Nuts += record.Nuts;
             totals.Seconds += record.DurationSeconds;
@@ -102,7 +101,6 @@ internal sealed class RunHistory
     public struct LifetimeTotals
     {
         public int Runs;
-        public int Bills;
         public int Marks;
         public int Seals;
         public int Nuts;
