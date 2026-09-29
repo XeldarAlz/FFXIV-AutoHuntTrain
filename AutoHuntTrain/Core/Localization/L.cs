@@ -209,6 +209,11 @@ internal static partial class L
         public static readonly LocString New = new("changelog.new", "New");
         public static readonly LocPlural Changes = new("changelog.changes", "{0} change", "{0} changes");
 
+        public static readonly LocString[] Release1010 =
+        [
+            new("changelog.r1010.1", "Added a Buy Me a Coffee button under Patreon on the About page"),
+        ];
+
         public static readonly LocString[] Release1000 =
         [
             new("changelog.r1000.1", "Rides hunt trains announced through HuntAlerts, with a Ride button on every train, auto-join per expansion and snooze"),

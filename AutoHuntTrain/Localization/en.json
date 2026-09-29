@@ -181,6 +181,7 @@
   "changelog.new": "New",
   "changelog.changes.one": "{0} change",
   "changelog.changes.other": "{0} changes",
+  "changelog.r1010.1": "Added a Buy Me a Coffee button under Patreon on the About page",
   "changelog.r1000.1": "Rides hunt trains announced through HuntAlerts, with a Ride button on every train, auto-join per expansion and snooze",
   "changelog.r1000.2": "Travels to the train's world, data center and instance through Lifestream, and carries a ride across the data center relog",
   "changelog.r1000.3": "Follows the conductor's map flags from Shout, Yell and Say, picking the conductor from the announcement, the first flag, or by hand",

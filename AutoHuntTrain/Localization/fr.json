@@ -181,6 +181,7 @@
   "changelog.new": "Nouveau",
   "changelog.changes.one": "{0} changement",
   "changelog.changes.other": "{0} changements",
+  "changelog.r1010.1": "Ajout d'un bouton Buy Me a Coffee sous Patreon sur la page À propos",
   "changelog.r1000.1": "Suit les trains de chasse annoncés par HuntAlerts, avec un bouton Embarquer sur chaque train, la participation automatique par extension et la mise en veille",
   "changelog.r1000.2": "Rejoint le monde, le centre de données et l'instance du train via Lifestream, et garde le trajet à travers la reconnexion d'un changement de centre de données",
   "changelog.r1000.3": "Suit les drapeaux du conducteur en criant, hurlant et dire ; le conducteur vient de l'annonce, du premier drapeau ou de votre choix",
