@@ -34,6 +34,9 @@ internal sealed partial class AutoRide : AutoCommon
     private const float EngageAtOnceBelowHealth = 0.5f;
     private const int QuietEndMinutesMin = 2;
     private const int ZoneTeleportWatchdogMs = 60_000;
+    // A conductor's thank-you can come on the way to the last flag or on entering the last zone, before its marks
+    // (Discord: "Stopping train prematurely"), so it ends the ride only once the ride is idle this long after it.
+    private const int ThanksGraceMs = 2 * TimeUnits.MillisecondsPerMinute;
     private const int TypingPollFrames = 10;
     // The upkeep conditions read the bag and the status list, so a quiet wait asks at most this often.
     private const int UpkeepCheckIntervalMs = 5_000;
@@ -66,6 +69,8 @@ internal sealed partial class AutoRide : AutoCommon
     private bool travelling;
     private bool engaging;
     private bool conductorEnded;
+    private bool thanked;
+    private long thankedAtMs;
     private long lastFlagAtMs;
     private int legCount;
     private int rankACredited;
@@ -511,6 +516,13 @@ internal sealed partial class AutoRide : AutoCommon
 
             if (!hasPending)
             {
+                if (ThanksEndReached())
+                {
+                    conductorEnded = true;
+                    EndOnConductorPhrase();
+                    return;
+                }
+
                 TakeGivenStart();
                 if (await HandlePendingInstanceRequest())
                 {
@@ -619,6 +631,12 @@ internal sealed partial class AutoRide : AutoCommon
         hasPending = true;
         quietSinceMs = Environment.TickCount64;
         var note = travelling ? "; it supersedes the leg in progress" : engaging ? "; it is taken once the fight ends" : string.Empty;
+        if (thanked)
+        {
+            thanked = false;
+            note += "; the thank-you before it was not the end of the train";
+        }
+
         Diag($"Ride: flag from {Conductor.Describe(conductor)} in {TerritoryNames.Of(post.TerritoryId)} at ({post.MapX:F1}, {post.MapY:F1}){InstanceText(post)} via {post.ChatType}{note}");
     }
 
@@ -658,7 +676,8 @@ internal sealed partial class AutoRide : AutoCommon
         }
     }
 
-    // A thank-you before any flag was followed greets the riders rather than dismissing them.
+    // A thank-you before any flag was followed greets the riders rather than dismissing them. A later one starts the
+    // countdown to the end; the flags already posted are followed meanwhile, and a new flag cancels it.
     private bool EndsTrain(in SpokenLine line)
     {
         if (!Plugin.Instance.Configuration.EndOnConductorPhrase || TrainEndPhrases.Find(line.Text) is not { } phrase)
@@ -672,10 +691,19 @@ internal sealed partial class AutoRide : AutoCommon
             return false;
         }
 
-        conductorEnded = true;
-        Diag($"Ride: {Conductor.Describe(conductor)} said \"{line.Text}\" via {line.ChatType}, matching \"{phrase}\"; the ride ends {(engaging ? "once the fight in progress finishes" : "now")}");
+        if (thanked)
+        {
+            return true;
+        }
+
+        thanked = true;
+        thankedAtMs = Environment.TickCount64;
+        Diag($"Ride: {Conductor.Describe(conductor)} said \"{line.Text}\" via {line.ChatType}, matching \"{phrase}\"; the ride ends once the flags already posted are done, unless a new flag follows within {ThanksGraceMs / TimeUnits.MillisecondsPerSecond}s");
         return true;
     }
+
+    private bool ThanksEndReached()
+        => thanked && Environment.TickCount64 - thankedAtMs >= ThanksGraceMs;
 
     // Only an announced ride picks: from a flag in the start zone, when known, posted from shortly before the start, or
     // while catching up, from a flag heard in the zone listened in.
