@@ -192,6 +192,7 @@
   "changelog.new": "Yeni",
   "changelog.changes.one": "{0} değişiklik",
   "changelog.changes.other": "{0} değişiklik",
+  "changelog.r1200.1": "Düzeltildi: Kondüktörün yeni ulaşılan durağı dakikalar sonra, geç kalanlar için veya yanlışlıkla yeniden paylaşması yeni bir bayrak gibi takip ediliyordu",
   "changelog.r1100.1": "S seviye avları eklendi: HuntAlerts'ten gelen S seviye bildirimleri artık listede bir S Seviye Avı düğmesiyle görünür; düğme hedefe gider, başka bir oyuncu saldırana kadar güvenli bir mesafede bekler, savaşa katılır ve av sayıldığında biter, katkı: Asha-00",
   "changelog.r1100.2": "Yolculuklar artık kondüktörün instance'ını takip eder: onu bir işaretin harita bağlantısından okur, kondüktör “swap to 2” gibi bir instance söylediğinde geçer ve geçiş için görünürde aetheryte yoksa önce açılmış bir aetheryte'a ışınlanır, Asha-00'ın çalışmasına dayanır",
   "changelog.r1100.3": "“starting in 10-15 minutes” gibi bir bekleme süresiyle ya da saat aralığıyla duyurulan trenler artık gerçekten başlayana kadar beklenir ve başlangıç saati vermeyen bir duyuru zaten başlamış sayılmak yerine 15 dakikalık bir pay alır",

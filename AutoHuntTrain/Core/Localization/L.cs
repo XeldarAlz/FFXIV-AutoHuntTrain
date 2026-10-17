@@ -220,6 +220,11 @@ internal static partial class L
         public static readonly LocString New = new("changelog.new", "New");
         public static readonly LocPlural Changes = new("changelog.changes", "{0} change", "{0} changes");
 
+        public static readonly LocString[] Release1200 =
+        [
+            new("changelog.r1200.1", "Fixed a conductor's repost of the stop just reached, minutes later for latecomers or by mistake, being followed as a new flag"),
+        ];
+
         public static readonly LocString[] Release1100 =
         [
             new("changelog.r1100.1", "Added one-off S-Hunts: S-rank relays from HuntAlerts now appear in the list with an S-Hunt button that travels to the mark, waits at a safe distance for another player to pull, joins the fight and ends once the kill is credited, contributed by Asha-00"),

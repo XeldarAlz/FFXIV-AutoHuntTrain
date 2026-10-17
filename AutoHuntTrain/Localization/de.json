@@ -192,6 +192,7 @@
   "changelog.new": "Neu",
   "changelog.changes.one": "{0} Änderung",
   "changelog.changes.other": "{0} Änderungen",
+  "changelog.r1200.1": "Behoben: Postete der Zugführer den gerade erreichten Halt Minuten später erneut, für Nachzügler oder versehentlich, wurde er als neue Flagge angefahren",
   "changelog.r1100.1": "S-Jagden hinzugefügt: S-Rang-Meldungen von HuntAlerts erscheinen jetzt in der Liste mit einem S-Jagd-Button, der zum Ziel reist, in sicherem Abstand wartet, bis ein anderer Spieler angreift, sich dem Kampf anschließt und endet, sobald der Sieg angerechnet ist, beigetragen von Asha-00",
   "changelog.r1100.2": "Fahrten folgen jetzt der Instanz des Zugführers: Sie lesen sie aus dem Kartenlink einer Markierung, wechseln, wenn der Zugführer eine ausruft, etwa „swap to 2“, und teleportieren sich zuerst zu einem freigeschalteten Ätheryten, wenn zum Wechseln keiner in Sicht ist, auf Grundlage der Arbeit von Asha-00",
   "changelog.r1100.3": "Züge, die mit einer Wartezeit wie „starting in 10-15 minutes“ oder einer Uhrzeitspanne angekündigt werden, werden jetzt bis zu ihrem tatsächlichen Start abgewartet, und eine Ankündigung ohne Startzeit bekommt 15 Minuten Schonfrist, statt als bereits unterwegs zu gelten",

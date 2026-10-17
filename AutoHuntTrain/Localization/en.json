@@ -192,6 +192,7 @@
   "changelog.new": "New",
   "changelog.changes.one": "{0} change",
   "changelog.changes.other": "{0} changes",
+  "changelog.r1200.1": "Fixed a conductor's repost of the stop just reached, minutes later for latecomers or by mistake, being followed as a new flag",
   "changelog.r1100.1": "Added one-off S-Hunts: S-rank relays from HuntAlerts now appear in the list with an S-Hunt button that travels to the mark, waits at a safe distance for another player to pull, joins the fight and ends once the kill is credited, contributed by Asha-00",
   "changelog.r1100.2": "Rides now follow the conductor's instance: they read it from a flag's map link, switch when the conductor calls one such as \"swap to 2\", and teleport to an attuned aetheryte first when none is in sight to switch at, based on work by Asha-00",
   "changelog.r1100.3": "Trains announced with a wait such as \"starting in 10-15 minutes\" or a clock range are now waited for until they actually start, and a post with no start time gets a 15-minute grace instead of being treated as already under way",
