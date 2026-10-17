@@ -25,6 +25,7 @@ internal static class InstanceHints
     private const string MoveWord = "move";
     private const string GoWord = "go";
     private const string CorrectWord = "correct";
+    private static readonly string[] ordinalSuffixes = ["st", "nd", "rd", "th"];
     // A conductor's instance call is a short line of its own; a longer one is chatter that happens to hold a number.
     private const int MaxStandaloneWords = 6;
 
@@ -98,7 +99,7 @@ internal static class InstanceHints
         return directed > 0 ? directed : named;
     }
 
-    // A circled digit anywhere, or "iN", "inst N" or "instance N" starting a word.
+    // A circled digit anywhere, or "iN", "inst N", "instance N" or "Nth instance" starting a word.
     private static bool TryReadNamed(ReadOnlySpan<char> text, int index, out int number)
     {
         var character = text[index];
@@ -109,13 +110,57 @@ internal static class InstanceHints
         }
 
         number = 0;
-        if (!AtWordStart(text, index) || char.ToLowerInvariant(character) != ShortPrefix)
+        if (!AtWordStart(text, index))
+        {
+            return false;
+        }
+
+        if (TryReadOrdinalInstance(text, index, out number))
+        {
+            return true;
+        }
+
+        if (char.ToLowerInvariant(character) != ShortPrefix)
         {
             return false;
         }
 
         var afterWord = WordEnd(text, index, LongWord) ?? WordEnd(text, index, ShortWord) ?? index + 1;
         return TryReadNumber(text, afterWord, out number, out _);
+    }
+
+    // "2nd instance" or "3rd inst": the number comes first, as an ordinal, and the word follows.
+    private static bool TryReadOrdinalInstance(ReadOnlySpan<char> text, int index, out int number)
+    {
+        number = 0;
+        if (!TryReadNumber(text, index, out var ordinal, out var suffixStart) || !TryReadOrdinalSuffix(text, suffixStart, out var suffixEnd))
+        {
+            return false;
+        }
+
+        var word = SkipWhitespace(text, suffixEnd);
+        if (WholeWordEnd(text, word, LongWord) is null && WholeWordEnd(text, word, ShortWord) is null)
+        {
+            return false;
+        }
+
+        number = ordinal;
+        return true;
+    }
+
+    private static bool TryReadOrdinalSuffix(ReadOnlySpan<char> text, int start, out int end)
+    {
+        for (var suffixIndex = 0; suffixIndex < ordinalSuffixes.Length; suffixIndex++)
+        {
+            if (WholeWordEnd(text, start, ordinalSuffixes[suffixIndex]) is { } suffixEnd)
+            {
+                end = suffixEnd;
+                return true;
+            }
+        }
+
+        end = start;
+        return false;
     }
 
     private static bool TryReadDirected(ReadOnlySpan<char> line, int index, out int number)

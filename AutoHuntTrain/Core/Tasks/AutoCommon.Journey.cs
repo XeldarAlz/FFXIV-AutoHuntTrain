@@ -24,6 +24,10 @@ public abstract partial class AutoCommon
     private const int HopPollMs = 500;
     private const int HopProgressLogMs = 15_000;
     private const int LifestreamBusyBeforeHopMs = 30_000;
+    // Lifestream drops a same data center world change now and then, going idle on the old world within seconds
+    // (Discord: "Char teleporting ... not moving"); a dropped change is asked for again before the ride is given up.
+    private const int WorldChangeAttempts = 3;
+    private const int WorldChangeRetryBackoffMs = 5_000;
     private const int LifestreamIdleWindowMs = 3_000;
     private const int LifestreamIdleBudgetMs = 60_000;
     private const int JourneyTeleportWatchdogMs = 60_000;
@@ -130,7 +134,8 @@ public abstract partial class AutoCommon
         var trainOverAtUtc = crossDataCenter ? giveUpAtUtc : null;
         if (trainOverAtUtc is { } overAtUtc && DateTime.UtcNow >= overAtUtc)
         {
-            return AbandonTransfer(target, label);
+            AbandonTransfer(target, label);
+            return JourneyOutcome.Overdue;
         }
 
         var reachable = crossDataCenter ? lifestream.CanVisitCrossDataCenter(target.Name) : lifestream.CanVisitSameDataCenter(target.Name);
@@ -164,10 +169,38 @@ public abstract partial class AutoCommon
         }
 
         var budgetMs = crossDataCenter ? DataCenterTransferBudgetMs : WorldChangeBudgetMs;
-        var arrival = await WaitForWorldArrival(target, budgetMs, trainOverAtUtc, kind, label);
-        if (arrival != JourneyOutcome.Arrived)
+        var attempts = crossDataCenter || resumed ? 1 : WorldChangeAttempts;
+        var ending = await WaitForWorldArrival(target, budgetMs, trainOverAtUtc, kind, label);
+        for (var attempt = 2; ending == HopEnding.Abandoned && attempt <= attempts; attempt++)
         {
-            return Unreached(arrival);
+            Diag($"{label}: asking Lifestream for the {kind} to {target.Name} again in {WorldChangeRetryBackoffMs / TimeUnits.MillisecondsPerSecond}s (attempt {attempt}/{attempts})");
+            await DelayMs(WorldChangeRetryBackoffMs);
+            if (CancelToken.IsCancellationRequested)
+            {
+                return JourneyOutcome.Cancelled;
+            }
+
+            if (!await StartHop(target, crossDataCenter, plan, kind, label))
+            {
+                return Unreached(JourneyOutcome.WorldUnreached);
+            }
+
+            ending = await WaitForWorldArrival(target, budgetMs, trainOverAtUtc, kind, label);
+        }
+
+        if (ending != HopEnding.Arrived)
+        {
+            if (ending == HopEnding.Abandoned)
+            {
+                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream gave up the trip to {target.Name}; the character is on {WorldNameOf(Svc.Objects.LocalPlayer)}. The log has the details.");
+            }
+
+            return Unreached(ending switch
+            {
+                HopEnding.Overdue => JourneyOutcome.Overdue,
+                HopEnding.Cancelled => JourneyOutcome.Cancelled,
+                _ => JourneyOutcome.WorldUnreached,
+            });
         }
 
         await WaitForLifestreamIdle(label);
@@ -252,7 +285,7 @@ public abstract partial class AutoCommon
         || !Svc.ClientState.IsLoggedIn
         || OnWorld(Svc.Objects.LocalPlayer, targetWorldId);
 
-    private async Task<JourneyOutcome> WaitForWorldArrival(WorldInfo target, int budgetMs, DateTime? trainOverAtUtc, string kind, string label)
+    private async Task<HopEnding> WaitForWorldArrival(WorldInfo target, int budgetMs, DateTime? trainOverAtUtc, string kind, string label)
     {
         var lifestream = LifestreamIPC.Instance;
         var startedAt = Environment.TickCount64;
@@ -275,7 +308,7 @@ public abstract partial class AutoCommon
             if (loggedIn && OnWorld(player, target.Id) && !Svc.Condition[ConditionFlag.BetweenAreas] && !Svc.Condition[ConditionFlag.BetweenAreas51])
             {
                 Diag($"{label}: arrived on {target.Name} after {(now - startedAt) / TimeUnits.MillisecondsPerSecond}s");
-                return JourneyOutcome.Arrived;
+                return HopEnding.Arrived;
             }
 
             var busy = lifestream.IsBusy();
@@ -287,20 +320,20 @@ public abstract partial class AutoCommon
             else if (now - idleSinceMs >= HopAbandonedIdleMs)
             {
                 Warn($"{label}: Lifestream went idle on {WorldNameOf(player)} without reaching {target.Name}; the {kind} was abandoned ({ConditionTag()})");
-                Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Lifestream gave up the trip to {target.Name}; the character is on {WorldNameOf(player)}. The log has the details.");
-                return JourneyOutcome.WorldUnreached;
+                return HopEnding.Abandoned;
             }
 
             if (now >= trainOverAt)
             {
-                return AbandonTransfer(target, label);
+                AbandonTransfer(target, label);
+                return HopEnding.Overdue;
             }
 
             if (now >= deadline)
             {
                 Warn($"{label}: {target.Name} not reached within {budgetMs / TimeUnits.MillisecondsPerMinute} minutes (logged in {loggedIn}, world {WorldNameOf(player)}, Lifestream busy {busy})");
                 Svc.Chat.PrintError($"{AhtConstants.LogPrefix} The trip to {target.Name} did not complete in time.");
-                return JourneyOutcome.WorldUnreached;
+                return HopEnding.TimedOut;
             }
 
             if (now >= nextLogAt)
@@ -313,11 +346,11 @@ public abstract partial class AutoCommon
             await DelayMs(HopPollMs);
         }
 
-        return JourneyOutcome.Cancelled;
+        return HopEnding.Cancelled;
     }
 
     // Lifestream is told to stop, so a transfer still in its queue does not carry the character off after the ride.
-    private JourneyOutcome AbandonTransfer(WorldInfo target, string label)
+    private void AbandonTransfer(WorldInfo target, string label)
     {
         var lifestream = LifestreamIPC.Instance;
         var busy = lifestream.IsBusy();
@@ -327,8 +360,6 @@ public abstract partial class AutoCommon
         {
             lifestream.Abort();
         }
-
-        return JourneyOutcome.Overdue;
     }
 
     // Lifestream goes busy again briefly after an arrival, so the next step waits for a quiet spell.
@@ -626,5 +657,14 @@ public abstract partial class AutoCommon
         Warn($"{label}: refused, {reason}");
         Svc.Chat.PrintError($"{AhtConstants.LogPrefix} Cannot travel: {reason}.");
         return JourneyOutcome.Refused;
+    }
+
+    private enum HopEnding : byte
+    {
+        Arrived,
+        Abandoned,
+        TimedOut,
+        Overdue,
+        Cancelled,
     }
 }
