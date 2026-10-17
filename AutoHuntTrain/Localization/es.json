@@ -192,6 +192,8 @@
   "changelog.new": "Nuevo",
   "changelog.changes.one": "{0} cambio",
   "changelog.changes.other": "{0} cambios",
+  "changelog.r1300.1": "Corregido que una llamada de instancia escrita como 'go to 2nd instance' se pasara por alto; un ordinal antes de la palabra ahora cuenta",
+  "changelog.r1300.2": "Corregido que un viaje se abandonara cuando Lifestream dejaba caer un cambio de mundo; el cambio se vuelve a pedir, hasta tres veces",
   "changelog.r1200.1": "Corregido que un reenvío del conductor de la parada recién alcanzada, minutos después para los rezagados o por error, se siguiera como una bandera nueva",
   "changelog.r1100.1": "Añadidas las cacerías S: los avisos de rango S de HuntAlerts aparecen ahora en la lista con un botón Cacería S que viaja hasta la presa, espera a una distancia segura a que otro jugador la ataque, se une al combate y termina cuando la muerte cuenta, contribuido por Asha-00",
   "changelog.r1100.2": "Los viajes siguen ahora la instancia del conductor: la leen del enlace de mapa de una marca, cambian cuando el conductor anuncia una, como «swap to 2», y se teletransportan primero a una eterita sintonizada si no hay ninguna a la vista para cambiar, basado en el trabajo de Asha-00",

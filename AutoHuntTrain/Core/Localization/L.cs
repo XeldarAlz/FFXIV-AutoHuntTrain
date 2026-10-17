@@ -220,6 +220,12 @@ internal static partial class L
         public static readonly LocString New = new("changelog.new", "New");
         public static readonly LocPlural Changes = new("changelog.changes", "{0} change", "{0} changes");
 
+        public static readonly LocString[] Release1300 =
+        [
+            new("changelog.r1300.1", "Fixed an instance call written as 'go to 2nd instance' being missed; an ordinal before the word now counts"),
+            new("changelog.r1300.2", "Fixed a ride being abandoned when Lifestream dropped a world change; the change is asked for again, up to three times"),
+        ];
+
         public static readonly LocString[] Release1200 =
         [
             new("changelog.r1200.1", "Fixed a conductor's repost of the stop just reached, minutes later for latecomers or by mistake, being followed as a new flag"),

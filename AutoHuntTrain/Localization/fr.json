@@ -192,6 +192,8 @@
   "changelog.new": "Nouveau",
   "changelog.changes.one": "{0} changement",
   "changelog.changes.other": "{0} changements",
+  "changelog.r1300.1": "Correction d'un appel d'instance écrit 'go to 2nd instance' qui était ignoré ; un ordinal placé avant le mot compte désormais",
+  "changelog.r1300.2": "Correction d'un trajet abandonné quand Lifestream laissait tomber un changement de monde ; le changement est redemandé, jusqu'à trois fois",
   "changelog.r1200.1": "Correction d'un renvoi par le conducteur de l'arrêt tout juste atteint, des minutes plus tard pour les retardataires ou par erreur, qui était suivi comme un nouveau drapeau",
   "changelog.r1100.1": "Ajout des chasses S : les signalements de rang S de HuntAlerts apparaissent désormais dans la liste avec un bouton Chasse S qui se rend jusqu'à la cible, attend à distance sûre qu'un autre joueur l'engage, rejoint le combat et s'arrête une fois la victoire comptée, contribution d'Asha-00",
   "changelog.r1100.2": "Les trajets suivent désormais l'instance du conducteur : ils la lisent dans le lien de carte d'un drapeau, changent quand le conducteur en annonce une, comme « swap to 2 », et se téléportent d'abord vers une éthérite harmonisée quand aucune n'est en vue pour changer, d'après le travail d'Asha-00",

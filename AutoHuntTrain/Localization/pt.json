@@ -192,6 +192,8 @@
   "changelog.new": "Novo",
   "changelog.changes.one": "{0} mudança",
   "changelog.changes.other": "{0} mudanças",
+  "changelog.r1300.1": "Corrigida uma chamada de instância escrita como 'go to 2nd instance' que era ignorada; um ordinal antes da palavra agora conta",
+  "changelog.r1300.2": "Corrigida uma viagem abandonada quando o Lifestream desistia de uma troca de mundo; a troca é pedida de novo, até três vezes",
   "changelog.r1200.1": "Corrigido o repost do condutor da parada recém-alcançada, minutos depois para atrasados ou por engano, que era seguido como uma bandeira nova",
   "changelog.r1100.1": "Adicionadas as caçadas S: os avisos de rank S do HuntAlerts agora aparecem na lista com um botão Caçada S que viaja até o alvo, espera a uma distância segura que outro jogador inicie o combate, entra na luta e termina quando o abate é contabilizado, contribuição de Asha-00",
   "changelog.r1100.2": "As viagens agora seguem a instância do condutor: leem-na do link de mapa de uma marcação, trocam quando o condutor anuncia uma, como “swap to 2”, e se teleportam antes a um éterite sintonizado quando não há nenhum à vista para trocar, com base no trabalho de Asha-00",

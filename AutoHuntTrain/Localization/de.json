@@ -192,6 +192,8 @@
   "changelog.new": "Neu",
   "changelog.changes.one": "{0} Änderung",
   "changelog.changes.other": "{0} Änderungen",
+  "changelog.r1300.1": "Behoben: Ein Instanzaufruf wie 'go to 2nd instance' wurde überhört; eine Ordnungszahl vor dem Wort zählt jetzt",
+  "changelog.r1300.2": "Behoben: Eine Fahrt wurde abgebrochen, wenn Lifestream einen Weltwechsel fallen ließ; der Wechsel wird bis zu dreimal erneut angefordert",
   "changelog.r1200.1": "Behoben: Postete der Zugführer den gerade erreichten Halt Minuten später erneut, für Nachzügler oder versehentlich, wurde er als neue Flagge angefahren",
   "changelog.r1100.1": "S-Jagden hinzugefügt: S-Rang-Meldungen von HuntAlerts erscheinen jetzt in der Liste mit einem S-Jagd-Button, der zum Ziel reist, in sicherem Abstand wartet, bis ein anderer Spieler angreift, sich dem Kampf anschließt und endet, sobald der Sieg angerechnet ist, beigetragen von Asha-00",
   "changelog.r1100.2": "Fahrten folgen jetzt der Instanz des Zugführers: Sie lesen sie aus dem Kartenlink einer Markierung, wechseln, wenn der Zugführer eine ausruft, etwa „swap to 2“, und teleportieren sich zuerst zu einem freigeschalteten Ätheryten, wenn zum Wechseln keiner in Sicht ist, auf Grundlage der Arbeit von Asha-00",
