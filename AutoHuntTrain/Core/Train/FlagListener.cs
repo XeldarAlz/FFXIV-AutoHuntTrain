@@ -26,10 +26,11 @@ public readonly record struct FlagPost(
     bool InstanceFromLink,
     string Message)
 {
-    // Conductors post each flag twice within a moment, in Shout and in Yell for one; a copy lands within half a map
-    // unit of the first, and a train never flags the same spot again inside a minute and a half.
+    // Conductors post each flag twice within a moment, in Shout and in Yell for one, and again minutes later for
+    // latecomers or by mistake (issue #10); a copy lands within half a map unit of the first. The ride only compares a
+    // post with the stop it is following, waiting on or last reached, and a train never flags those spots again, so
+    // the check needs no time window.
     private const float RepeatMapTolerance = 0.5f;
-    private static readonly TimeSpan RepeatWindow = TimeSpan.FromSeconds(90);
 
     public bool NamesInstance => Instance > 0;
 
@@ -39,8 +40,7 @@ public readonly record struct FlagPost(
         => TerritoryId == earlier.TerritoryId
         && Instance == earlier.Instance
         && MathF.Abs(MapX - earlier.MapX) <= RepeatMapTolerance
-        && MathF.Abs(MapY - earlier.MapY) <= RepeatMapTolerance
-        && (PostedAtUtc - earlier.PostedAtUtc).Duration() <= RepeatWindow;
+        && MathF.Abs(MapY - earlier.MapY) <= RepeatMapTolerance;
 }
 
 // A chat line with no map link, heard only while someone listens for them.
