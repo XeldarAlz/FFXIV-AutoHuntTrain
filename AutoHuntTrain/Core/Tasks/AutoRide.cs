@@ -35,8 +35,8 @@ internal sealed partial class AutoRide : AutoCommon
     private const int QuietEndMinutesMin = 2;
     private const int ZoneTeleportWatchdogMs = 60_000;
     // A conductor's thank-you can come on the way to the last flag or on entering the last zone, before its marks
-    // (Discord: "Stopping train prematurely"), so it ends the ride only once the ride is idle this long after it.
-    private const int ThanksGraceMs = 2 * TimeUnits.MillisecondsPerMinute;
+    // (Discord: "Stopping train prematurely"), so it ends the ride only once the ride has been idle for a while after it.
+    private const int MinThanksGraceMs = TimeUnits.MillisecondsPerMinute;
     private const int TypingPollFrames = 10;
     // The upkeep conditions read the bag and the status list, so a quiet wait asks at most this often.
     private const int UpkeepCheckIntervalMs = 5_000;
@@ -57,6 +57,7 @@ internal sealed partial class AutoRide : AutoCommon
     // doing besides a fight.
     private readonly Func<bool> interrupted;
     private readonly IFramework.OnUpdateDelegate sampleMarkHealth;
+    private readonly bool[] creditedMarks = new bool[HuntMarkRegistry.Marks.Length];
 
     private ConductorIdentity conductor = ConductorIdentity.None;
     private ConductorIdentity manualAtStart = ConductorIdentity.None;
@@ -698,12 +699,40 @@ internal sealed partial class AutoRide : AutoCommon
 
         thanked = true;
         thankedAtMs = Environment.TickCount64;
-        Diag($"Ride: {Conductor.Describe(conductor)} said \"{line.Text}\" via {line.ChatType}, matching \"{phrase}\"; the ride ends once the flags already posted are done, unless a new flag follows within {ThanksGraceMs / TimeUnits.MillisecondsPerSecond}s");
+        Diag($"Ride: {Conductor.Describe(conductor)} said \"{line.Text}\" via {line.ChatType}, matching \"{phrase}\"; the ride ends once the flags already posted are done, unless a new flag follows within {ThanksGraceMs() / TimeUnits.MillisecondsPerSecond}s");
         return true;
     }
 
     private bool ThanksEndReached()
-        => thanked && Environment.TickCount64 - thankedAtMs >= ThanksGraceMs;
+        => thanked && Environment.TickCount64 - thankedAtMs >= ThanksGraceMs();
+
+    // With A ranks of the zone still to credit, the thank-you is more likely a greeting on entering it, so the ride
+    // waits the whole quiet time for the next flag; with the zone done, half of it is enough.
+    private long ThanksGraceMs()
+        => ZoneHasUncreditedMarks(Svc.ClientState.TerritoryType) ? QuietEndMs() : Math.Max(MinThanksGraceMs, QuietEndMs() / 2);
+
+    private bool ZoneHasUncreditedMarks(uint territoryId)
+    {
+        var marks = HuntMarkRegistry.Marks;
+        for (var index = 0; index < marks.Length; index++)
+        {
+            if (marks[index].TerritoryId == territoryId && marks[index].Rank == HuntMarkRank.A && !creditedMarks[index])
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void NoteCredited(uint nameId)
+    {
+        var index = HuntMarkRegistry.IndexOf(nameId);
+        if (index != HuntMarkRegistry.NotFound)
+        {
+            creditedMarks[index] = true;
+        }
+    }
 
     // Only an announced ride picks: from a flag in the start zone, when known, posted from shortly before the start, or
     // while catching up, from a flag heard in the zone listened in.
@@ -914,6 +943,7 @@ internal sealed partial class AutoRide : AutoCommon
         }
 
         session.CreditMark();
+        NoteCredited(mark.NameId);
         if (mark.Rank == HuntMarkRank.A)
         {
             rankACredited++;

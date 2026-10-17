@@ -194,7 +194,7 @@
   "changelog.changes.other": "{0} değişiklik",
   "changelog.r1300.1": "Düzeltildi: 'go to 2nd instance' gibi yazılan instance çağrısı kaçırılıyordu; kelimeden önceki sıra sayısı artık sayılıyor",
   "changelog.r1300.2": "Düzeltildi: Lifestream dünya değişimini bıraktığında yolculuk terk ediliyordu; değişim üç defaya kadar yeniden isteniyor",
-  "changelog.r1300.3": "Düzeltildi: Kondüktörün teşekkürü, zaten paylaşılan bayraklar bitmeden yolculuğu bitiriyordu; önce onlar takip edilir ve iki dakika içinde gelen yeni bir bayrak yolculuğu sürdürür",
+  "changelog.r1300.3": "Düzeltildi: Kondüktörün teşekkürü, zaten paylaşılan bayraklar bitmeden yolculuğu bitiriyordu; önce onlar takip edilir ve hemen ardından gelen yeni bir bayrak yolculuğu sürdürür",
   "changelog.r1200.1": "Düzeltildi: Kondüktörün yeni ulaşılan durağı dakikalar sonra, geç kalanlar için veya yanlışlıkla yeniden paylaşması yeni bir bayrak gibi takip ediliyordu",
   "changelog.r1100.1": "S seviye avları eklendi: HuntAlerts'ten gelen S seviye bildirimleri artık listede bir S Seviye Avı düğmesiyle görünür; düğme hedefe gider, başka bir oyuncu saldırana kadar güvenli bir mesafede bekler, savaşa katılır ve av sayıldığında biter, katkı: Asha-00",
   "changelog.r1100.2": "Yolculuklar artık kondüktörün instance'ını takip eder: onu bir işaretin harita bağlantısından okur, kondüktör “swap to 2” gibi bir instance söylediğinde geçer ve geçiş için görünürde aetheryte yoksa önce açılmış bir aetheryte'a ışınlanır, Asha-00'ın çalışmasına dayanır",

@@ -224,7 +224,7 @@ internal static partial class L
         [
             new("changelog.r1300.1", "Fixed an instance call written as 'go to 2nd instance' being missed; an ordinal before the word now counts"),
             new("changelog.r1300.2", "Fixed a ride being abandoned when Lifestream dropped a world change; the change is asked for again, up to three times"),
-            new("changelog.r1300.3", "Fixed the conductor's thank-you ending the ride before the flags already posted were done; those are followed first, and a flag posted within two minutes of it keeps the ride going"),
+            new("changelog.r1300.3", "Fixed the conductor's thank-you ending the ride before the flags already posted were done; those are followed first, and a flag posted soon after it keeps the ride going"),
         ];
 
         public static readonly LocString[] Release1200 =
