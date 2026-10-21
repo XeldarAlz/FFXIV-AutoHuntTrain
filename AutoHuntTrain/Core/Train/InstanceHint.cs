@@ -26,6 +26,8 @@ internal static class InstanceHints
     private const string GoWord = "go";
     private const string CorrectWord = "correct";
     private static readonly string[] ordinalSuffixes = ["st", "nd", "rd", "th"];
+    private static readonly string[] numberWords = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    private static readonly string[] ordinalWords = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"];
     // A conductor's instance call is a short line of its own; a longer one is chatter that happens to hold a number.
     private const int MaxStandaloneWords = 6;
 
@@ -54,9 +56,11 @@ internal static class InstanceHints
                 continue;
             }
 
-            if (TryReadNamed(span, index, out var named))
+            if (TryReadNamed(span, index, out var named, out var namedEnd))
             {
                 number = named;
+                // A glyph typed after "instance" is the number called, not the one the game wrote into the map link.
+                index = namedEnd - 1;
                 continue;
             }
 
@@ -69,9 +73,9 @@ internal static class InstanceHints
         return number > 0 ? new InstanceHint(number, false, linked) : new InstanceHint(0, same, linked);
     }
 
-    // A line with no map link that is an instance call of its own: "i2", "move to instance 2", "swap to 2". A bare
-    // number counts only right after a directive and at the end of a clause, so "move 2 min" calls nothing. A directive
-    // outranks a plain mention and the later call wins, so "i1 done, swap to i2" calls instance 2.
+    // A line with no map link that is an instance call of its own: "i2", "instance TWO", "swap to 2". A bare number,
+    // digit or word, counts only right after a directive and at the end of a clause, so "move 2 min" calls nothing.
+    // A directive outranks a plain mention and the later call wins, so "i1 done, swap to i2" calls instance 2.
     public static int ParseStandalone(string text)
     {
         var line = text.AsSpan().Trim();
@@ -84,7 +88,7 @@ internal static class InstanceHints
         var directed = 0;
         for (var index = 0; index < line.Length; index++)
         {
-            if (TryReadLinkGlyph(line[index], out var number) || TryReadNamed(line, index, out number))
+            if (TryReadLinkGlyph(line[index], out var number) || TryReadNamed(line, index, out number, out _))
             {
                 named = number;
                 continue;
@@ -100,22 +104,21 @@ internal static class InstanceHints
     }
 
     // A circled digit anywhere, or "iN", "inst N", "instance N" or "Nth instance" starting a word.
-    private static bool TryReadNamed(ReadOnlySpan<char> text, int index, out int number)
+    private static bool TryReadNamed(ReadOnlySpan<char> text, int index, out int number, out int end)
     {
         var character = text[index];
-        if (character is >= FirstCircledDigit and <= LastCircledDigit)
+        end = index + 1;
+        if (TryReadCircledDigit(character, out number))
         {
-            number = character - FirstCircledDigit + 1;
             return true;
         }
 
-        number = 0;
         if (!AtWordStart(text, index))
         {
             return false;
         }
 
-        if (TryReadOrdinalInstance(text, index, out number))
+        if (TryReadOrdinalInstance(text, index, out number, out end))
         {
             return true;
         }
@@ -125,27 +128,76 @@ internal static class InstanceHints
             return false;
         }
 
-        var afterWord = WordEnd(text, index, LongWord) ?? WordEnd(text, index, ShortWord) ?? index + 1;
-        return TryReadNumber(text, afterWord, out number, out _);
+        var afterWord = WordEnd(text, index, LongWord) ?? WordEnd(text, index, ShortWord);
+        var cursor = afterWord ?? index + 1;
+        if (TryReadNumber(text, cursor, out number, out end) || TryReadGlyph(text, cursor, out number, out end))
+        {
+            return true;
+        }
+
+        // A bare "i" takes no number word, or "I one-shot it" would call instance 1.
+        return afterWord is { } wordEnd && TryReadWord(text, SkipWhitespace(text, wordEnd), numberWords, out number, out end);
     }
 
-    // "2nd instance" or "3rd inst": the number comes first, as an ordinal, and the word follows.
-    private static bool TryReadOrdinalInstance(ReadOnlySpan<char> text, int index, out int number)
+    // "2nd instance", "second inst": the number comes first, as an ordinal, and the word follows.
+    private static bool TryReadOrdinalInstance(ReadOnlySpan<char> text, int index, out int number, out int end)
+    {
+        end = index;
+        if (!TryReadOrdinal(text, index, out number, out var ordinalEnd))
+        {
+            return false;
+        }
+
+        var word = SkipWhitespace(text, ordinalEnd);
+        if ((WholeWordEnd(text, word, LongWord) ?? WholeWordEnd(text, word, ShortWord)) is not { } wordEnd)
+        {
+            number = 0;
+            return false;
+        }
+
+        end = wordEnd;
+        return true;
+    }
+
+    private static bool TryReadOrdinal(ReadOnlySpan<char> text, int index, out int number, out int end)
+    {
+        if (TryReadNumber(text, index, out number, out var suffixStart) && TryReadOrdinalSuffix(text, suffixStart, out end))
+        {
+            return true;
+        }
+
+        return TryReadWord(text, index, ordinalWords, out number, out end);
+    }
+
+    private static bool TryReadWord(ReadOnlySpan<char> text, int start, string[] words, out int number, out int end)
     {
         number = 0;
-        if (!TryReadNumber(text, index, out var ordinal, out var suffixStart) || !TryReadOrdinalSuffix(text, suffixStart, out var suffixEnd))
+        end = start;
+        if (!AtWordStart(text, start))
         {
             return false;
         }
 
-        var word = SkipWhitespace(text, suffixEnd);
-        if (WholeWordEnd(text, word, LongWord) is null && WholeWordEnd(text, word, ShortWord) is null)
+        for (var wordIndex = 0; wordIndex < words.Length; wordIndex++)
         {
-            return false;
+            if (WholeWordEnd(text, start, words[wordIndex]) is { } wordEnd)
+            {
+                number = wordIndex + 1;
+                end = wordEnd;
+                return true;
+            }
         }
 
-        number = ordinal;
-        return true;
+        return false;
+    }
+
+    // Conductors also type the game's instance glyph after the word, as in "instance ②" beside a map link.
+    private static bool TryReadGlyph(ReadOnlySpan<char> text, int start, out int number, out int end)
+    {
+        var index = SkipWhitespace(text, start);
+        number = 0;
+        end = index + 1;
+        return index < text.Length && (TryReadLinkGlyph(text[index], out number) || TryReadCircledDigit(text[index], out number));
     }
 
     private static bool TryReadOrdinalSuffix(ReadOnlySpan<char> text, int start, out int end)
@@ -182,12 +234,13 @@ internal static class InstanceHints
             return false;
         }
 
-        if (TryReadLinkGlyph(line[cursor], out number) || TryReadNamed(line, cursor, out number))
+        if (TryReadLinkGlyph(line[cursor], out number) || TryReadNamed(line, cursor, out number, out _))
         {
             return true;
         }
 
-        return TryReadNumber(line, cursor, out number, out var numberEnd) && EndsClause(line, numberEnd);
+        var bare = TryReadNumber(line, cursor, out number, out var numberEnd) || TryReadWord(line, cursor, numberWords, out number, out numberEnd);
+        return bare && EndsClause(line, numberEnd);
     }
 
     private static int? DirectiveEnd(ReadOnlySpan<char> line, int index)
@@ -207,6 +260,18 @@ internal static class InstanceHints
         }
 
         return char.IsPunctuation(line[cursor]) && (cursor + 1 >= line.Length || !char.IsAsciiDigit(line[cursor + 1]));
+    }
+
+    private static bool TryReadCircledDigit(char character, out int number)
+    {
+        if (character is >= FirstCircledDigit and <= LastCircledDigit)
+        {
+            number = character - FirstCircledDigit + 1;
+            return true;
+        }
+
+        number = 0;
+        return false;
     }
 
     private static bool TryReadLinkGlyph(char character, out int instance)
