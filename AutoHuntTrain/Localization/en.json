@@ -192,6 +192,7 @@
   "changelog.new": "New",
   "changelog.changes.one": "{0} change",
   "changelog.changes.other": "{0} changes",
+  "changelog.r1310.1": "Fixed long rides ending in a crash or a Start button that stops working; moving around no longer sets up new game hooks each time",
   "changelog.r1300.1": "Fixed an instance call written as 'go to 2nd instance' being missed; an ordinal before the word now counts",
   "changelog.r1300.2": "Fixed a ride being abandoned when Lifestream dropped a world change; the change is asked for again, up to three times",
   "changelog.r1300.3": "Fixed the conductor's thank-you ending the ride before the flags already posted were done; those are followed first, and a flag posted soon after it keeps the ride going",

@@ -192,6 +192,7 @@
   "changelog.new": "Nouveau",
   "changelog.changes.one": "{0} changement",
   "changelog.changes.other": "{0} changements",
+  "changelog.r1310.1": "Correction des longs trajets qui finissaient par un plantage ou un bouton Démarrer qui ne répondait plus ; se déplacer n'installe plus de nouveaux hooks du jeu à chaque fois",
   "changelog.r1300.1": "Correction d'un appel d'instance écrit 'go to 2nd instance' qui était ignoré ; un ordinal placé avant le mot compte désormais",
   "changelog.r1300.2": "Correction d'un trajet abandonné quand Lifestream laissait tomber un changement de monde ; le changement est redemandé, jusqu'à trois fois",
   "changelog.r1300.3": "Correction du merci du conducteur qui terminait le trajet avant les drapeaux déjà postés ; ils sont suivis d'abord, et un drapeau posté peu après maintient le trajet",

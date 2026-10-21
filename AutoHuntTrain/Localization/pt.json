@@ -192,6 +192,7 @@
   "changelog.new": "Novo",
   "changelog.changes.one": "{0} mudança",
   "changelog.changes.other": "{0} mudanças",
+  "changelog.r1310.1": "Corrigidas viagens longas que terminavam em travamento ou num botão Iniciar que parava de funcionar; mover-se não cria mais novos hooks do jogo a cada vez",
   "changelog.r1300.1": "Corrigida uma chamada de instância escrita como 'go to 2nd instance' que era ignorada; um ordinal antes da palavra agora conta",
   "changelog.r1300.2": "Corrigida uma viagem abandonada quando o Lifestream desistia de uma troca de mundo; a troca é pedida de novo, até três vezes",
   "changelog.r1300.3": "Corrigido o agradecimento do condutor encerrar a viagem antes de concluir as bandeiras já publicadas; elas são seguidas primeiro, e uma bandeira publicada logo depois mantém a viagem",

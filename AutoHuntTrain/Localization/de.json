@@ -192,6 +192,7 @@
   "changelog.new": "Neu",
   "changelog.changes.one": "{0} Änderung",
   "changelog.changes.other": "{0} Änderungen",
+  "changelog.r1310.1": "Behoben: Lange Fahrten endeten mit einem Absturz oder einem Start-Button, der nicht mehr reagierte; Bewegungen richten nicht mehr jedes Mal neue Spiel-Hooks ein",
   "changelog.r1300.1": "Behoben: Ein Instanzaufruf wie 'go to 2nd instance' wurde überhört; eine Ordnungszahl vor dem Wort zählt jetzt",
   "changelog.r1300.2": "Behoben: Eine Fahrt wurde abgebrochen, wenn Lifestream einen Weltwechsel fallen ließ; der Wechsel wird bis zu dreimal erneut angefordert",
   "changelog.r1300.3": "Behoben: Ein Dank des Zugführers beendete die Fahrt, bevor die bereits geposteten Flaggen abgefahren waren; sie werden jetzt zuerst angefahren, und eine kurz darauf gepostete Flagge hält die Fahrt am Laufen",

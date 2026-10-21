@@ -192,6 +192,7 @@
   "changelog.new": "Yeni",
   "changelog.changes.one": "{0} değişiklik",
   "changelog.changes.other": "{0} değişiklik",
+  "changelog.r1310.1": "Düzeltildi: Uzun yolculuklar bir çökmeyle ya da çalışmayı bırakan bir Başlat düğmesiyle bitiyordu; hareket artık her seferinde yeni oyun hook'ları kurmuyor",
   "changelog.r1300.1": "Düzeltildi: 'go to 2nd instance' gibi yazılan instance çağrısı kaçırılıyordu; kelimeden önceki sıra sayısı artık sayılıyor",
   "changelog.r1300.2": "Düzeltildi: Lifestream dünya değişimini bıraktığında yolculuk terk ediliyordu; değişim üç defaya kadar yeniden isteniyor",
   "changelog.r1300.3": "Düzeltildi: Kondüktörün teşekkürü, zaten paylaşılan bayraklar bitmeden yolculuğu bitiriyordu; önce onlar takip edilir ve hemen ardından gelen yeni bir bayrak yolculuğu sürdürür",

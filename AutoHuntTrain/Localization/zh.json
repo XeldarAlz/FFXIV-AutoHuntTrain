@@ -192,6 +192,7 @@
   "changelog.new": "新",
   "changelog.changes.one": "{0} 项更改",
   "changelog.changes.other": "{0} 项更改",
+  "changelog.r1310.1": "修复：长时间乘车会以崩溃或“开始”按钮失灵告终；移动时不再每次都新建游戏钩子",
   "changelog.r1300.1": "修复：写成 'go to 2nd instance' 的分线指令被漏掉；现在识别词前的序数",
   "changelog.r1300.2": "修复：Lifestream 放弃跨服时会直接放弃本次乘车；现在最多重新请求三次",
   "changelog.r1300.3": "修复：车头的致谢会在已发布的旗标跑完之前结束乘车；现在先跑完它们，之后不久出现的新旗标会让乘车继续",
