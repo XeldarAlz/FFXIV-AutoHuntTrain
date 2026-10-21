@@ -121,6 +121,7 @@ internal sealed class SettingsPage
                 TravelSettings.Draw(configuration);
                 EngagementSettings.Draw(configuration);
                 AfterRideSettings.Draw(configuration);
+                PostRunSettings.Draw(configuration);
                 break;
             case Tab.Humanizer:
                 HumanizerSettings.Draw(configuration);

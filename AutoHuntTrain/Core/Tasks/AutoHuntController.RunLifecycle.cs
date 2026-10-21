@@ -17,6 +17,8 @@ internal sealed partial class AutoHuntController
     private int runFaultResumeCount;
     private long faultWindowStartedAtMs;
 
+    private readonly record struct AfterRunStep(AfterRunAction Action, bool SendCommands);
+
     private void OnRideEnded(AutoHuntSession owningSession)
     {
         if (CutByRelog(owningSession))
@@ -83,8 +85,8 @@ internal sealed partial class AutoHuntController
     }
 
     // One ordered chain once a ride ends on its own: the end of its Party Finder listing, leaving the train's party, the
-    // way home, then the after-run action. A Stop or a fault runs none of them. The finished run stays on screen while
-    // the chain runs, and is cleared once it ends.
+    // way home, then the chat commands and the after-run action. A Stop or a fault runs none of them. The finished run
+    // stays on screen while the chain runs, and is cleared once it ends.
     private bool TryRunAfterAction(AutoHuntSession ending)
     {
         if (ending.AfterActionDispatched)
@@ -107,46 +109,46 @@ internal sealed partial class AutoHuntController
 
         var leaveParty = LeavePartyDue(ending);
         var stays = StaysForNextTrain();
-        var action = stays ? null : AfterActionFor(ending);
+        var afterRun = stays ? null : AfterRunStepFor(ending);
         var wayHome = !stays && WayHomeDue();
         // A listing still coming down keeps the run until it is down, so auto-join cannot start the next ride over it.
         var awaitListing = Plugin.Instance.PartyFinderListing.Busy;
-        if (!awaitListing && !leaveParty && !wayHome && action is null)
+        if (!awaitListing && !leaveParty && !wayHome && afterRun is null)
         {
             return false;
         }
 
         progress.SetPhase(HuntPhase.Finishing);
-        RunChain(awaitListing, leaveParty, wayHome, action);
+        RunChain(awaitListing, leaveParty, wayHome, afterRun);
         return true;
     }
 
-    private void RunChain(bool awaitListing, bool leaveParty, bool wayHome, AfterRunAction? action)
+    private void RunChain(bool awaitListing, bool leaveParty, bool wayHome, AfterRunStep? afterRun)
     {
         if (awaitListing && Plugin.Instance.PartyFinderListing.Busy)
         {
-            RunTask(new AutoEndListing(), () => RunChain(awaitListing: false, leaveParty, wayHome, action));
+            RunTask(new AutoEndListing(), () => RunChain(awaitListing: false, leaveParty, wayHome, afterRun));
             return;
         }
 
         if (leaveParty)
         {
-            RunTask(new AutoLeaveParty(), () => RunChain(awaitListing: false, leaveParty: false, wayHome, action));
+            RunTask(new AutoLeaveParty(), () => RunChain(awaitListing: false, leaveParty: false, wayHome, afterRun));
             return;
         }
 
         if (wayHome)
         {
-            Diag(action is { } then ? $"Run completed; taking the way home, then after-run action {then}." : "Run completed; taking the way home.");
+            Diag(afterRun is { } then ? $"Run completed; taking the way home, then after-run action {then.Action}." : "Run completed; taking the way home.");
             RunTask(new AutoWayHome(), () =>
             {
                 Diag("The way home finished.");
-                RunChain(awaitListing: false, leaveParty: false, wayHome: false, action);
+                RunChain(awaitListing: false, leaveParty: false, wayHome: false, afterRun);
             });
             return;
         }
 
-        if (action is { } next)
+        if (afterRun is { } next)
         {
             RunAfterAction(next);
             return;
@@ -172,33 +174,69 @@ internal sealed partial class AutoHuntController
         return true;
     }
 
-    private static AfterRunAction? AfterActionFor(AutoHuntSession ending)
+    private static AfterRunStep? AfterRunStepFor(AutoHuntSession ending)
     {
         var action = Plugin.Instance.Configuration.AfterRun;
-        if (action == AfterRunAction.StayLoggedIn)
+        var sendCommands = PostRunCommandsDue(ending);
+        if (action == AfterRunAction.StayLoggedIn && !sendCommands)
         {
-            Diag("Run completed by its stop condition; the after-run action is StayLoggedIn, nothing to do.");
+            Diag("Run completed by its stop condition; the after-run action is StayLoggedIn and no chat commands are due, nothing to do.");
             return null;
         }
 
         if (ending.DidNothing)
         {
-            Diag($"Run ended by its stop condition without doing any work; skipping after-run action {action}.");
+            Diag($"Run ended by its stop condition without doing any work; skipping chat commands and after-run action {action}.");
             return null;
         }
 
-        return action;
+        return new AfterRunStep(action, sendCommands);
     }
 
-    private void RunAfterAction(AfterRunAction action)
+    // An abandoned ride never found or reached its train, so it ends on its own without having run its course.
+    private static bool PostRunCommandsDue(AutoHuntSession ending)
     {
-        Diag($"Starting after-run action {action}.");
-        AutoCommon task = action == AfterRunAction.ReturnToInn ? new AutoReturnToInn() : new AutoAfterRun(action);
-        RunTask(task, () =>
+        if (string.IsNullOrWhiteSpace(Plugin.Instance.Configuration.PostRunCommands))
         {
-            Diag($"After-run action {action} finished.");
-            ClearRun();
+            return false;
+        }
+
+        if (ending.Outcome is RideOutcome.AllCredited or RideOutcome.ConductorQuiet)
+        {
+            return true;
+        }
+
+        Diag($"The ride ended with outcome {ending.Outcome}; chat commands are sent only after a train or S-Hunt that ran its course.");
+        return false;
+    }
+
+    private void RunAfterAction(AfterRunStep step)
+    {
+        var action = step.Action;
+        Diag(step.SendCommands ? $"Starting chat commands, then after-run action {action}." : $"Starting after-run action {action}.");
+        if (!step.SendCommands && action == AfterRunAction.ReturnToInn)
+        {
+            RunTask(new AutoReturnToInn(), () => FinishAfterAction(action));
+            return;
+        }
+
+        var commandBlock = step.SendCommands ? Plugin.Instance.Configuration.PostRunCommands : string.Empty;
+        RunTask(new AutoAfterRun(action, commandBlock), () =>
+        {
+            if (action != AfterRunAction.ReturnToInn)
+            {
+                FinishAfterAction(action);
+                return;
+            }
+
+            RunTask(new AutoReturnToInn(), () => FinishAfterAction(action));
         });
+    }
+
+    private void FinishAfterAction(AfterRunAction action)
+    {
+        Diag($"After-run action {action} finished.");
+        ClearRun();
     }
 
     private static bool WayHomeDue()
