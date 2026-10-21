@@ -18,6 +18,8 @@ public sealed partial class Configuration : IPluginConfiguration
 
     public bool AutoShowOnLogin { get; set; } = false;
 
+    public bool DragWindowFromAnywhere { get; set; } = false;
+
     public string Language { get; set; } = "";
 
     // The bundled hunt preset is rewritten in the combat plugin only while this trails its revision, so edits to it survive otherwise.
