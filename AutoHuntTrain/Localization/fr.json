@@ -192,6 +192,8 @@
   "changelog.new": "Nouveau",
   "changelog.changes.one": "{0} changement",
   "changelog.changes.other": "{0} changements",
+  "changelog.r1410.1": "Les téléportations vers une éthérite partent désormais directement depuis la monture, même en vol, quand le jeu autorise le sort, au lieu d'atterrir d'abord, ce qui prenait plusieurs secondes et pouvait échouer sur un terrain accidenté",
+  "changelog.r1410.2": "Changements d'instance plus rapides : quand la téléportation arrive trop loin de l'éthérite pour que Lifestream change d'instance, la marche vers elle commence aussitôt au lieu d'attendre 8 secondes",
   "changelog.r1400.1": "Ajout de Commandes de chat dans les réglages Trajet : listez vos propres commandes, une par ligne (comme /li home ou /ays m), elles se lancent quand un train se termine, avant l'action de fin, jamais après Arrêt ou un trajet qui n'a pas trouvé le train",
   "changelog.r1400.2": "Meilleure lecture des annonces d'instance : les nombres écrits en lettres comme « instance TWO », « inst two », « second instance » ou « swap to two », et le symbole d'instance tapé après « instance », déclenchent maintenant le changement",
   "changelog.r1400.3": "Correction d'une session qui attendait sans fin près d'un éthérite principal quand aucun arrêt du réseau éthéré vers une zone n'était harmonisé, comme les portes d'Idyllshire vers l'Arrière-pays : elle s'arrête désormais avec un message indiquant qu'un arrêt doit être harmonisé",

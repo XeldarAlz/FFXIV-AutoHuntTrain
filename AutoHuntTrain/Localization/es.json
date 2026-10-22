@@ -192,6 +192,8 @@
   "changelog.new": "Nuevo",
   "changelog.changes.one": "{0} cambio",
   "changelog.changes.other": "{0} cambios",
+  "changelog.r1410.1": "Los teletransportes a un etérito ahora se lanzan directamente desde la montura, también en el aire, cuando el juego lo permite, en lugar de aterrizar primero, lo que tardaba varios segundos y podía fallar sobre terreno irregular",
+  "changelog.r1410.2": "Cambios de instancia más rápidos: si el teletransporte aterriza demasiado lejos del etérito para que Lifestream cambie de instancia, el camino hasta él empieza al momento en lugar de tras una espera de 8 segundos",
   "changelog.r1400.1": "Se añadieron Comandos de chat a los ajustes de Viaje: escribe tus propios comandos, uno por línea (como /li home o /ays m), y se ejecutan cuando termina un tren, antes de la acción final, nunca tras Detener o un viaje que no encontró el tren",
   "changelog.r1400.2": "Mejor lectura de los avisos de instancia: los números escritos con letras como \"instance TWO\", \"inst two\", \"second instance\" o \"swap to two\", y el símbolo de instancia escrito tras \"instance\", ahora activan el cambio",
   "changelog.r1400.3": "Corregido que una sesión esperara sin fin junto a un etérito central cuando ninguna parada de la red etérea hacia una zona estaba sintonizada, como las puertas de Idyllshire hacia Hinterlands: ahora se detiene con un mensaje que indica que hay que sintonizar una parada",

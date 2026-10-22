@@ -192,6 +192,8 @@
   "changelog.new": "Novo",
   "changelog.changes.one": "{0} mudança",
   "changelog.changes.other": "{0} mudanças",
+  "changelog.r1410.1": "Os teletransportes para um aetheryte agora saem direto da montaria, também no ar, quando o jogo permite o lançamento, em vez de pousar primeiro, o que levava vários segundos e podia falhar em terreno irregular",
+  "changelog.r1410.2": "Trocas de instância mais rápidas: quando o teletransporte chega longe demais do aetheryte para o Lifestream trocar de instância, a caminhada até ele agora começa na hora em vez de após 8 segundos de espera",
   "changelog.r1400.1": "Adicionados Comandos de chat às configurações de Viagem: liste seus próprios comandos, um por linha (como /li home ou /ays m), e eles rodam quando um trem termina, antes da ação final, nunca depois de Parar ou de uma viagem que não encontrou o trem",
   "changelog.r1400.2": "Melhor leitura dos avisos de instância: números por extenso como \"instance TWO\", \"inst two\", \"second instance\" ou \"swap to two\", e o símbolo de instância digitado depois de \"instance\", agora disparam a troca",
   "changelog.r1400.3": "Corrigida uma sessão que esperava para sempre num aetheryte central quando nenhuma parada da rede de aetherytes para uma zona estava sintonizada, como os portões de Idyllshire para as Hinterlands: agora ela para com uma mensagem dizendo que uma parada precisa ser sintonizada",

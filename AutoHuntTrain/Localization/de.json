@@ -192,6 +192,8 @@
   "changelog.new": "Neu",
   "changelog.changes.one": "{0} Änderung",
   "changelog.changes.other": "{0} Änderungen",
+  "changelog.r1410.1": "Teleports zu einem Ätheryten starten jetzt direkt vom Reittier, auch in der Luft, wenn das Spiel den Zauber erlaubt, statt erst zu landen; das kostete einige Sekunden und konnte über unebenem Gelände scheitern",
+  "changelog.r1410.2": "Schnellere Instanzwechsel: Landet der Teleport zu weit vom Ätheryten entfernt, als dass Lifestream die Instanz wechseln kann, beginnt der Weg dorthin jetzt sofort statt nach 8 Sekunden Wartezeit",
   "changelog.r1400.1": "Chat-Befehle in den Fahrt-Einstellungen hinzugefügt: Trage eigene Befehle ein, einen pro Zeile (etwa /li home oder /ays m); sie laufen, wenn ein Zug endet, vor der Aktion danach, und nie nach Stopp oder einer Fahrt, die den Zug nicht gefunden hat",
   "changelog.r1400.2": "Instanz-Ansagen werden besser gelesen: ausgeschriebene Zahlen wie \"instance TWO\", \"inst two\", \"second instance\" oder \"swap to two\" und das nach \"instance\" getippte Instanzsymbol lösen jetzt den Wechsel aus",
   "changelog.r1400.3": "Behoben: Ein Lauf wartete endlos an einem Ätheryten, wenn keine Station des Ätheryten-Netzes in ein Gebiet abgestimmt war, etwa bei den Toren von Idyllshire ins Hinterland; jetzt endet er mit dem Hinweis, dass eine Station abgestimmt werden muss",

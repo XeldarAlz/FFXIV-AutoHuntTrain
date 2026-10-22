@@ -220,6 +220,12 @@ internal static partial class L
         public static readonly LocString New = new("changelog.new", "New");
         public static readonly LocPlural Changes = new("changelog.changes", "{0} change", "{0} changes");
 
+        public static readonly LocString[] Release1410 =
+        [
+            new("changelog.r1410.1", "Teleports to an aetheryte now go straight from the mount, in the air too, when the game allows the cast, instead of landing first, which took several seconds and could fail over rough ground"),
+            new("changelog.r1410.2", "Faster instance swaps: when the teleport lands too far from the aetheryte for Lifestream to switch instances, the walk to it now starts at once instead of after an 8 second wait"),
+        ];
+
         public static readonly LocString[] Release1400 =
         [
             new("changelog.r1400.1", "Added Chat commands to the Ride settings: list your own commands, one per line (such as /li home or /ays m), and they run when a train finishes, before the after-run action, never after Stop or a ride that could not find the train"),

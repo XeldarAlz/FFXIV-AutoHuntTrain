@@ -192,6 +192,8 @@
   "changelog.new": "Yeni",
   "changelog.changes.one": "{0} değişiklik",
   "changelog.changes.other": "{0} değişiklik",
+  "changelog.r1410.1": "Bir aetheryte'a ışınlanmalar artık oyun izin verdiğinde, havadayken de dahil, doğrudan binekten yapılıyor; önce inmeye çalışmak birkaç saniye sürüyor ve engebeli zeminde başarısız olabiliyordu",
+  "changelog.r1410.2": "Daha hızlı instance değişimi: Işınlanma, Lifestream'in instance değiştiremeyeceği kadar aetheryte'tan uzağa düşerse oraya yürüyüş artık 8 saniye beklemeden hemen başlıyor",
   "changelog.r1400.1": "Yolculuk ayarlarına Sohbet komutları eklendi: kendi komutlarınızı her satıra bir tane yazın (örneğin /li home veya /ays m); bir tren bittiğinde, bitiş eyleminden önce çalışırlar, Durdur'dan veya treni bulamayan bir yolculuktan sonra asla çalışmazlar",
   "changelog.r1400.2": "Instance duyurularını okuma geliştirildi: \"instance TWO\", \"inst two\", \"second instance\" veya \"swap to two\" gibi yazıyla sayılar ve \"instance\" sonrasına yazılan instance simgesi artık geçişi başlatıyor",
   "changelog.r1400.3": "Bir bölgeye giden aethernet duraklarının hiçbiri attune edilmemişken çalışmanın merkez aetheryte'ta sonsuza dek beklemesi düzeltildi (Idyllshire'dan Hinterlands'e açılan kapılar gibi): artık bir durağın attune edilmesi gerektiğini söyleyen bir mesajla duruyor",
