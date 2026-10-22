@@ -22,6 +22,10 @@ public abstract partial class AutoCommon
     private const int ReturnHomePollMs = 250;
     // General action 8 is Return, the home-point teleport, which takes a different path than an aetheryte teleport.
     private const uint ReturnGeneralActionId = 8;
+    // Action 5 is Teleport, the cast every aetheryte teleport goes through.
+    private const uint TeleportActionId = 5;
+    // GetActionStatus answers 0 for an action the game would start right now.
+    private const uint ActionReadyStatus = 0;
     private const int MaxTeleportFaults = 2;
     private const int StallsBeforeReturnHome = 2;
     // A gateway attempt costs more than twice a plain one, so it stops once try, go home, and try from home have run.
@@ -71,9 +75,11 @@ public abstract partial class AutoCommon
     }
 
     // Gate for every teleport: stop navigation (being moved blocks the cast), fight off whatever has aggroed since the
-    // game refuses a teleport in combat, let a cast end, get back onto solid ground, then dismount. From the air or the
-    // water the library spins on a cast that never starts.
-    internal async Task PrepareForTeleport(string scope)
+    // game refuses a teleport in combat, and let a cast end. The game casts Teleport from a mount, in the air too, so
+    // out of the water the character lands and dismounts only when the game says the cast would not start: a landing
+    // costs seconds, and over ground the navmesh does not cover it can fail outright. alwaysDismount keeps the landing
+    // for a hop Lifestream makes, which may end at an aetheryte's menu instead of a cast.
+    internal async Task PrepareForTeleport(string scope, bool alwaysDismount = false)
     {
         NavmeshIPC.Instance.Stop();
         await FightOffAttackers(scope);
@@ -91,6 +97,16 @@ public abstract partial class AutoCommon
 
         if (CancelToken.IsCancellationRequested)
         {
+            return;
+        }
+
+        if (!alwaysDismount && !InWater() && TeleportCastable())
+        {
+            if (Svc.Condition[ConditionFlag.Mounted])
+            {
+                Diag($"{scope}: teleporting without dismounting ({ConditionTag()})");
+            }
+
             return;
         }
 
@@ -212,7 +228,8 @@ public abstract partial class AutoCommon
             }
 
             var scope = $"{label}#{attempt}";
-            await PrepareForTeleport(scope);
+            // A retry lands first, in case the cast from the mount was what did not start.
+            await PrepareForTeleport(scope, alwaysDismount: attempt > 1);
             if (CancelToken.IsCancellationRequested)
             {
                 break;
@@ -275,9 +292,10 @@ public abstract partial class AutoCommon
     }
 
     private static bool NotOnSolidGround()
-        => Svc.Condition[ConditionFlag.InFlight]
-        || Svc.Condition[ConditionFlag.Diving]
-        || Svc.Condition[ConditionFlag.Swimming];
+        => Svc.Condition[ConditionFlag.InFlight] || InWater();
+
+    private static bool InWater()
+        => Svc.Condition[ConditionFlag.Diving] || Svc.Condition[ConditionFlag.Swimming];
 
     private static bool AnyFlagSet(ICondition condition, ConditionFlag[] flags)
     {
@@ -290,6 +308,12 @@ public abstract partial class AutoCommon
         }
 
         return false;
+    }
+
+    private static unsafe bool TeleportCastable()
+    {
+        var actionManager = ActionManager.Instance();
+        return actionManager is not null && actionManager->GetActionStatus(ActionType.Action, TeleportActionId) == ActionReadyStatus;
     }
 
     private static unsafe void UseGeneralAction(uint generalActionId)

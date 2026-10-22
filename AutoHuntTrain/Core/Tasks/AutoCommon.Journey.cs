@@ -32,7 +32,9 @@ public abstract partial class AutoCommon
     private const int LifestreamIdleBudgetMs = 60_000;
     private const int JourneyTeleportWatchdogMs = 60_000;
     private const float AtAetheryteMeters = 20f;
-    // Lifestream switches instances at an aetheryte within 11 metres; the walk stops well inside that.
+    // Lifestream offers its instance switcher only within 11 metres of an aetheryte.
+    private const float InstanceSwitcherReachMeters = 11f;
+    // The walk to the aetheryte stops well inside the switcher's reach.
     private const float InstanceAetheryteReachMeters = 4f;
     // Right after a zone load Lifestream still reads the character as occupied for a moment.
     private const int InstanceSwitcherSettleMs = 8_000;
@@ -216,7 +218,7 @@ public abstract partial class AutoCommon
     private async Task<bool> StartHop(WorldInfo target, bool crossDataCenter, JourneyPlan plan, string kind, string label)
     {
         var lifestream = LifestreamIPC.Instance;
-        await PrepareForTeleport($"{label}-prepare");
+        await PrepareForTeleport($"{label}-prepare", alwaysDismount: true);
         if (CancelToken.IsCancellationRequested)
         {
             return false;
@@ -523,7 +525,7 @@ public abstract partial class AutoCommon
     private async Task<bool> ReadyInstanceSwitcher(string scope)
     {
         var lifestream = LifestreamIPC.Instance;
-        if (lifestream.CanChangeInstance() || await WaitUntilTimed(lifestream.CanChangeInstance, InstanceSwitcherSettleMs, $"{scope}-settle"))
+        if (await SettleInstanceSwitcher($"{scope}-settle"))
         {
             return true;
         }
@@ -541,7 +543,7 @@ public abstract partial class AutoCommon
         else if (await TeleportForInstanceSwitch(scope) is { } landedAt)
         {
             // The teleport can land inside Lifestream's reach of the aetheryte, and then there is nothing to walk.
-            if (lifestream.CanChangeInstance() || await WaitUntilTimed(lifestream.CanChangeInstance, InstanceSwitcherSettleMs, $"{scope}-teleport-settle"))
+            if (await SettleInstanceSwitcher($"{scope}-teleport-settle"))
             {
                 return true;
             }
@@ -578,6 +580,25 @@ public abstract partial class AutoCommon
 
         return false;
     }
+
+    // The wait only helps while Lifestream still reads the character as occupied after a zone load. A teleport can land
+    // the character beyond the switcher's reach of the aetheryte, where no wait ever brings it in, so the wait ends the
+    // moment the aetheryte shows up out there and the walk starts at once.
+    private async Task<bool> SettleInstanceSwitcher(string scope)
+    {
+        var lifestream = LifestreamIPC.Instance;
+        if (lifestream.CanChangeInstance())
+        {
+            return true;
+        }
+
+        await WaitUntilTimed(InstanceSwitcherSettled, InstanceSwitcherSettleMs, scope);
+        return lifestream.CanChangeInstance();
+    }
+
+    private static bool InstanceSwitcherSettled()
+        => LifestreamIPC.Instance.CanChangeInstance()
+        || (FindNearestAetheryteObject() is { } aetheryte && DistanceTo(aetheryte.Position) >= InstanceSwitcherReachMeters);
 
     // Out of sight of every aetheryte, the attuned one nearest the character is teleported to instead. Where it landed,
     // or null when there is none or the teleport failed.
